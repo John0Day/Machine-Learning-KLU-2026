@@ -1,0 +1,7 @@
+# SHA-256 for official GTSRB training archives
+# Format: <sha256> <filename>
+#
+# Generate or refresh after downloading archives:
+#   ./scripts/fetch_gtsrb.sh --skip-verify --write-checksums
+#
+# Then commit this file so everyone (including course staff) can verify downloads.
