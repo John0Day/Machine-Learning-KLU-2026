@@ -1,0 +1,6 @@
+# SHA-256 for official GTSRB training archives
+# Format: <sha256> <filename>
+d32ac4b5fa9a1cbd1994768413902e8193599d9434cf0a8eb9cfd00a6d3a290c GTSRB_Final_Training_Images.zip
+8f57e44ab1ec0216a26d3d5c7f4256604a026b1f828f0731091ad8fdd3ec6e0c GTSRB_Final_Training_HueHist.zip
+67e34890c4451d781613664cf2cc764835c23cdc59c56d25713be9610d279554 GTSRB_Final_Training_HOG.zip
+b69ffefd4f29929e41497d8c286d212aff3651a4ed2a030267ac9d3b1588df4b GTSRB_Final_Training_Haar.zip

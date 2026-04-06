@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+
+# Build/test artifacts
+.pytest_cache/
+.mypy_cache/
+coverage/
+.cache/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Large data and generated model artifacts
+data/raw/
+models/*.pth
+models/*.pt
+results/*
+
+# Keep structure via placeholder files
+!data/.gitkeep
+!models/.gitkeep
+!results/.gitkeep
+!notebooks/.gitkeep
+!src/.gitkeep
