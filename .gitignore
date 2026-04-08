@@ -18,6 +18,7 @@ coverage/
 .DS_Store
 .vscode/
 .idea/
+TASKS.md
 
 # Large data and generated model artifacts
 data/raw/
