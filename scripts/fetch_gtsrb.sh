@@ -12,6 +12,7 @@ DRY_RUN=0
 VERIFY_SHA256=1
 VERIFY_ONLY=0
 WRITE_CHECKSUMS=0
+TRASH_ZIPS=0
 LOCK_DIR=""
 EXTRACT_STATE_DIR=""
 
@@ -42,12 +43,14 @@ Options:
   --verify-only               Only verify local archives; no download/extract
   --write-checksums           Write checksums for local archives to checksums file
   --extract                   Extract each archive after download
+  --trash-zips                Move ZIP files to trash after successful extraction
   --force                     Re-download archives and re-extract
   --dry-run                   Print actions without executing
   -h, --help                  Show this help
 
 Examples:
   ./scripts/fetch_gtsrb.sh --extract
+  ./scripts/fetch_gtsrb.sh --extract --trash-zips
   ./scripts/fetch_gtsrb.sh --verify-only
   ./scripts/fetch_gtsrb.sh --skip-verify --write-checksums
 USAGE
@@ -83,6 +86,10 @@ while [[ $# -gt 0 ]]; do
       EXTRACT=1
       shift
       ;;
+    --trash-zips)
+      TRASH_ZIPS=1
+      shift
+      ;;
     --force)
       FORCE=1
       shift
@@ -110,6 +117,11 @@ fi
 
 if [[ "$VERIFY_ONLY" -eq 1 && "$EXTRACT" -eq 1 ]]; then
   echo "Error: --verify-only cannot be combined with --extract" >&2
+  exit 1
+fi
+
+if [[ "$TRASH_ZIPS" -eq 1 && "$EXTRACT" -ne 1 ]]; then
+  echo "Error: --trash-zips requires --extract" >&2
   exit 1
 fi
 
@@ -259,6 +271,46 @@ maybe_extract_file() {
   printf '%s\n' "$archive_hash" >"$marker_file"
 }
 
+move_to_trash() {
+  local file_path="$1"
+  if [[ "$TRASH_ZIPS" -ne 1 || ! -f "$file_path" ]]; then
+    return 0
+  fi
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] move to trash: '$file_path'"
+    return 0
+  fi
+
+  if command -v gio >/dev/null 2>&1; then
+    gio trash "$file_path"
+    echo "Moved ZIP to trash: $file_path"
+    return 0
+  fi
+
+  if command -v trash-put >/dev/null 2>&1; then
+    trash-put "$file_path"
+    echo "Moved ZIP to trash: $file_path"
+    return 0
+  fi
+
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    local trash_dir="$HOME/.Trash"
+    mkdir -p "$trash_dir"
+    local base_name
+    base_name="$(basename "$file_path")"
+    local target_path="$trash_dir/$base_name"
+    if [[ -e "$target_path" ]]; then
+      target_path="$trash_dir/${base_name%.*}-$(date +%Y%m%d-%H%M%S)-$$.${base_name##*.}"
+    fi
+    mv "$file_path" "$target_path"
+    echo "Moved ZIP to trash: $target_path"
+    return 0
+  fi
+
+  echo "Warning: no supported trash command found; keeping ZIP: $file_path" >&2
+}
+
 acquire_lock() {
   LOCK_DIR="${TARGET_DIR%/}/.fetch.lock"
   if [[ "$DRY_RUN" -eq 1 ]]; then
@@ -322,7 +374,14 @@ fi
 for file in "${FILES[@]}"; do
   url="${BASE_URL%/}/${file}"
   out="${TARGET_DIR%/}/${file}"
+  out_dir="${TARGET_DIR%/}/${file%.zip}"
+  marker_file="${EXTRACT_STATE_DIR%/}/${file}.sha256"
   should_download=1
+  has_cached_extraction=0
+
+  if [[ -d "$out_dir" && -f "$marker_file" && "$FORCE" -ne 1 ]]; then
+    has_cached_extraction=1
+  fi
 
   if [[ -f "$out" && "$FORCE" -ne 1 ]]; then
     if [[ "$VERIFY_SHA256" -eq 1 ]]; then
@@ -342,6 +401,9 @@ for file in "${FILES[@]}"; do
       should_download=0
       echo "Skipping existing file: $out"
     fi
+  elif [[ "$EXTRACT" -eq 1 && "$has_cached_extraction" -eq 1 && "$FORCE" -ne 1 ]]; then
+    should_download=0
+    echo "Skipping download (already extracted with cache marker): $file"
   fi
 
   if [[ "$should_download" -eq 1 ]]; then
@@ -349,8 +411,24 @@ for file in "${FILES[@]}"; do
     download_file_atomic "$url" "$out"
   fi
 
-  verify_archive_hash "$out" "$file"
-  maybe_extract_file "$out" "$TARGET_DIR" "$file"
+  if [[ -f "$out" ]]; then
+    verify_archive_hash "$out" "$file"
+  elif [[ "$VERIFY_SHA256" -eq 1 && "$has_cached_extraction" -ne 1 ]]; then
+    echo "Error: missing archive and no extraction cache for: $file" >&2
+    exit 1
+  fi
+
+  if [[ "$EXTRACT" -eq 1 ]]; then
+    if [[ -f "$out" ]]; then
+      maybe_extract_file "$out" "$TARGET_DIR" "$file"
+      move_to_trash "$out"
+    elif [[ "$has_cached_extraction" -eq 1 && "$FORCE" -ne 1 ]]; then
+      echo "Skipping extraction (already extracted): $file"
+    else
+      echo "Error: cannot extract missing archive: $out" >&2
+      exit 1
+    fi
+  fi
 done
 
 if [[ "$WRITE_CHECKSUMS" -eq 1 ]]; then
