@@ -65,6 +65,41 @@ This generates:
 - `results/class_mapping.csv`
 - `results/dataset_stats.json`
 
+## Baseline Training (Task 04)
+
+Run baseline model training:
+
+```bash
+.venv/bin/python src/train.py --epochs 10 --batch-size 64
+```
+
+Run with an explicit run label (prevents output overwrite):
+
+```bash
+.venv/bin/python src/train.py --epochs 10 --batch-size 64 --seed 123 --run-name seed123
+```
+
+Outputs:
+
+- `models/baseline_<run_name>.pth` (default run name: `seed-<seed>`)
+- `results/baseline_loss_curve_<run_name>.png`
+- `results/baseline_history_<run_name>.json`
+
+## Offline Demo (No Camera)
+
+Generate presentation-ready prediction visuals from the test split:
+
+```bash
+.venv/bin/python src/demo_offline.py --model models/baseline_seed-123.pth --device cpu
+```
+
+Demo outputs are written to `results/demo_offline/`:
+
+- `predictions_grid.png`
+- `misclassifications_top_confidence.png`
+- `confusion_matrix.png`
+- `summary.json`
+
 ## Optional Commands
 
 - Override dataset base URL:
