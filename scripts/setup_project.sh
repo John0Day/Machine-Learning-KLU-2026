@@ -15,6 +15,7 @@ FORCE_DATA=0
 FORCE_INSTALL=0
 SKIP_VERIFY=0
 SKIP_PIP_UPGRADE=0
+TRASH_ZIPS=1
 BASE_URL=""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,11 +34,12 @@ Options:
   --force-install       Force dependency installation even if unchanged
   --no-pip-upgrade      Skip pip self-upgrade step
   --skip-verify         Disable checksum verification during dataset pull
+  --keep-zips           Keep downloaded ZIP archives (default moves ZIPs to trash after extraction)
   --base-url <url>      Override dataset base URL for fetch_gtsrb.sh
   -h, --help            Show this help
 
 Default behavior:
-  Creates .venv, installs requirements, fetches/extracts GTSRB, and runs dataset inspection.
+  Creates .venv, installs requirements, fetches/extracts GTSRB, moves ZIPs to trash, and runs dataset inspection.
 USAGE
 }
 
@@ -70,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-verify)
       SKIP_VERIFY=1
+      shift
+      ;;
+    --keep-zips)
+      TRASH_ZIPS=0
       shift
       ;;
     --base-url)
@@ -161,6 +167,9 @@ if [[ "$SKIP_DATA" -eq 0 ]]; then
   fi
   if [[ "$SKIP_VERIFY" -eq 1 ]]; then
     fetch_cmd+=("--skip-verify")
+  fi
+  if [[ "$TRASH_ZIPS" -eq 1 ]]; then
+    fetch_cmd+=("--trash-zips")
   fi
   if [[ -n "$BASE_URL" ]]; then
     fetch_cmd+=("--base-url" "$BASE_URL")
