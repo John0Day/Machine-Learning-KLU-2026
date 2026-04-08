@@ -17,6 +17,7 @@ This single command will:
 
 By default it prefers `python3.12`, then `python3.11`, then `python3.10`, then `python3`.
 Running it again is safe: unchanged dependencies are skipped, verified archives are reused, and extraction uses a cache marker.
+By default, ZIP files are moved to trash after extraction.
 
 ## Project Structure
 
@@ -48,6 +49,11 @@ Before sharing the repo with course staff, generate and commit checksums once:
 ```
 
 Then commit `checksums/gtsrb.sha256` so downloads can be verified automatically.
+If you want extracted folders only, run:
+
+```bash
+./scripts/fetch_gtsrb.sh --extract --trash-zips
+```
 
 ## Dataset Inspection (Task 02)
 
@@ -83,6 +89,12 @@ This generates:
 
 ```bash
 ./scripts/setup_project.sh --force-data
+```
+
+- Keep ZIP archives instead of moving them to trash:
+
+```bash
+./scripts/setup_project.sh --keep-zips
 ```
 
 - Force dependency reinstall:
