@@ -33,8 +33,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--models-dir", type=Path, default=Path("models"))
     parser.add_argument("--img-size", type=int, default=32)
     parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
+    parser.add_argument("--patience", type=int, default=5, help="Early stopping patience")
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
@@ -119,18 +120,39 @@ def run_epoch(
     return avg_loss, acc
 
 
-def plot_losses(train_losses: list[float], val_losses: list[float], out_path: Path) -> None:
-    plt.figure(figsize=(8, 5))
-    plt.plot(train_losses, label="Train Loss")
-    plt.plot(val_losses, label="Validation Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.title("Baseline CNN: Train vs Validation Loss")
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(out_path, dpi=150)
-    plt.close()
+def plot_curves(
+    train_losses: list[float],
+    val_losses: list[float],
+    train_accs: list[float],
+    val_accs: list[float],
+    out_path: Path,
+) -> None:
+    """Save loss and accuracy curves side by side."""
+    epochs = range(1, len(train_losses) + 1)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Loss
+    ax1.plot(epochs, train_losses, label="Train Loss")
+    ax1.plot(epochs, val_losses, label="Validation Loss")
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Cross-Entropy Loss")
+    ax1.set_title("Loss Curves")
+    ax1.legend()
+    ax1.grid(alpha=0.3)
+
+    # Accuracy
+    ax2.plot(epochs, [a * 100 for a in train_accs], label="Train Accuracy")
+    ax2.plot(epochs, [a * 100 for a in val_accs], label="Val Accuracy")
+    ax2.set_xlabel("Epoch")
+    ax2.set_ylabel("Accuracy (%)")
+    ax2.set_title("Accuracy Curves")
+    ax2.legend()
+    ax2.grid(alpha=0.3)
+
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
 
 
 def main() -> None:
@@ -154,14 +176,19 @@ def main() -> None:
     model = BaselineCNN(num_classes=43, input_size=args.img_size).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=0.5)
 
     train_losses: list[float] = []
     val_losses: list[float] = []
+    train_accuracies: list[float] = []
     val_accuracies: list[float] = []
 
     run_name = args.run_name.strip() if args.run_name.strip() else f"seed-{args.seed}"
     best_val_acc = -1.0
+    epochs_without_improvement = 0
     best_model_path = args.models_dir / f"baseline_{run_name}.pth"
+
+    print(f"Training for up to {args.epochs} epochs (early stopping patience={args.patience}) …\n")
 
     for epoch in range(1, args.epochs + 1):
         train_loss, train_acc = run_epoch(
@@ -182,8 +209,11 @@ def main() -> None:
             max_batches=args.max_val_batches,
         )
 
+        scheduler.step(val_loss)
+
         train_losses.append(train_loss)
         val_losses.append(val_loss)
+        train_accuracies.append(train_acc)
         val_accuracies.append(val_acc)
 
         print(
@@ -194,6 +224,7 @@ def main() -> None:
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
+            epochs_without_improvement = 0
             torch.save(
                 {
                     "model_state_dict": model.state_dict(),
@@ -204,6 +235,12 @@ def main() -> None:
                 },
                 best_model_path,
             )
+            print(f"  → New best model saved (val_acc={best_val_acc:.4f})")
+        else:
+            epochs_without_improvement += 1
+            if epochs_without_improvement >= args.patience:
+                print(f"\nEarly stopping after {epoch} epochs (no improvement for {args.patience} epochs).")
+                break
 
     if best_model_path.exists():
         checkpoint = torch.load(best_model_path, map_location=device)
@@ -224,8 +261,9 @@ def main() -> None:
         max_batches=args.max_val_batches,
     )
 
-    loss_plot_path = args.results_dir / f"baseline_loss_curve_{run_name}.png"
-    plot_losses(train_losses, val_losses, loss_plot_path)
+    loss_plot_path = args.results_dir / f"baseline_curves_{run_name}.png"
+    plot_curves(train_losses, val_losses, train_accuracies, val_accuracies, loss_plot_path)
+    print(f"Training curves saved → {loss_plot_path}")
 
     history: Dict[str, object] = {
         "epochs": args.epochs,
