@@ -76,6 +76,25 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def validate_args(args: argparse.Namespace) -> None:
+    if args.img_size <= 0:
+        raise ValueError("--img-size must be > 0")
+    if args.batch_size <= 0:
+        raise ValueError("--batch-size must be > 0")
+    if args.num_workers < 0:
+        raise ValueError("--num-workers must be >= 0")
+    if args.max_test_batches < 0:
+        raise ValueError("--max-test-batches must be >= 0")
+    if args.num_misclassified <= 0:
+        raise ValueError("--num-misclassified must be > 0")
+    if args.num_gradcam <= 0:
+        raise ValueError("--num-gradcam must be > 0")
+    if args.noise_std < 0:
+        raise ValueError("--noise-std must be >= 0")
+    if args.blur_kernel_size <= 0 or args.blur_kernel_size % 2 == 0:
+        raise ValueError("--blur-kernel-size must be a positive odd integer (e.g. 3, 5, 7)")
+
+
 def resolve_device(device_arg: str) -> torch.device:
     if device_arg == "cpu":
         return torch.device("cpu")
@@ -289,13 +308,43 @@ def save_classification_report(
     return {"json": str(json_path), "txt": str(txt_path), "csv": str(csv_path)}
 
 
-def compute_class_counts(loader: torch.utils.data.DataLoader) -> np.ndarray:
-    counts = np.zeros(43, dtype=np.int64)
-    for _, labels in loader:
-        labels_np = labels.numpy()
-        for class_id in labels_np:
-            counts[int(class_id)] += 1
-    return counts
+def _extract_labels_from_dataset(dataset) -> List[int]:
+    """Extract labels without iterating augmented DataLoader batches.
+
+    Handles:
+    - preprocessing._TransformedSubset (has `.subset`)
+    - torch.utils.data.Subset (has `.dataset` + `.indices`)
+    - preprocessing.GTSRBDataset (has `.samples`)
+    """
+    # Custom transformed subset wrapper used in preprocessing.py
+    if hasattr(dataset, "subset"):
+        return _extract_labels_from_dataset(dataset.subset)
+
+    # torch.utils.data.Subset
+    if hasattr(dataset, "dataset") and hasattr(dataset, "indices"):
+        base_dataset = dataset.dataset
+        indices = [int(i) for i in dataset.indices]
+        if hasattr(base_dataset, "samples"):
+            return [int(base_dataset.samples[i][1]) for i in indices]
+        base_labels = _extract_labels_from_dataset(base_dataset)
+        return [int(base_labels[i]) for i in indices]
+
+    # Base GTSRB dataset
+    if hasattr(dataset, "samples"):
+        return [int(label) for _, label in dataset.samples]
+
+    # Fallback for unexpected dataset types
+    labels: List[int] = []
+    for i in range(len(dataset)):
+        _, label = dataset[i]
+        labels.append(int(label))
+    return labels
+
+
+def compute_class_counts_from_dataset(dataset, num_classes: int = 43) -> np.ndarray:
+    labels = _extract_labels_from_dataset(dataset)
+    counts = np.bincount(np.array(labels, dtype=np.int64), minlength=num_classes)
+    return counts.astype(np.int64)
 
 
 def save_bias_analysis(
@@ -305,31 +354,45 @@ def save_bias_analysis(
     class_names: Sequence[str],
     out_dir: Path,
 ) -> Dict[str, object]:
-    train_counts = compute_class_counts(train_loader)
+    train_counts = compute_class_counts_from_dataset(train_loader.dataset, num_classes=len(class_names))
     cm = confusion_matrix(true_labels.numpy(), pred_labels.numpy(), labels=list(range(43)))
-    class_support = cm.sum(axis=1).clip(min=1)
-    class_acc = np.diag(cm) / class_support
+    class_support = cm.sum(axis=1)
+    class_acc = np.full(len(class_names), np.nan, dtype=np.float64)
+    present_mask = class_support > 0
+    diag = np.diag(cm)
+    class_acc[present_mask] = diag[present_mask] / class_support[present_mask]
 
     ranked = np.argsort(train_counts)
     group_size = max(1, len(ranked) // 4)
     rare_ids = ranked[:group_size]
     frequent_ids = ranked[-group_size:]
 
-    rare_acc = float(class_acc[rare_ids].mean())
-    frequent_acc = float(class_acc[frequent_ids].mean())
+    rare_present_ids = [int(i) for i in rare_ids if present_mask[i]]
+    frequent_present_ids = [int(i) for i in frequent_ids if present_mask[i]]
+
+    rare_acc = float(np.nanmean(class_acc[rare_present_ids])) if rare_present_ids else None
+    frequent_acc = float(np.nanmean(class_acc[frequent_present_ids])) if frequent_present_ids else None
+    accuracy_gap_abs = None if (rare_acc is None or frequent_acc is None) else float(abs(frequent_acc - rare_acc))
+
+    def class_entry(class_id: int) -> Dict[str, object]:
+        support = int(class_support[class_id])
+        test_acc = None if support == 0 else float(class_acc[class_id])
+        return {
+            "class_id": int(class_id),
+            "class_name": class_names[class_id],
+            "train_count": int(train_counts[class_id]),
+            "test_support": support,
+            "test_acc": test_acc,
+        }
 
     summary = {
-        "frequent_classes": [
-            {"class_id": int(i), "class_name": class_names[i], "train_count": int(train_counts[i]), "test_acc": float(class_acc[i])}
-            for i in frequent_ids
-        ],
-        "rare_classes": [
-            {"class_id": int(i), "class_name": class_names[i], "train_count": int(train_counts[i]), "test_acc": float(class_acc[i])}
-            for i in rare_ids
-        ],
+        "frequent_classes": [class_entry(int(i)) for i in frequent_ids],
+        "rare_classes": [class_entry(int(i)) for i in rare_ids],
+        "frequent_classes_present_in_test": len(frequent_present_ids),
+        "rare_classes_present_in_test": len(rare_present_ids),
         "frequent_mean_acc": frequent_acc,
         "rare_mean_acc": rare_acc,
-        "accuracy_gap_abs": float(abs(frequent_acc - rare_acc)),
+        "accuracy_gap_abs": accuracy_gap_abs,
     }
 
     json_path = out_dir / "bias_analysis.json"
@@ -337,11 +400,26 @@ def save_bias_analysis(
         json.dump(summary, f, indent=2)
 
     bar_path = out_dir / "bias_analysis_mean_accuracy.png"
+    rare_plot = 0.0 if rare_acc is None else rare_acc * 100
+    frequent_plot = 0.0 if frequent_acc is None else frequent_acc * 100
+    rare_color = "#bbbbbb" if rare_acc is None else "#f4a261"
+    frequent_color = "#bbbbbb" if frequent_acc is None else "#2a9d8f"
+
     plt.figure(figsize=(6, 4))
-    plt.bar(["Rare classes", "Frequent classes"], [rare_acc * 100, frequent_acc * 100], color=["#f4a261", "#2a9d8f"])
+    bars = plt.bar(["Rare classes", "Frequent classes"], [rare_plot, frequent_plot], color=[rare_color, frequent_color])
     plt.ylabel("Mean class accuracy (%)")
     plt.title("Task 06: Bias Check (Rare vs Frequent Classes)")
     plt.ylim(0, 100)
+    labels = ["n/a" if rare_acc is None else f"{rare_plot:.2f}%", "n/a" if frequent_acc is None else f"{frequent_plot:.2f}%"]
+    for bar, label in zip(bars, labels):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 1.0,
+            label,
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
     plt.tight_layout()
     plt.savefig(bar_path, dpi=160)
     plt.close()
@@ -539,6 +617,7 @@ def save_gradcam_examples(
 
 def main() -> None:
     args = parse_args()
+    validate_args(args)
     args.results_dir.mkdir(parents=True, exist_ok=True)
 
     device = resolve_device(args.device)
