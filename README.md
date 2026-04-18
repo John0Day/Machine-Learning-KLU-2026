@@ -100,6 +100,33 @@ Demo outputs are written to `results/demo_offline/`:
 - `confusion_matrix.png`
 - `summary.json`
 
+## Task 06 Evaluation
+
+Run full evaluation for the selected model (default: `deep`):
+
+```bash
+.venv/bin/python src/evaluate.py --model-type deep --device mps
+```
+
+CPU fallback:
+
+```bash
+.venv/bin/python src/evaluate.py --model-type deep --device cpu
+```
+
+Task 06 outputs are written to `results/task06/`:
+
+- `evaluation_summary.json`
+- `confusion_matrix_counts.png`
+- `confusion_matrix_normalized.png`
+- `classification_report.txt`
+- `classification_report_per_class.csv`
+- `bias_analysis.json`
+- `bias_analysis_mean_accuracy.png`
+- `misclassifications_top_confidence.png`
+- `gradcam_examples.png`
+- `robustness_metrics.json`
+
 ## Optional Commands
 
 - Override dataset base URL:
