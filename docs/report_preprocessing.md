@@ -59,16 +59,60 @@ Augmentation is deliberately **not** applied to the validation and test sets. Th
 
 ## Mini-Batch Loading
 
-Images are loaded in mini-batches of 64 samples using PyTorch's `DataLoader`. Mini-batch gradient descent is used during training rather than processing the entire dataset at once because:
+Images are loaded in mini-batches using PyTorch's `DataLoader`. As described in Lecture 4,
+stochastic gradient descent randomly draws mini-batches of training samples and performs a
+gradient update on the average loss of each mini-batch, rather than computing the gradient
+over the entire dataset at once.
 
-1. It makes gradient updates more frequent, which speeds up learning.
-2. The noise introduced by sampling different batches helps the optimizer escape poor local minima.
-3. It makes training feasible on hardware with limited memory.
+A batch size of 64 was chosen because:
 
-The training DataLoader uses `shuffle=True` so that the order of samples is randomized at every epoch, preventing the model from learning any unintended ordering patterns in the data.
+1. **Frequent updates**: smaller batches produce more gradient updates per epoch, which speeds up learning.
+2. **Escaping local optima**: the noise introduced by different random mini-batches helps the optimizer avoid poor local optima — a key advantage of stochastic over full-batch gradient descent (Lecture 4).
+3. **Memory efficiency**: processing the full dataset at once would require significantly more GPU memory.
+4. **Computational efficiency**: powers of 2 (32, 64, 128) are computationally more efficient on modern hardware due to memory alignment.
+
+The training DataLoader uses `shuffle=True` so that the order of samples is randomized at
+every epoch. This ensures that every mini-batch sees a different combination of samples,
+which is essential for the stochastic nature of mini-batch gradient descent to work correctly.
+
+---
+
+## Overfitting, Underfitting and Early Stopping
+
+As introduced in Lecture 4, a model can either underfit (too little capacity to learn the
+patterns) or overfit (memorises the training data instead of generalising). The three-way
+data split is the primary mechanism for detecting this:
+
+- If **training accuracy is high but validation accuracy is low**, the model is overfitting.
+- If **both training and validation accuracy are low**, the model is underfitting.
+
+To prevent overfitting during training, **Early Stopping** is applied (Lecture 4): training
+is halted when the validation loss stops improving for a fixed number of consecutive epochs
+(patience=5). This ensures the best generalising model is saved rather than the most
+recently trained one.
+
+Data augmentation also acts as an implicit regularizer — by randomly transforming training
+images, the model is prevented from memorising specific pixel patterns, which reduces
+overfitting even with limited training data.
 
 ---
 
 ## Summary
 
-The preprocessing pipeline ensures that all images are in a consistent, normalized format before being passed to the model. The combination of resizing, normalization, and data augmentation directly addresses key challenges of the GTSRB dataset: variable image sizes, diverse capture conditions, and a limited number of samples per class for rare sign types. These choices follow established best practices in deep learning and are grounded in the theoretical foundations of gradient-based optimization and generalization.
+The preprocessing pipeline ensures that all images are in a consistent, normalized format
+before being passed to the model. The design decisions are directly grounded in the
+theoretical concepts from Lecture 4:
+
+| Concept | Lecture 4 Topic | Implementation |
+|---|---|---|
+| Resize to 32×32 | CNN input requirements (Lecture 5) | `transforms.Resize` |
+| Normalization | Stable gradient descent | `transforms.Normalize` with GTSRB mean/std |
+| Data Augmentation | Regularization, overfitting prevention | `RandomRotation`, `ColorJitter`, `RandomAffine` |
+| Train/Val/Test Split | Unbiased evaluation, overfitting detection | `random_split` with seed=42 |
+| Mini-Batch size=64 | Stochastic gradient descent efficiency | `DataLoader(batch_size=64)` |
+| Shuffle=True | Stochastic sampling requirement | `DataLoader(shuffle=True)` |
+| Early Stopping | Prevent memorisation | patience=5 in `train.py` |
+
+The combination of these techniques directly addresses the key challenges of the GTSRB
+dataset: variable image sizes, diverse lighting and weather conditions, and class imbalance
+for rare sign types.
