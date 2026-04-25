@@ -27,5 +27,4 @@ data/raw/
 !data/.gitkeep
 !models/.gitkeep
 !results/.gitkeep
-!notebooks/.gitkeep
 !src/.gitkeep

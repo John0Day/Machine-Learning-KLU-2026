@@ -30,7 +30,6 @@ By default, ZIP files are moved to trash after extraction.
 ```text
 /data/          dataset files (ignored by git)
 /src/           Python source files (dataset, model, train, evaluate)
-/notebooks/     Jupyter notebooks for experiments
 /models/        trained model weights (.pth/.pt)
 /results/       plots, metrics, confusion matrices
 ```
