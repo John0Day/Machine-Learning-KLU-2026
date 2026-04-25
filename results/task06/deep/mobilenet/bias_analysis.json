@@ -1,0 +1,151 @@
+{
+  "frequent_classes": [
+    {
+      "class_id": 9,
+      "class_name": "No passing",
+      "train_count": 1024,
+      "test_support": 217,
+      "test_acc": 0.9953917050691244
+    },
+    {
+      "class_id": 25,
+      "class_name": "Road work",
+      "train_count": 1055,
+      "test_support": 232,
+      "test_acc": 0.9956896551724138
+    },
+    {
+      "class_id": 5,
+      "class_name": "Speed limit (80km/h)",
+      "train_count": 1296,
+      "test_support": 287,
+      "test_acc": 0.9930313588850174
+    },
+    {
+      "class_id": 4,
+      "class_name": "Speed limit (70km/h)",
+      "train_count": 1382,
+      "test_support": 282,
+      "test_acc": 0.9929078014184397
+    },
+    {
+      "class_id": 10,
+      "class_name": "No passing for vehicles over 3.5t",
+      "train_count": 1411,
+      "test_support": 294,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 12,
+      "class_name": "Priority road",
+      "train_count": 1477,
+      "test_support": 306,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 38,
+      "class_name": "Keep right",
+      "train_count": 1482,
+      "test_support": 299,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 13,
+      "class_name": "Yield",
+      "train_count": 1528,
+      "test_support": 307,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 2,
+      "class_name": "Speed limit (50km/h)",
+      "train_count": 1531,
+      "test_support": 345,
+      "test_acc": 0.9942028985507246
+    },
+    {
+      "class_id": 1,
+      "class_name": "Speed limit (30km/h)",
+      "train_count": 1552,
+      "test_support": 365,
+      "test_acc": 0.9917808219178083
+    }
+  ],
+  "rare_classes": [
+    {
+      "class_id": 0,
+      "class_name": "Speed limit (20km/h)",
+      "train_count": 140,
+      "test_support": 32,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 19,
+      "class_name": "Dangerous curve left",
+      "train_count": 145,
+      "test_support": 35,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 37,
+      "class_name": "Go straight or left",
+      "train_count": 153,
+      "test_support": 31,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 27,
+      "class_name": "Pedestrians",
+      "train_count": 163,
+      "test_support": 42,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 32,
+      "class_name": "End of all speed and passing limits",
+      "train_count": 165,
+      "test_support": 38,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 41,
+      "class_name": "End of no passing",
+      "train_count": 169,
+      "test_support": 41,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 24,
+      "class_name": "Road narrows on the right",
+      "train_count": 177,
+      "test_support": 46,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 42,
+      "class_name": "End of no passing by vehicles over 3.5t",
+      "train_count": 179,
+      "test_support": 30,
+      "test_acc": 0.9666666666666667
+    },
+    {
+      "class_id": 29,
+      "class_name": "Bicycles crossing",
+      "train_count": 192,
+      "test_support": 42,
+      "test_acc": 1.0
+    },
+    {
+      "class_id": 39,
+      "class_name": "Keep left",
+      "train_count": 204,
+      "test_support": 43,
+      "test_acc": 1.0
+    }
+  ],
+  "frequent_classes_present_in_test": 10,
+  "rare_classes_present_in_test": 10,
+  "frequent_mean_acc": 0.9963004241013529,
+  "rare_mean_acc": 0.9966666666666667,
+  "accuracy_gap_abs": 0.0003662425653138124
+}

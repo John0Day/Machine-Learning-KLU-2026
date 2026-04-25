@@ -81,7 +81,30 @@ def train_model(
     patience: int,
     models_dir: Path,
 ) -> dict:
-    """Train a model and return results dict."""
+    """Train a single model with Adam + ReduceLROnPlateau and early stopping.
+
+    Uses CrossEntropyLoss on raw logits (no softmax needed in the model).
+    Saves the checkpoint with the highest validation accuracy and reloads it
+    before the final test evaluation.
+
+    Args:
+        model:        Instantiated (but not yet moved to device) nn.Module.
+        model_name:   Display name used for printing and checkpoint filenames.
+        train_loader: DataLoader for the training split.
+        val_loader:   DataLoader for the validation split.
+        test_loader:  DataLoader for the held-out test split.
+        device:       Target compute device.
+        epochs:       Maximum number of training epochs.
+        lr:           Initial learning rate for Adam.
+        patience:     Early-stopping patience — stops when val accuracy has not
+                      improved for this many consecutive epochs (Lecture 4).
+        models_dir:   Directory where the best checkpoint is saved.
+
+    Returns:
+        dict with keys: model_name, best_val_acc, test_acc, test_loss,
+        training_time_s, num_params, epochs_trained, train_accs, val_accs,
+        train_losses, val_losses.
+    """
     print(f"\n{'='*60}")
     print(f"Training: {model_name}")
     print(f"{'='*60}")
@@ -155,6 +178,66 @@ def train_model(
 # ---------------------------------------------------------------------------
 # Plotting & comparison table
 # ---------------------------------------------------------------------------
+
+def plot_summary_charts(results: list[dict], results_dir: Path) -> None:
+    """Generate three summary charts for the model comparison (Task 05).
+
+    1. Bar chart – Test accuracy per model (who wins at a glance)
+    2. Scatter plot – Accuracy vs. number of parameters (efficiency tradeoff)
+    3. Bar chart – Training time per model (computational cost)
+    """
+    names   = [r["model_name"]       for r in results]
+    accs    = [r["test_acc"] * 100   for r in results]
+    params  = [r["num_params"] / 1e6 for r in results]   # millions
+    times   = [r["training_time_s"]  for r in results]
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    # ── 1. Test accuracy bar chart ──────────────────────────────────────────
+    bars = axes[0].bar(names, accs, color="steelblue", edgecolor="white")
+    axes[0].set_title("Test Accuracy per Model")
+    axes[0].set_ylabel("Test Accuracy (%)")
+    axes[0].set_ylim(min(accs) - 0.5, 100.1)
+    axes[0].tick_params(axis="x", rotation=20)
+    # Annotate each bar with its exact value
+    for bar, acc in zip(bars, accs):
+        axes[0].text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.02,
+            f"{acc:.2f}%",
+            ha="center", va="bottom", fontsize=8,
+        )
+
+    # ── 2. Accuracy vs. parameters scatter ─────────────────────────────────
+    axes[1].scatter(params, accs, s=100, color="steelblue", zorder=3)
+    for name, x, y in zip(names, params, accs):
+        axes[1].annotate(name, (x, y), textcoords="offset points",
+                         xytext=(6, 3), fontsize=7)
+    axes[1].set_title("Accuracy vs. Model Size")
+    axes[1].set_xlabel("Trainable Parameters (millions)")
+    axes[1].set_ylabel("Test Accuracy (%)")
+    axes[1].grid(alpha=0.3)
+
+    # ── 3. Training time bar chart ──────────────────────────────────────────
+    bars2 = axes[2].bar(names, times, color="coral", edgecolor="white")
+    axes[2].set_title("Training Time per Model")
+    axes[2].set_ylabel("Training Time (s)")
+    axes[2].tick_params(axis="x", rotation=20)
+    for bar, t in zip(bars2, times):
+        axes[2].text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 1,
+            f"{t:.0f}s",
+            ha="center", va="bottom", fontsize=8,
+        )
+
+    fig.suptitle("Model Comparison Summary – Task 05", fontsize=14)
+    fig.tight_layout()
+    path = results_dir / "model_comparison_summary.png"
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+    print(f"Summary charts saved  → {path}")
+
 
 def plot_comparison(results: list[dict], results_dir: Path) -> None:
     """Plot accuracy curves for all models side by side."""
@@ -313,6 +396,7 @@ if __name__ == "__main__":
 
     # Save comparison
     plot_comparison(results, args.results_dir)
+    plot_summary_charts(results, args.results_dir)
     save_comparison_table(results, args.results_dir)
 
     print("\n✓ Task 05 complete!")

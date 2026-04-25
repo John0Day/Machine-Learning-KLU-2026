@@ -93,6 +93,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_images_dir(data_root: Path) -> Path:
+    """Return the GTSRB Images directory, trying several common sub-paths."""
     candidates = [
         data_root / "GTSRB_Final_Training_Images" / "Final_Training" / "Images",
         data_root / "Final_Training" / "Images",
@@ -108,6 +109,10 @@ def resolve_images_dir(data_root: Path) -> Path:
 
 
 def load_annotations(images_dir: Path) -> List[Dict[str, object]]:
+    """Read per-class GT-*.csv files and return a flat list of image records.
+
+    Each record contains class_id, class_name, width, height, and image_path.
+    """
     records: List[Dict[str, object]] = []
 
     class_dirs = sorted(d for d in images_dir.iterdir() if d.is_dir() and d.name.isdigit())
@@ -142,6 +147,7 @@ def load_annotations(images_dir: Path) -> List[Dict[str, object]]:
 
 
 def save_class_mapping(results_dir: Path) -> Path:
+    """Write SIGN_LABELS to a two-column CSV (class_id, class_name)."""
     path = results_dir / "class_mapping.csv"
     with path.open("w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
@@ -152,6 +158,7 @@ def save_class_mapping(results_dir: Path) -> Path:
 
 
 def plot_class_distribution(class_counts: Counter, results_dir: Path) -> Path:
+    """Bar chart of per-class image counts; reveals class imbalance."""
     path = results_dir / "class_distribution.png"
     classes = sorted(class_counts.keys())
     counts = [class_counts[c] for c in classes]
@@ -170,6 +177,7 @@ def plot_class_distribution(class_counts: Counter, results_dir: Path) -> Path:
 
 
 def plot_resolution_distribution(resolution_counts: Counter, results_dir: Path, top_n: int = 20) -> Path:
+    """Bar chart of the top-N most common image resolutions in the dataset."""
     path = results_dir / "resolution_distribution_top20.png"
     top = resolution_counts.most_common(top_n)
 
@@ -190,6 +198,7 @@ def plot_resolution_distribution(resolution_counts: Counter, results_dir: Path, 
 
 
 def plot_example_images(records: List[Dict[str, object]], results_dir: Path) -> Path:
+    """Grid plot showing one sample image per class (43 classes total)."""
     path = results_dir / "sample_images_by_class.png"
 
     first_record_per_class: Dict[int, Dict[str, object]] = {}
@@ -226,6 +235,7 @@ def plot_example_images(records: List[Dict[str, object]], results_dir: Path) -> 
 
 
 def save_dataset_stats(records: List[Dict[str, object]], results_dir: Path) -> Path:
+    """Compute and save summary statistics (counts, resolution ranges) as JSON."""
     path = results_dir / "dataset_stats.json"
 
     widths = [int(r["width"]) for r in records]

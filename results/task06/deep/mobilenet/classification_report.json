@@ -1,0 +1,273 @@
+{
+  "Speed limit (20km/h)": {
+    "precision": 0.9696969696969697,
+    "recall": 1.0,
+    "f1-score": 0.9846153846153847,
+    "support": 32.0
+  },
+  "Speed limit (30km/h)": {
+    "precision": 0.9972451790633609,
+    "recall": 0.9917808219178083,
+    "f1-score": 0.9945054945054945,
+    "support": 365.0
+  },
+  "Speed limit (50km/h)": {
+    "precision": 0.997093023255814,
+    "recall": 0.9942028985507246,
+    "f1-score": 0.9956458635703919,
+    "support": 345.0
+  },
+  "Speed limit (60km/h)": {
+    "precision": 0.986784140969163,
+    "recall": 1.0,
+    "f1-score": 0.9933481152993349,
+    "support": 224.0
+  },
+  "Speed limit (70km/h)": {
+    "precision": 0.9893992932862191,
+    "recall": 0.9929078014184397,
+    "f1-score": 0.9911504424778761,
+    "support": 282.0
+  },
+  "Speed limit (80km/h)": {
+    "precision": 0.9965034965034965,
+    "recall": 0.9930313588850174,
+    "f1-score": 0.9947643979057592,
+    "support": 287.0
+  },
+  "End of speed limit (80km/h)": {
+    "precision": 1.0,
+    "recall": 0.9852941176470589,
+    "f1-score": 0.9925925925925926,
+    "support": 68.0
+  },
+  "Speed limit (100km/h)": {
+    "precision": 0.9871794871794872,
+    "recall": 1.0,
+    "f1-score": 0.9935483870967742,
+    "support": 231.0
+  },
+  "Speed limit (120km/h)": {
+    "precision": 1.0,
+    "recall": 0.9864253393665159,
+    "f1-score": 0.9931662870159453,
+    "support": 221.0
+  },
+  "No passing": {
+    "precision": 1.0,
+    "recall": 0.9953917050691244,
+    "f1-score": 0.9976905311778291,
+    "support": 217.0
+  },
+  "No passing for vehicles over 3.5t": {
+    "precision": 0.9966101694915255,
+    "recall": 1.0,
+    "f1-score": 0.99830220713073,
+    "support": 294.0
+  },
+  "Right-of-way at next intersection": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 207.0
+  },
+  "Priority road": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 306.0
+  },
+  "Yield": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 307.0
+  },
+  "Stop": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 90.0
+  },
+  "No vehicles": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 99.0
+  },
+  "Vehicles over 3.5t prohibited": {
+    "precision": 0.984375,
+    "recall": 1.0,
+    "f1-score": 0.9921259842519685,
+    "support": 63.0
+  },
+  "No entry": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 159.0
+  },
+  "General caution": {
+    "precision": 1.0,
+    "recall": 0.9943181818181818,
+    "f1-score": 0.9971509971509972,
+    "support": 176.0
+  },
+  "Dangerous curve left": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 35.0
+  },
+  "Dangerous curve right": {
+    "precision": 1.0,
+    "recall": 0.9818181818181818,
+    "f1-score": 0.9908256880733946,
+    "support": 55.0
+  },
+  "Double curve": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 62.0
+  },
+  "Bumpy road": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 56.0
+  },
+  "Slippery road": {
+    "precision": 1.0,
+    "recall": 0.9859154929577465,
+    "f1-score": 0.9929078014184397,
+    "support": 71.0
+  },
+  "Road narrows on the right": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 46.0
+  },
+  "Road work": {
+    "precision": 1.0,
+    "recall": 0.9956896551724138,
+    "f1-score": 0.9978401727861771,
+    "support": 232.0
+  },
+  "Traffic signals": {
+    "precision": 0.987012987012987,
+    "recall": 1.0,
+    "f1-score": 0.9934640522875817,
+    "support": 76.0
+  },
+  "Pedestrians": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 42.0
+  },
+  "Children crossing": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 79.0
+  },
+  "Bicycles crossing": {
+    "precision": 0.9767441860465116,
+    "recall": 1.0,
+    "f1-score": 0.9882352941176471,
+    "support": 42.0
+  },
+  "Beware of ice/snow": {
+    "precision": 0.9866666666666667,
+    "recall": 0.9866666666666667,
+    "f1-score": 0.9866666666666667,
+    "support": 75.0
+  },
+  "Wild animals crossing": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 126.0
+  },
+  "End of all speed and passing limits": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 38.0
+  },
+  "Turn right ahead": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 105.0
+  },
+  "Turn left ahead": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 64.0
+  },
+  "Ahead only": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 154.0
+  },
+  "Go straight or right": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 64.0
+  },
+  "Go straight or left": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 31.0
+  },
+  "Keep right": {
+    "precision": 0.9966666666666667,
+    "recall": 1.0,
+    "f1-score": 0.998330550918197,
+    "support": 299.0
+  },
+  "Keep left": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 43.0
+  },
+  "Roundabout mandatory": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 42.0
+  },
+  "End of no passing": {
+    "precision": 0.9761904761904762,
+    "recall": 1.0,
+    "f1-score": 0.9879518072289156,
+    "support": 41.0
+  },
+  "End of no passing by vehicles over 3.5t": {
+    "precision": 1.0,
+    "recall": 0.9666666666666667,
+    "f1-score": 0.9830508474576272,
+    "support": 30.0
+  },
+  "accuracy": 0.9965992178200986,
+  "macro avg": {
+    "precision": 0.9960039009774266,
+    "recall": 0.9965141601849895,
+    "f1-score": 0.9962297573429238,
+    "support": 5881.0
+  },
+  "weighted avg": {
+    "precision": 0.9966314402729212,
+    "recall": 0.9965992178200986,
+    "f1-score": 0.9966005877837081,
+    "support": 5881.0
+  }
+}

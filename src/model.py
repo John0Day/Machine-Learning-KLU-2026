@@ -68,6 +68,7 @@ class BaselineCNN(nn.Module):
             return out.view(1, -1).shape[1]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Run feature extractor, flatten, and classify. Returns raw logits."""
         x = self.features(x)
         x = torch.flatten(x, start_dim=1)
         x = self.classifier(x)

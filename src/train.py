@@ -1,4 +1,17 @@
-"""Train baseline CNN on local GTSRB data (Task 04)."""
+"""Train the baseline CNN on local GTSRB data (Task 04).
+
+Training setup:
+- Model:      BaselineCNN (3 Conv blocks + Dropout classifier)
+- Loss:       CrossEntropyLoss — expects raw logits, not softmax output
+- Optimiser:  Adam (lr=1e-3 by default) — adaptive learning rates (Lecture 4)
+- Scheduler:  ReduceLROnPlateau (patience=3, factor=0.5) — halves LR on plateau
+- Early stop: stops when val accuracy does not improve for `patience` epochs (default 5)
+- Best model: checkpoint with highest val accuracy is saved and used for test evaluation
+
+Usage:
+    python src/train.py
+    python src/train.py --epochs 50 --learning-rate 3e-4 --device mps
+"""
 
 from __future__ import annotations
 

@@ -39,7 +39,7 @@ from optuna.visualization.matplotlib import (
 )
 
 from preprocessing import get_dataloaders
-from model_improved import StrideCNN  # Best model from Task 05
+from model_improved import StrideCNN  # Used for tuning (Task 05); DeepCNN achieved highest overall accuracy
 
 
 # ---------------------------------------------------------------------------

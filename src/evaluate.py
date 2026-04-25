@@ -793,7 +793,7 @@ def save_report_md(
         "sign regions (shape, symbol, color) rather than background artifacts.",
         "See `results/task06/gradcam_examples.png`.\n",
         "## 6. Conclusion\n",
-        f"The StrideCNN achieves **{summary['test_acc']*100:.2f}% top-1 accuracy** on the GTSRB test set.",
+        f"The Deep CNN achieves **{summary['test_acc']*100:.2f}% top-1 accuracy** on the GTSRB test set.",
         "Performance remains robust under Gaussian noise and blur perturbations.",
         "Per-class analysis reveals no systematic failure mode across the 43 traffic sign categories.",
     ]
@@ -910,8 +910,8 @@ def evaluate_one(
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
 
-    # Per-model report only for stride (best model)
-    if model_type == "stride":
+    # Per-model report only for deep (best model by test accuracy)
+    if model_type == "deep":
         report_md_path = Path("docs/report_evaluation.md")
         save_report_md(summary, class_acc, class_names, noise_eval, blur_eval, bias_summary, top5_acc, report_md_path)
 
@@ -945,9 +945,13 @@ def save_comparison_table(all_summaries: List[Dict], out_dir: Path) -> None:
             f"| {s['num_wrong']} |"
         )
 
+    # Dynamically determine the best model by test accuracy
+    best = max(all_summaries, key=lambda s: s["test_acc"])
+    best_label = MODEL_LABELS.get(best["model_type"], best["model_type"])
+
     lines += [
         "",
-        "> Best model: **Stride CNN** — highest Top-1 accuracy and best robustness.",
+        f"> Best model: **{best_label}** — highest Top-1 accuracy ({best['test_acc']*100:.2f}%).",
         "",
         f"*Noise std = {all_summaries[0]['noise_std']}, "
         f"Blur kernel = {all_summaries[0]['blur_kernel_size']}*",

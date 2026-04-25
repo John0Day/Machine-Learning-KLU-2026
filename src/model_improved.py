@@ -48,25 +48,27 @@ class DeepCNN(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            # Block 1
+            # Block 1: 3 x 32 x 32 → 32 x 16 x 16
             nn.Conv2d(3, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
+            nn.BatchNorm2d(32),   # Normalize activations → stable gradients (Lecture 4)
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
 
-            # Block 2
+            # Block 2: 32 x 16 x 16 → 64 x 8 x 8
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
 
-            # Block 3
+            # Block 3: 64 x 8 x 8 → 128 x 4 x 4
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
 
-            # Block 4 – extra compared to baseline
+            # Block 4: 128 x 4 x 4 → 256 x 2 x 2  ← extra block vs. baseline
+            # More filters allow the network to learn higher-level combinations
+            # of features (Lecture 5: deeper networks capture more abstract patterns).
             nn.Conv2d(128, 256, kernel_size=3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
@@ -76,19 +78,21 @@ class DeepCNN(nn.Module):
         flatten_dim = self._infer_flatten_dim(input_size)
 
         self.classifier = nn.Sequential(
-            nn.Linear(flatten_dim, 512),
+            nn.Linear(flatten_dim, 512),  # Larger hidden layer to match deeper feature extractor
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.5),            # Regularization: prevents overfitting (Lecture 4)
             nn.Linear(512, num_classes),
         )
 
     def _infer_flatten_dim(self, input_size: int) -> int:
+        """Dynamically compute the flattened size after the feature extractor."""
         with torch.no_grad():
             dummy = torch.zeros(1, 3, input_size, input_size)
             out = self.features(dummy)
             return out.view(1, -1).shape[1]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Extract features, flatten, and classify. Returns raw logits."""
         x = self.features(x)
         x = torch.flatten(x, start_dim=1)
         x = self.classifier(x)
@@ -146,9 +150,10 @@ class MobileNetTransfer(nn.Module):
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Run pretrained feature extractor, global pool, and custom classifier."""
         x = self.features(x)
-        x = self.pool(x)
-        x = torch.flatten(x, 1)
+        x = self.pool(x)          # Global average pooling → [batch, 1280, 1, 1]
+        x = torch.flatten(x, 1)  # Flatten → [batch, 1280]
         x = self.classifier(x)
         return x
 
@@ -169,16 +174,19 @@ class LeakyReLUCNN(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
+            # Block 1: 3 x 32 x 32 → 32 x 16 x 16
             nn.Conv2d(3, 32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
-            nn.LeakyReLU(negative_slope, inplace=True),
+            nn.LeakyReLU(negative_slope, inplace=True),  # φ(z) = z if z>0, else 0.01·z
             nn.MaxPool2d(2),
 
+            # Block 2: 32 x 16 x 16 → 64 x 8 x 8
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.LeakyReLU(negative_slope, inplace=True),
             nn.MaxPool2d(2),
 
+            # Block 3: 64 x 8 x 8 → 128 x 4 x 4
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(negative_slope, inplace=True),
@@ -189,16 +197,18 @@ class LeakyReLUCNN(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(flatten_dim, 256),
             nn.LeakyReLU(negative_slope, inplace=True),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.5),   # Regularization: prevents overfitting (Lecture 4)
             nn.Linear(256, num_classes),
         )
 
     def _infer_flatten_dim(self, input_size: int) -> int:
+        """Dynamically compute the flattened size after the feature extractor."""
         with torch.no_grad():
             dummy = torch.zeros(1, 3, input_size, input_size)
             return self.features(dummy).view(1, -1).shape[1]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Extract features, flatten, and classify. Returns raw logits."""
         x = self.features(x)
         x = torch.flatten(x, 1)
         return self.classifier(x)
@@ -252,11 +262,13 @@ class StrideCNN(nn.Module):
         )
 
     def _infer_flatten_dim(self, input_size: int) -> int:
+        """Dynamically compute the flattened size after the feature extractor."""
         with torch.no_grad():
             dummy = torch.zeros(1, 3, input_size, input_size)
             return self.features(dummy).view(1, -1).shape[1]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Extract features, flatten, and classify. Returns raw logits."""
         x = self.features(x)
         x = torch.flatten(x, 1)
         return self.classifier(x)
