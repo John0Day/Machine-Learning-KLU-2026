@@ -2,13 +2,17 @@
 
 ## Overview
 
-This report documents **Task 04 (Baseline Model)** for the GTSRB traffic sign project. The goal is to implement a first working CNN baseline, train it reproducibly, and store core training artifacts for later comparison.
+This report documents the implementation and evaluation of **Task 04: Baseline Model** for the GTSRB traffic sign classification project.
+
+The objective of this task was to establish a first fully functional convolutional neural network (CNN) baseline. This baseline serves as a reproducible reference point for later experiments, including architecture changes, hyperparameter tuning, and optimization strategies in subsequent tasks.
+
+In addition to implementing and training the model, this task also stores the most relevant training artifacts, including model checkpoints, training histories, loss curves, and offline demo outputs. These artifacts make it possible to compare future models against the initial baseline in a structured and transparent way.
 
 ---
 
 ## Baseline Architecture
 
-The implemented model follows the baseline structure from `TASKS.md`:
+The implemented neural network follows the baseline architecture defined in `TASKS.md`.
 
 ```text
 Input (3 x 32 x 32)
@@ -19,109 +23,131 @@ Input (3 x 32 x 32)
 -> Linear(256, 43)
 ```
 
-Implementation file:
+The model is implemented in:
 
 - `src/model.py`
 
-Note: the model outputs raw logits. Softmax is not applied in `forward()` because `CrossEntropyLoss` internally applies log-softmax.
+The architecture is intentionally simple. It consists of two convolutional blocks followed by a fully connected classifier head. This keeps the model lightweight, easy to train, and suitable as a clear reference point for later comparisons.
+
+The model outputs raw logits instead of probabilities. Therefore, no softmax activation is applied inside the `forward()` method. This is intentional because `CrossEntropyLoss` expects raw logits and internally applies log-softmax during loss computation.
 
 ---
 
 ## Training Pipeline
 
-Training is implemented in `src/train.py` and reuses the Task-03 preprocessing/data-loader pipeline.
+The training procedure is implemented in:
 
-Configuration used for baseline runs:
+- `src/train.py`
 
-- Optimizer: Adam (`lr=1e-3`)
-- Loss: CrossEntropyLoss
-- Epochs: 10
-- Batch size: 64
-- Input size: 32 x 32
-- Data split: Train/Val/Test = 70/15/15 (from Task 03)
+The script reuses the preprocessing and data-loading pipeline developed in Task 03. This ensures that the baseline model is trained on the same standardized dataset splits and transformations, making the results reproducible and comparable across tasks.
 
-Per epoch, the script logs:
+The following configuration was used for the baseline experiments:
 
-- train loss and train accuracy
-- validation loss and validation accuracy
+- Optimizer: Adam
+- Learning rate: `1e-3`
+- Loss function: `CrossEntropyLoss`
+- Number of epochs: `10`
+- Batch size: `64`
+- Input image size: `32 x 32`
+- Data split: Train / Validation / Test = `70 / 15 / 15`
 
-Saved outputs per run:
+During training, the script logs the following metrics for each epoch:
+
+- training loss
+- training accuracy
+- validation loss
+- validation accuracy
+
+For each run, the following artifacts are saved:
 
 - `models/baseline_<run_name>.pth`
 - `results/baseline_loss_curve_<run_name>.png`
 - `results/baseline_history_<run_name>.json`
 
-Additionally, the best checkpoint is mirrored to:
+In addition, the best-performing checkpoint is mirrored to:
 
 - `models/baseline.pth`
+
+This makes it easy to access the current best baseline model without having to reference a specific run name manually.
 
 ---
 
 ## Results
 
-Two baseline runs were executed with different seeds.
+Two baseline training runs were executed using different random seeds. This was done to verify whether the baseline performance is stable across different initializations and data splits.
 
-| Seed | Best Val Accuracy | Test Accuracy | Test Loss |
+| Seed | Best Validation Accuracy | Test Accuracy | Test Loss |
 |---|---:|---:|---:|
 | 42  | 98.78% | 98.55% | 0.0621 |
 | 123 | 99.15% | 99.29% | 0.0451 |
 
-Source files:
+The corresponding training history files are stored in:
 
 - `results/baseline_history_seed-42.json`
 - `results/baseline_history_seed-123.json`
 
+Both runs achieved very high validation and test accuracy. The difference between the two seeds is relatively small, which suggests that the model is not overly sensitive to random initialization or the specific data split used in these experiments.
+
+The seed-123 run achieved the strongest overall performance, with a test accuracy of **99.29%** and a test loss of **0.0451**.
+
 ---
 
-## Offline Demo Error Analysis (No Camera)
+## Offline Demo Error Analysis
 
-To visualize predictions and failure modes, the offline demo was executed with the seed-123 model and matching split seed:
+To further inspect the model behavior beyond aggregate metrics, the offline demo script was executed using the seed-123 baseline model and the matching split seed.
+
+The following command was used:
 
 ```bash
 .venv/bin/python src/demo_offline.py --model models/baseline_seed-123.pth --device cpu --split-seed 123
 ```
 
-Output summary (`results/demo_offline/summary.json`):
+The output summary is stored in:
+
+- `results/demo_offline/summary.json`
+
+Offline demo evaluation results:
 
 - Test samples used: `5881`
 - Correct predictions: `5839`
-- Wrong predictions: `42`
+- Incorrect predictions: `42`
 - Test accuracy: `99.29%`
-- Fail rate: `0.71%` (`42 / 5881`)
+- Failure rate: `0.71%` (`42 / 5881`)
 
-Generated artifacts:
+The following visualization artifacts were generated:
 
 - `results/demo_offline/confusion_matrix.png`
 - `results/demo_offline/misclassifications_top_confidence.png`
 - `results/demo_offline/predictions_grid.png`
 
-Interpretation:
+The confusion matrix is strongly diagonal, confirming that the model separates most traffic sign classes very well. Only a small number of samples are misclassified.
 
-- The confusion matrix is strongly diagonal, confirming high overall class separability.
-- `misclassifications_top_confidence.png` does **not** show all failures; it shows only the top-N high-confidence mistakes (default `N=20`).
-- The remaining errors are concentrated in visually similar classes (especially speed-limit signs) and difficult image conditions (blur, low light, glare, partial occlusion).
+It is important to note that `misclassifications_top_confidence.png` does not display all incorrect predictions. Instead, it shows only the top-N high-confidence mistakes, with the default value being `N=20`. This visualization is useful for identifying particularly critical errors where the model was highly confident despite predicting the wrong class.
 
-Note on reproducibility:
+The remaining classification errors are mainly concentrated in visually similar categories, especially different speed-limit signs. Additional failure cases occur under challenging image conditions such as blur, low illumination, glare, and partial occlusion.
 
-- `train.py` uses `--seed` for both initialization and data split.
-- For direct comparison with a training run, the demo should use the same `--split-seed` as the training seed.
+---
+
+## Reproducibility Notes
+
+Reproducibility is an important part of this task. The training script uses the `--seed` argument for both model initialization and data splitting.
+
+For a direct comparison between a training run and the offline demo evaluation, the demo should be executed with the same `--split-seed` as the corresponding training run.
+
+For example, when evaluating the seed-123 model, the offline demo should also use:
+
+```bash
+--split-seed 123
+```
+
+This ensures that the same test split is used and that the reported results are directly comparable to the original training run.
 
 ---
 
 ## Interpretation
 
-The baseline converges quickly and stably across both seeds. Validation and test metrics are consistently high, and the spread between seeds is small, indicating that the architecture and training setup are robust enough to serve as a strong reference point for Task 05 model-improvement experiments.
+The baseline CNN converges quickly and consistently across both tested seeds. Validation and test performance are high, and the gap between validation and test accuracy remains small.
 
----
+This indicates that the baseline model generalizes well to unseen test data and does not show obvious signs of severe overfitting under the current setup. The small performance variation between seeds further suggests that the architecture and training pipeline are stable enough to serve as a reliable reference for future experiments.
 
-## Summary
-
-Task 04 is functionally complete:
-
-- baseline CNN implemented (`src/model.py`)
-- training loop with validation logging implemented (`src/train.py`)
-- loss curves generated
-- best model weights saved
-- reproducible multi-seed run artifacts recorded
-
-This establishes a solid baseline for later architecture and optimization comparisons.
+Although the baseline is intentionally simple, it already achieves strong performance on the GTSRB dataset. Therefore, future improvements in Task 05 should focus not only on increasing accuracy, but also on evaluating robustness, reducing confident misclassifications, improving performance under difficult visual conditions, and comparing model complexity against performance gains.

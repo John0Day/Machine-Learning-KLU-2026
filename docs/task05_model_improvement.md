@@ -54,37 +54,6 @@ All three models were trained under identical conditions to ensure a fair compar
 - Image size: 32×32
 - Data split: 70% train / 15% val / 15% test (same split as baseline)
 
----
-
-## Results
-
-The results below are filled in after training. Refer to `results/model_comparison.md` for the automatically generated table.
-
-| Model | Test Accuracy | Val Accuracy | Parameters | Training Time |
-|---|---|---|---|---|
-| Baseline CNN | 99.78% | 99.91% | 629,291 | — |
-| Deep CNN | — | — | — | — |
-| MobileNetV2 | — | — | — | — |
-| LeakyReLU CNN | — | — | — | — |
-| Stride CNN | — | — | — | — |
-
-*Results to be filled in after training. See `results/model_comparison.md` for the auto-generated table.*
-
----
-
-## Discussion
-
-The baseline CNN already achieves 99.78% test accuracy, which leaves limited room for improvement on this dataset. The comparison with the Deep CNN variant reveals whether additional depth provides measurable benefit given the already high baseline performance. The MobileNetV2 variant demonstrates the practical value of transfer learning: despite being designed for a general image classification task, the pretrained weights provide a strong initialization that can be efficiently adapted to traffic sign classification.
-
-A key observation for the report is the trade-off between model complexity and accuracy: a larger model is not always better, especially when the simpler model already saturates the available performance on the dataset.
-
-# Task 05 Outcomes (Beginner-Friendly)
-
-## What This Document Is
-
-This file explains the results of Task 05.
-We trained several image-classification models and compared them to see which one recognizes traffic signs best.
-
 Run command:
 
 ```bash
@@ -124,18 +93,6 @@ Practical rule:
 - Use `mps` for normal development on your Mac (faster iterations).
 - Use `cpu` if `mps` is unavailable or if you need a fallback that works on almost any system.
 
-## What The Models Actually Do
-
-Each model looks at a traffic sign image and answers:
-"Which of the 43 sign classes is this?"
-
-For every image, the dataset already contains the correct answer (the class label).
-During training, the model compares its guess with the correct label and adjusts itself to make fewer mistakes over time.
-
-This is called **supervised learning**.
-
-Note: The autoencoder/anomaly part in Task 05 is different. It is **unsupervised** and learns to reconstruct images instead of predicting class labels.
-
 ## How The Data Was Split
 
 Total images: `39,209`
@@ -144,13 +101,7 @@ Total images: `39,209`
 - Validation set (15%): `5,881` images
 - Test set (15%): `5,881` images
 
-Why this matters:
-
-- Train set: used to learn.
-- Validation set: used during training to monitor progress and pick the best checkpoint.
-- Test set: used only at the end for final, fair evaluation on unseen images.
-
-## Results In Plain Language
+## Results 
 
 | Model | Test Accuracy | Approx. Wrong Predictions (out of 5,881) | Parameters | Training Time |
 |---|---:|---:|---:|---:|
@@ -176,11 +127,8 @@ Why:
 - It has the highest test accuracy (`99.81%`).
 - It has the fewest estimated mistakes on the test set (`11` wrong out of `5,881`).
 
-## Is The Baseline Model Still Good?
+## Discussion
 
-Yes. The baseline is already very strong:
+The baseline CNN already achieves 99.78% test accuracy, which leaves limited room for improvement on this dataset. The comparison with the Deep CNN variant reveals whether additional depth provides measurable benefit given the already high baseline performance. The MobileNetV2 variant demonstrates the practical value of transfer learning: despite being designed for a general image classification task, the pretrained weights provide a strong initialization that can be efficiently adapted to traffic sign classification.
 
-- `99.49%` test accuracy
-- about `30` wrong predictions out of `5,881`
-
-So Task 05 improves from "already very good" to "even better."
+A key observation for the report is the trade-off between model complexity and accuracy: a larger model is not always better, especially when the simpler model already saturates the available performance on the dataset.
