@@ -56,6 +56,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_device(device_arg: str) -> torch.device:
+    """Resolve requested runtime backend with explicit fallbacks."""
     if device_arg == "cpu":
         return torch.device("cpu")
     if device_arg == "cuda":
@@ -75,6 +76,7 @@ def resolve_device(device_arg: str) -> torch.device:
 
 
 def load_checkpoint(model_path: Path, device: torch.device) -> tuple[dict, int]:
+    """Load checkpoint and normalize legacy/new formats to a common dict."""
     if not model_path.exists():
         raise FileNotFoundError(f"Model file not found: {model_path}")
 
@@ -117,6 +119,7 @@ def collect_test_outputs(
     device: torch.device,
     max_batches: int,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Collect predictions, confidences, and images for downstream plotting."""
     model.eval()
 
     all_images: list[torch.Tensor] = []
@@ -126,6 +129,7 @@ def collect_test_outputs(
 
     with torch.no_grad():
         for batch_idx, (images, labels) in enumerate(test_loader, start=1):
+            # Keep tensors in normalized form; plotting code denormalizes on demand.
             logits = model(images.to(device))
             probs = torch.softmax(logits, dim=1)
             conf, pred = probs.max(dim=1)
@@ -215,6 +219,7 @@ def main() -> None:
     class_names = load_class_names()
 
     checkpoint, ckpt_img_size = load_checkpoint(args.model, device)
+    # Use image size embedded in checkpoint when available to avoid shape mismatch.
     img_size = ckpt_img_size if ckpt_img_size else args.img_size
 
     model = BaselineCNN(num_classes=43, input_size=img_size).to(device)
@@ -238,6 +243,7 @@ def main() -> None:
     accuracy = float((pred_labels == true_labels).float().mean().item()) if len(true_labels) else 0.0
 
     rng = random.Random(args.sample_seed)
+    # Random subset: lightweight qualitative overview of normal predictions.
     sample_indices = list(range(len(true_labels)))
     rng.shuffle(sample_indices)
     sample_indices = sample_indices[: min(args.num_samples, len(sample_indices))]
@@ -246,6 +252,7 @@ def main() -> None:
         i for i in range(len(true_labels))
         if int(pred_labels[i]) != int(true_labels[i])
     ]
+    # Focus error grid on high-confidence mistakes: most informative failure cases.
     mistakes_sorted = sorted(mistakes, key=lambda i: float(confidences[i]), reverse=True)
     mistakes_indices = mistakes_sorted[: min(args.num_mistakes, len(mistakes_sorted))]
 

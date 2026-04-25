@@ -77,18 +77,18 @@ class BaselineCNN(nn.Module):
 if __name__ == "__main__":
     model = BaselineCNN(num_classes=43, input_size=32)
 
-    # Architektur ausgeben
+    # Print a readable architecture summary for quick manual inspection.
     print(model)
     print()
 
-    # Anzahl trainierbare Parameter
+    # Count trainable parameters to estimate model complexity and memory cost.
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Trainable parameters: {total_params:,}")
 
-    # Output-Shape prüfen mit einem Dummy-Batch
+    # Run a dummy forward pass to verify output tensor shape early.
     dummy = torch.zeros(8, 3, 32, 32)
     output = model(dummy)
     print(f"Input  shape: {dummy.shape}")
-    print(f"Output shape: {output.shape}")   # erwartet: torch.Size([8, 43])
-    assert output.shape == (8, 43), "Output shape falsch!"
+    print(f"Output shape: {output.shape}")   # expected: torch.Size([8, 43])
+    assert output.shape == (8, 43), "Unexpected output shape."
     print("✓ Model OK")

@@ -177,6 +177,14 @@ Task 06 outputs are written to `results/task06/`:
 ./scripts/test_fetch_gtsrb.sh
 ```
 
+## Tests
+
+Run the Python unit tests:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -p "test_*.py" -v
+```
+
 ## License
 
 See [LICENSE](LICENSE).

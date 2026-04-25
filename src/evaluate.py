@@ -77,6 +77,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate CLI inputs before model/data loading starts."""
     if args.img_size <= 0:
         raise ValueError("--img-size must be > 0")
     if args.batch_size <= 0:
@@ -96,6 +97,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def resolve_device(device_arg: str) -> torch.device:
+    """Resolve runtime backend from CLI input with explicit fallbacks."""
     if device_arg == "cpu":
         return torch.device("cpu")
     if device_arg == "cuda":
@@ -114,6 +116,7 @@ def resolve_device(device_arg: str) -> torch.device:
 
 
 def default_model_path(model_type: str) -> Path:
+    """Map logical model type names to the expected checkpoint files."""
     mapping = {
         "baseline": Path("models/baseline_cnn.pth"),
         "deep": Path("models/deep_cnn.pth"),
@@ -125,6 +128,7 @@ def default_model_path(model_type: str) -> Path:
 
 
 def build_model(model_type: str, img_size: int) -> nn.Module:
+    """Instantiate the requested architecture with consistent class count."""
     if model_type == "baseline":
         return BaselineCNN(num_classes=43, input_size=img_size)
     if model_type == "deep":
@@ -139,6 +143,7 @@ def build_model(model_type: str, img_size: int) -> nn.Module:
 
 
 def load_weights(model: nn.Module, model_path: Path, device: torch.device) -> None:
+    """Load both full checkpoints and plain state_dict files."""
     if not model_path.exists():
         raise FileNotFoundError(f"Model file not found: {model_path}")
     checkpoint = torch.load(model_path, map_location=device)
@@ -182,6 +187,7 @@ def evaluate_model(
     device: torch.device,
     max_batches: int,
 ) -> EvalOutputs:
+    """Run clean evaluation and cache tensors for downstream visual analyses."""
     model.eval()
     criterion = nn.CrossEntropyLoss()
 
@@ -200,6 +206,7 @@ def evaluate_model(
             labels = labels.to(device)
             logits = model(images)
             loss = criterion(logits, labels)
+            # Confidence is the predicted class probability after softmax.
             probs = torch.softmax(logits, dim=1)
             conf, pred = torch.max(probs, dim=1)
 
@@ -232,6 +239,7 @@ def save_confusion_matrices(
     class_names: Sequence[str],
     out_dir: Path,
 ) -> Dict[str, str]:
+    """Save count and row-normalized confusion matrix heatmaps."""
     cm = confusion_matrix(true_labels.numpy(), pred_labels.numpy(), labels=list(range(len(class_names))))
 
     count_path = out_dir / "confusion_matrix_counts.png"
@@ -265,6 +273,7 @@ def save_classification_report(
     class_names: Sequence[str],
     out_dir: Path,
 ) -> Dict[str, str]:
+    """Persist per-class precision/recall/F1 in JSON, text, and CSV formats."""
     report_dict = classification_report(
         true_labels.numpy(),
         pred_labels.numpy(),
@@ -342,6 +351,7 @@ def _extract_labels_from_dataset(dataset) -> List[int]:
 
 
 def compute_class_counts_from_dataset(dataset, num_classes: int = 43) -> np.ndarray:
+    """Count class frequencies from dataset metadata (no expensive transforms)."""
     labels = _extract_labels_from_dataset(dataset)
     counts = np.bincount(np.array(labels, dtype=np.int64), minlength=num_classes)
     return counts.astype(np.int64)
@@ -354,6 +364,7 @@ def save_bias_analysis(
     class_names: Sequence[str],
     out_dir: Path,
 ) -> Dict[str, object]:
+    """Compare frequent vs rare class accuracy and export bias summary artifacts."""
     train_counts = compute_class_counts_from_dataset(train_loader.dataset, num_classes=len(class_names))
     cm = confusion_matrix(true_labels.numpy(), pred_labels.numpy(), labels=list(range(43)))
     class_support = cm.sum(axis=1)
@@ -362,6 +373,7 @@ def save_bias_analysis(
     diag = np.diag(cm)
     class_acc[present_mask] = diag[present_mask] / class_support[present_mask]
 
+    # Quartile grouping: bottom 25% train frequency = rare, top 25% = frequent.
     ranked = np.argsort(train_counts)
     group_size = max(1, len(ranked) // 4)
     rare_ids = ranked[:group_size]
@@ -486,6 +498,7 @@ def evaluate_with_transform(
     transform_fn,
     max_batches: int,
 ) -> Dict[str, float]:
+    """Evaluate robustness by applying an image perturbation during inference."""
     model.eval()
     criterion = nn.CrossEntropyLoss()
 
@@ -516,6 +529,7 @@ def evaluate_with_transform(
 
 
 def find_last_conv_layer(model: nn.Module) -> nn.Module:
+    """Find the final convolution layer to use as Grad-CAM target."""
     last_conv = None
     for module in model.modules():
         if isinstance(module, nn.Conv2d):
@@ -526,6 +540,7 @@ def find_last_conv_layer(model: nn.Module) -> nn.Module:
 
 
 class GradCAM:
+    """Minimal Grad-CAM helper that captures activations and gradients via hooks."""
     def __init__(self, model: nn.Module, target_layer: nn.Module) -> None:
         self.model = model
         self.target_layer = target_layer
@@ -545,6 +560,7 @@ class GradCAM:
         self.target_layer.register_full_backward_hook(backward_hook)
 
     def generate(self, input_tensor: torch.Tensor, class_idx: int) -> torch.Tensor:
+        """Generate a normalized Grad-CAM heatmap for one target class."""
         self.model.zero_grad(set_to_none=True)
         logits = self.model(input_tensor)
         score = logits[:, class_idx].sum()
@@ -575,6 +591,7 @@ def save_gradcam_examples(
     out_path: Path,
     num_items: int,
 ) -> int:
+    """Overlay Grad-CAM maps on image samples (error-focused when available)."""
     indices = torch.where(true_labels != pred_labels)[0].tolist()
     if not indices:
         indices = list(range(len(images)))
@@ -621,6 +638,7 @@ def compute_top5_accuracy(
     device: torch.device,
     max_batches: int,
 ) -> float:
+    """Compute top-5 accuracy for models where ranking quality matters."""
     model.eval()
     correct, total = 0, 0
     with torch.no_grad():
@@ -641,6 +659,7 @@ def save_per_class_accuracy_plot(
     class_names: Sequence[str],
     out_path: Path,
 ) -> np.ndarray:
+    """Plot sorted per-class accuracy to surface weak classes quickly."""
     cm = confusion_matrix(true_labels.numpy(), pred_labels.numpy(), labels=list(range(len(class_names))))
     support = cm.sum(axis=1)
     diag = np.diag(cm)
@@ -676,7 +695,7 @@ def save_precision_recall_curve(
     class_names: Sequence[str],
     out_path: Path,
 ) -> None:
-    """Plot per-class Precision and Recall as a grouped bar chart."""
+    """Plot per-class precision and recall as a grouped bar chart."""
     from sklearn.metrics import classification_report
 
     report = classification_report(
@@ -723,6 +742,7 @@ def save_report_md(
     top5_acc: float,
     out_path: Path,
 ) -> None:
+    """Create a concise markdown summary for the best model evaluation."""
     worst5_idx = np.argsort(class_acc)[:5]
     best5_idx = np.argsort(class_acc)[-5:][::-1]
 
@@ -791,7 +811,7 @@ def evaluate_one(
     test_loader,
     out_dir: Path,
 ) -> Dict:
-    """Run the full evaluation pipeline for a single model. Returns summary dict."""
+    """Run the full evaluation pipeline for one model and return summary metrics."""
     model_path = default_model_path(model_type)
     if not model_path.exists():
         print(f"  [SKIP] {model_type}: model file not found ({model_path})")
@@ -809,9 +829,10 @@ def evaluate_one(
     top5_acc = compute_top5_accuracy(model, test_loader, device, args.max_test_batches)
     print(f"  Test acc (Top-1): {eval_out.test_acc:.4f}  Top-5: {top5_acc:.4f}  Loss: {eval_out.test_loss:.4f}")
 
-    cm_paths      = save_confusion_matrices(eval_out.true_labels, eval_out.pred_labels, class_names, out_dir)
-    report_paths  = save_classification_report(eval_out.true_labels, eval_out.pred_labels, class_names, out_dir)
-    bias_summary  = save_bias_analysis(train_loader, eval_out.true_labels, eval_out.pred_labels, class_names, out_dir)
+    # Core quality diagnostics required by Task 06.
+    cm_paths = save_confusion_matrices(eval_out.true_labels, eval_out.pred_labels, class_names, out_dir)
+    report_paths = save_classification_report(eval_out.true_labels, eval_out.pred_labels, class_names, out_dir)
+    bias_summary = save_bias_analysis(train_loader, eval_out.true_labels, eval_out.pred_labels, class_names, out_dir)
 
     per_class_path = out_dir / "per_class_accuracy.png"
     class_acc = save_per_class_accuracy_plot(eval_out.true_labels, eval_out.pred_labels, class_names, per_class_path)
@@ -949,6 +970,7 @@ def main() -> None:
     device = resolve_device(args.device)
     class_names = load_class_names()
 
+    # Reproducible split/evaluation behavior across reruns.
     random.seed(args.split_seed)
     np.random.seed(args.split_seed)
     torch.manual_seed(args.split_seed)
@@ -961,6 +983,7 @@ def main() -> None:
         seed=args.split_seed,
     )
 
+    # Evaluate all trained variants under identical settings.
     all_models = ["baseline", "deep", "mobilenet", "leaky", "stride"]
     all_summaries = []
 

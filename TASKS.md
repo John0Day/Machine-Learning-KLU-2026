@@ -1,24 +1,24 @@
-# Projektaufgaben – CNN Verkehrszeichen-Klassifizierung (GTSRB)
+# Project Tasks - CNN Traffic Sign Classification (GTSRB)
 
-## Branch-Strategie
+## Branch Strategy
 
+```text
+main                          <- stable, completed versions only
+`-- dev                       <- integration branch for all features
+    |-- task/01-project-setup
+    |-- task/02-data-loading
+    |-- task/03-data-preprocessing
+    |-- task/04-baseline-model
+    |-- task/05-model-improvement
+    |-- task/06-evaluation
+    `-- task/07-report
 ```
-main                          ← nur stabile, fertige Versionen
-└── dev                       ← Integration aller Features
-    ├── task/01-project-setup
-    ├── task/02-data-loading
-    ├── task/03-data-preprocessing
-    ├── task/04-baseline-model
-    ├── task/05-model-improvement
-    ├── task/06-evaluation
-    └── task/07-report
-```
 
-**Workflow pro Task:**
-1. Von `dev` einen neuen Branch erstellen: `git checkout -b task/XX-name`
-2. Arbeiten, committen
-3. Pull Request nach `dev` öffnen
-4. Die andere Person reviewed → Merge
+**Workflow per task:**
+1. Create a new branch from `dev`: `git checkout -b task/XX-name`
+2. Implement and commit changes
+3. Open a pull request to `dev`
+4. Teammate reviews, then merge
 
 ---
 
@@ -26,163 +26,122 @@ main                          ← nur stabile, fertige Versionen
 
 ---
 
-### Task 01 – Project Setup
-**Branch:** `task/01-project-setup`
-**Ziel:** Repository-Grundstruktur aufsetzen
+### Task 01 - Project Setup
+**Branch:** `task/01-project-setup`  
+**Goal:** Set up the repository foundation
 
-**Aufgaben:**
-- Ordnerstruktur anlegen:
+**Work items:**
+- Create folder structure:
+  ```text
+  /data/          <- GTSRB raw data (do not push to repo)
+  /src/           <- Python scripts (model.py, dataset.py, train.py, evaluate.py)
+  /notebooks/     <- Jupyter notebooks for experiments
+  /models/        <- saved model weights (.pth)
+  /results/       <- plots, metrics, confusion matrix
   ```
-  /data/          ← GTSRB Rohdaten (nicht ins Repo pushen!)
-  /src/           ← Python-Skripte (model.py, dataset.py, train.py, evaluate.py)
-  /notebooks/     ← Jupyter Notebooks für Experimente
-  /models/        ← gespeicherte Modell-Gewichte (.pth)
-  /results/       ← Plots, Metriken, Confusion Matrix
-  ```
-- `requirements.txt` mit allen Abhängigkeiten (torch, torchvision, numpy, matplotlib, seaborn, scikit-learn)
-- `.gitignore` (data/, models/*.pth, __pycache__, .env)
-- `README.md` mit Projektbeschreibung, Setup-Anleitung und Datensatz-Download-Link
+- Add `requirements.txt` with dependencies (torch, torchvision, numpy, matplotlib, seaborn, scikit-learn)
+- Add `.gitignore` (data/, models/*.pth, __pycache__, .env)
+- Add `README.md` with project description, setup guide, and dataset download link
 
-**Definition of Done:** Repo ist geklont, `pip install -r requirements.txt` läuft fehlerfrei, Struktur steht.
+**Definition of Done:** Repo is cloned, `pip install -r requirements.txt` runs without errors, and structure is in place.
 
 ---
 
-### Task 02 – Data Loading
-**Branch:** `task/02-data-loading`
-**Ziel:** GTSRB-Datensatz laden und verstehen
+### Task 02 - Data Loading
+**Branch:** `task/02-data-loading`  
+**Goal:** Load and inspect the GTSRB dataset
 
-**Aufgaben:**
-- GTSRB über `torchvision.datasets.GTSRB` laden
-- Klassenverteilung visualisieren (Balkendiagramm: Anzahl Bilder pro Klasse)
-- Beispielbilder aus verschiedenen Klassen anzeigen
-- Klassen-Mapping erstellen (Index → Verkehrszeichen-Name)
-- Datensatz-Statistiken ausgeben (Anzahl Bilder, Bildgrößen, Auflösungsverteilung)
+**Work items:**
+- Load GTSRB via `torchvision.datasets.GTSRB`
+- Visualize class distribution (bar chart: number of images per class)
+- Show sample images from multiple classes
+- Build class mapping (index -> traffic-sign name)
+- Export dataset statistics (image count, dimensions, resolution distribution)
 
-**Definition of Done:** Skript `src/dataset.py` läuft, Visualisierungen werden in `/results/` gespeichert.
-
----
-
-### Task 03 – Data Preprocessing
-**Branch:** `task/03-data-preprocessing`
-**Ziel:** Bilder für das CNN vorbereiten
-
-**Aufgaben:**
-- Alle Bilder auf einheitliche Größe bringen (32×32 oder 64×64 px)
-- Normalisierung: Pixelwerte 0–255 → 0.0–1.0 (mit Mittelwert und Standardabweichung des Trainingssets)
-- Data Augmentation für Trainingsdaten:
-  - Zufällige Rotation (±15°)
-  - Zufällige Helligkeits-/Kontrastveränderung
-  - Zufälliges horizontales Spiegeln (nur bei symmetrischen Zeichen sinnvoll!)
-- Train / Validation / Test Split (z.B. 70% / 15% / 15%)
-- PyTorch `DataLoader` mit Batches (Batch-Size z.B. 64)
-
-**Definition of Done:** `DataLoader` für Train/Val/Test läuft, Batch-Shape wird korrekt ausgegeben.
+**Definition of Done:** `src/dataset.py` runs and visualizations are saved to `/results/`.
 
 ---
 
-### Task 04 – Baseline Model
-**Branch:** `task/04-baseline-model`
-**Ziel:** Erstes funktionierendes CNN implementieren und trainieren
+### Task 03 - Data Preprocessing
+**Branch:** `task/03-data-preprocessing`  
+**Goal:** Prepare images for CNN training
 
-**Architektur (Baseline):**
-```
-Input (3 × 32 × 32)
-→ Conv(32 Filter, 3×3) + ReLU + MaxPool(2×2)
-→ Conv(64 Filter, 3×3) + ReLU + MaxPool(2×2)
-→ Flatten
-→ Linear(256) + ReLU + Dropout(0.5)
-→ Linear(43)  ← 43 Klassen
-→ Softmax
+**Work items:**
+- Resize all images to a consistent size (32x32 or 64x64 px)
+- Normalize pixels: 0-255 -> 0.0-1.0 (with training-set mean/std)
+- Data augmentation for training split:
+  - Random rotation (+/-15 deg)
+  - Random brightness/contrast changes
+  - Random horizontal flip (only where semantically valid)
+- Train/Validation/Test split (for example 70% / 15% / 15%)
+- PyTorch `DataLoader` with batches (for example batch size 64)
+
+**Definition of Done:** Train/Val/Test `DataLoader`s run and batch shape is verified.
+
+---
+
+### Task 04 - Baseline Model
+**Branch:** `task/04-baseline-model`  
+**Goal:** Implement and train the first working CNN baseline
+
+**Architecture (baseline):**
+```text
+Input (3 x 32 x 32)
+-> Conv(32 filters, 3x3) + ReLU + MaxPool(2x2)
+-> Conv(64 filters, 3x3) + ReLU + MaxPool(2x2)
+-> Flatten
+-> Linear(256) + ReLU + Dropout(0.5)
+-> Linear(43)  <- 43 classes
+-> Softmax
 ```
 
-**Aufgaben:**
-- Modell in `src/model.py` definieren (PyTorch `nn.Module`)
-- Trainingsloop in `src/train.py` (Adam-Optimizer, Cross-Entropy-Loss)
-- Validation-Loss und Accuracy nach jeder Epoche ausgeben
-- Loss-Kurve plotten (Train vs. Validation)
-- Modell-Gewichte speichern (`models/baseline.pth`)
+**Work items:**
+- Define model in `src/model.py` (PyTorch `nn.Module`)
+- Implement training loop in `src/train.py` (Adam optimizer, cross-entropy loss)
+- Log validation loss and accuracy after each epoch
+- Plot loss curves (train vs validation)
+- Save model weights (`models/baseline.pth`)
 
-**Definition of Done:** Modell trainiert ohne Fehler, Validation Accuracy > 80% erreichbar.
-
----
-
-### Task 05 – Model Improvement
-**Branch:** `task/05-model-improvement`
-**Ziel:** Baseline verbessern und verschiedene Varianten vergleichen
-
-**Aufgaben:**
-- Variante A: Tieferes Netz (4–5 Conv-Layer)
-- Variante B: Batch Normalization nach jeder Conv-Schicht
-- Variante C: Transfer Learning mit vortrainiertem MobileNet (`torchvision.models`)
-- Learning Rate Scheduling (z.B. `StepLR` oder `ReduceLROnPlateau`)
-- Vergleichstabelle: Accuracy / Trainingszeit / Modellgröße
-- Bestes Modell speichern
-
-**Definition of Done:** Mindestens 3 Varianten verglichen, Ergebnisse in `results/model_comparison.csv`.
+**Definition of Done:** Model trains without errors and can reach validation accuracy > 80%.
 
 ---
 
-### Task 06 – Evaluation
-**Branch:** `task/06-evaluation`
-**Ziel:** Modell gründlich auswerten und Schwachstellen analysieren
+### Task 05 - Model Improvement
+**Branch:** `task/05-model-improvement`  
+**Goal:** Improve the baseline and compare variants
 
-**Aufgaben:**
-- Test Set Accuracy des besten Modells
-- Confusion Matrix (Heatmap) → welche Klassen werden verwechselt?
-- Precision, Recall, F1-Score pro Klasse (`sklearn.metrics.classification_report`)
-- **Bias-Analyse:** Vergleich Accuracy für häufige vs. seltene Klassen
-- Beispiele für falsch klassifizierte Bilder visualisieren
-- Grad-CAM Visualisierung: welche Bildbereiche aktiviert das Modell?
-- Robustheitstest: Modell auf verrauschten / unscharfen Bildern testen
+**Work items:**
+- Variant A: deeper network (4-5 conv layers)
+- Variant B: batch normalization after every conv layer
+- Variant C: transfer learning with pretrained MobileNet (`torchvision.models`)
+- Learning-rate scheduling (for example `StepLR` or `ReduceLROnPlateau`)
+- Comparison table: accuracy / training time / model size
+- Save best model
 
-**Definition of Done:** Alle Plots und Metriken in `/results/`, Ergebnisse sind reproduzierbar.
-
----
-
-### Task 07 – Report
-**Branch:** `task/07-report`
-**Ziel:** Schriftlichen Bericht verfassen (3000–5000 Wörter)
-
-**Aufgaben:**
-- Bericht als `report.md` oder `report.pdf` im Repo-Root
-- Inhalt gemäß Vorgabe:
-  1. **Einleitung:** Problembeschreibung und Motivation
-  2. **Datensatz:** GTSRB Beschreibung, Klassenverteilung, Biases im Datensatz
-  3. **Methode:** CNN-Architektur, Preprocessing, Training (keine Code-Details, Konzepte erklären)
-  4. **Experimente:** Vergleich der Modellvarianten, Hyperparameter
-  5. **Ergebnisse:** Accuracy, Confusion Matrix, Bias-Analyse, Grad-CAM
-  6. **Diskussion:** Stärken, Schwächen, Limitierungen, mögliche Verbesserungen
-  7. **Fazit**
-
-**Definition of Done:** Bericht ist im Repo, 3000–5000 Wörter, **vor der Präsentationssitzung** eingereicht.
+**Definition of Done:** At least 3 variants are compared and results are stored in `results/model_comparison.csv`.
 
 ---
 
-## Aufgabenverteilung (2 Personen)
+### Task 06 - Evaluation
+**Branch:** `task/06-evaluation`  
+**Goal:** Evaluate the model thoroughly and analyze weak points
 
-| Person A | Person B |
-|----------|----------|
-| Task 01 – Project Setup | Task 03 – Data Preprocessing |
-| Task 02 – Data Loading | Task 05 – Model Improvement |
-| Task 04 – Baseline Model | Task 07 – Report |
-| Task 06 – Evaluation (gemeinsam) | Task 06 – Evaluation (gemeinsam) |
+**Work items:**
+- Test-set accuracy of the best model
+- Confusion matrix (heatmap): which classes are confused?
+- Precision, recall, F1-score per class (`sklearn.metrics.classification_report`)
+- **Bias analysis:** compare accuracy for frequent vs rare classes
+- Visualize examples of misclassified images
+- Grad-CAM visualization: which image regions activate the model?
+- Robustness test: evaluate on noisy/blurred images
 
-> Beide Personen sollten Commits, Issues und Pull Requests haben – das wird individuell bewertet!
+**Definition of Done:** All plots and metrics are generated in `/results/` and are reproducible.
 
 ---
 
-## Nützliche Befehle
+### Task 07 - Report
+**Branch:** `task/07-report`  
+**Goal:** Write the final report (3000-5000 words)
 
-```bash
-# Neuen Task-Branch erstellen
-git checkout dev
-git pull origin dev
-git checkout -b task/02-data-loading
-
-# Änderungen committen
-git add src/dataset.py
-git commit -m "feat: add GTSRB data loader with class distribution plot"
-
-# Branch pushen und PR öffnen
-git push origin task/02-data-loading
-```
+**Work items:**
+- Create report as `report.md` or `report.pdf` at repo root

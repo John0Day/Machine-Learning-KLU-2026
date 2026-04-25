@@ -51,6 +51,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_device(device_arg: str) -> torch.device:
+    """Resolve compute backend from CLI selection."""
     if device_arg == "cpu":
         return torch.device("cpu")
     if device_arg == "cuda":
@@ -77,6 +78,7 @@ def run_epoch(
     optimizer: optim.Optimizer | None = None,
     max_batches: int = 0,
 ) -> Tuple[float, float]:
+    """Run one full pass over a loader in train or eval mode."""
     training = optimizer is not None
     if training:
         model.train()
@@ -94,12 +96,14 @@ def run_epoch(
             labels = labels.to(device)
 
             if training:
+                # `set_to_none=True` saves memory and can improve performance.
                 optimizer.zero_grad(set_to_none=True)
 
             logits = model(images)
             loss = criterion(logits, labels)
 
             if training:
+                # Backprop + optimizer step happen only during training pass.
                 loss.backward()
                 optimizer.step()
 
@@ -157,6 +161,7 @@ def plot_curves(
 
 def main() -> None:
     args = parse_args()
+    # Single seed controls both split reproducibility and model initialization.
     torch.manual_seed(args.seed)
 
     args.results_dir.mkdir(parents=True, exist_ok=True)
@@ -176,6 +181,7 @@ def main() -> None:
     model = BaselineCNN(num_classes=43, input_size=args.img_size).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+    # Plateau scheduler lowers LR when validation loss stalls.
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=0.5)
 
     train_losses: list[float] = []
@@ -225,6 +231,7 @@ def main() -> None:
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             epochs_without_improvement = 0
+            # Save full training state so the best epoch can be restored exactly.
             torch.save(
                 {
                     "model_state_dict": model.state_dict(),
@@ -239,10 +246,12 @@ def main() -> None:
         else:
             epochs_without_improvement += 1
             if epochs_without_improvement >= args.patience:
+                # Stop once validation performance has not improved for `patience` epochs.
                 print(f"\nEarly stopping after {epoch} epochs (no improvement for {args.patience} epochs).")
                 break
 
     if best_model_path.exists():
+        # Evaluate using the best validation checkpoint, not the last epoch state.
         checkpoint = torch.load(best_model_path, map_location=device)
         model.load_state_dict(checkpoint["model_state_dict"])
 
