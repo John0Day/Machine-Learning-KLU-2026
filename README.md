@@ -7,12 +7,18 @@ Traffic sign classification project for the KLU Machine Learning course, based o
 ```bash
 ./scripts/setup_project.sh
 ```
-
 This single command will:
 
 1. Create a local virtual environment (`.venv`)
 2. Install Python dependencies from `requirements.txt`
 3. Download and extract the official GTSRB training archives into `data/raw/`
+
+If you want extracted folders only, run:
+
+```bash
+./scripts/fetch_gtsrb.sh --extract --trash-zips
+```
+
 4. Run dataset inspection (`src/dataset.py`) to generate initial outputs in `results/`
 
 By default it prefers `python3.12`, then `python3.11`, then `python3.10`, then `python3`.
@@ -25,8 +31,8 @@ By default, ZIP files are moved to trash after extraction.
 /data/          dataset files (ignored by git)
 /src/           Python source files (dataset, model, train, evaluate)
 /notebooks/     Jupyter notebooks for experiments
-/models/        trained model weights (.pth/.pt) (ignored by git)
-/results/       plots, metrics, confusion matrices (ignored by git)
+/models/        trained model weights (.pth/.pt)
+/results/       plots, metrics, confusion matrices
 ```
 
 ## Data Source
@@ -40,21 +46,6 @@ The dataset pull script uses these official ERDA URLs by default:
 
 These files are intentionally excluded from git because of their size.
 
-## Maintainer Checksum Step (One-Time)
-
-Before sharing the repo with course staff, generate and commit checksums once:
-
-```bash
-./scripts/fetch_gtsrb.sh --skip-verify --write-checksums
-```
-
-Then commit `checksums/gtsrb.sha256` so downloads can be verified automatically.
-If you want extracted folders only, run:
-
-```bash
-./scripts/fetch_gtsrb.sh --extract --trash-zips
-```
-
 ## Dataset Inspection (Task 02)
 
 Run:
@@ -65,33 +56,33 @@ Run:
 
 This generates:
 
-- `results/class_distribution.png`
-- `results/sample_images_by_class.png`
-- `results/resolution_distribution_top20.png`
-- `results/class_mapping.csv`
-- `results/dataset_stats.json`
+- `results/task03/class_distribution.png`
+- `results/task03/sample_images_by_class.png`
+- `results/task03/resolution_distribution_top20.png`
+- `results/task03/class_mapping.csv`
+- `results/task03/dataset_stats.json`
 
 ## Baseline Training (Task 04)
 
 Run baseline model training:
 
 ```bash
-.venv/bin/python src/train.py --epochs 10 --batch-size 64
+.venv/bin/python src/train.py --epochs 10 --batch-size 64 --results-dir results/task04 --models-dir models
 ```
 
 Run with an explicit run label (prevents output overwrite):
 
 ```bash
-.venv/bin/python src/train.py --epochs 10 --batch-size 64 --seed 123 --run-name seed123
+.venv/bin/python src/train.py --epochs 10 --batch-size 64 --seed 123 --run-name seed123 --results-dir results/task04 --models-dir models
 ```
 
 Outputs:
 
 - `models/baseline_<run_name>.pth` (default run name: `seed-<seed>`)
-- `results/baseline_loss_curve_<run_name>.png`
-- `results/baseline_history_<run_name>.json`
+- `results/task04/baseline_loss_curve_<run_name>.png`
+- `results/task04/baseline_history_<run_name>.json`
 
-## Offline Demo (No Camera)
+## Offline Demo (Without Camera Detection)
 
 Generate presentation-ready prediction visuals from the test split:
 
@@ -99,7 +90,7 @@ Generate presentation-ready prediction visuals from the test split:
 .venv/bin/python src/demo_offline.py --model models/baseline_seed-123.pth --device cpu
 ```
 
-Demo outputs are written to `results/demo_offline/`:
+Demo outputs are written to `results/task04/demo_offline/`:
 
 - `predictions_grid.png`
 - `misclassifications_top_confidence.png`
@@ -120,7 +111,7 @@ CPU fallback:
 .venv/bin/python src/evaluate.py --model-type deep --device cpu
 ```
 
-Task 06 outputs are written to `results/task06/`:
+Task 06 outputs are written to `results/task06/` (including per-model folders like `results/task06/deep/`):
 
 - `evaluation_summary.json`
 - `confusion_matrix_counts.png`
@@ -132,6 +123,8 @@ Task 06 outputs are written to `results/task06/`:
 - `misclassifications_top_confidence.png`
 - `gradcam_examples.png`
 - `robustness_metrics.json`
+- `model_comparison.md`
+- `model_comparison.json`
 
 ## Optional Commands
 
