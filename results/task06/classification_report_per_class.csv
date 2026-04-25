@@ -1,0 +1,44 @@
+class_id,class_name,precision,recall,f1_score,support
+0,Speed limit (20km/h),0.0,0.0,0.0,0
+1,Speed limit (30km/h),1.0,1.0,1.0,17
+2,Speed limit (50km/h),1.0,1.0,1.0,17
+3,Speed limit (60km/h),1.0,1.0,1.0,12
+4,Speed limit (70km/h),1.0,1.0,1.0,14
+5,Speed limit (80km/h),1.0,0.9230769230769231,0.96,13
+6,End of speed limit (80km/h),1.0,1.0,1.0,3
+7,Speed limit (100km/h),1.0,1.0,1.0,9
+8,Speed limit (120km/h),0.9411764705882353,1.0,0.9696969696969697,16
+9,No passing,1.0,1.0,1.0,15
+10,No passing for vehicles over 3.5t,1.0,1.0,1.0,9
+11,Right-of-way at next intersection,1.0,1.0,1.0,18
+12,Priority road,1.0,1.0,1.0,10
+13,Yield,1.0,1.0,1.0,20
+14,Stop,1.0,1.0,1.0,4
+15,No vehicles,1.0,1.0,1.0,6
+16,Vehicles over 3.5t prohibited,1.0,1.0,1.0,7
+17,No entry,1.0,1.0,1.0,7
+18,General caution,1.0,1.0,1.0,10
+19,Dangerous curve left,1.0,1.0,1.0,4
+20,Dangerous curve right,1.0,1.0,1.0,2
+21,Double curve,1.0,1.0,1.0,4
+22,Bumpy road,1.0,1.0,1.0,4
+23,Slippery road,1.0,1.0,1.0,1
+24,Road narrows on the right,1.0,1.0,1.0,5
+25,Road work,1.0,1.0,1.0,10
+26,Traffic signals,1.0,1.0,1.0,4
+27,Pedestrians,1.0,1.0,1.0,2
+28,Children crossing,1.0,1.0,1.0,3
+29,Bicycles crossing,1.0,1.0,1.0,3
+30,Beware of ice/snow,1.0,1.0,1.0,1
+31,Wild animals crossing,1.0,1.0,1.0,8
+32,End of all speed and passing limits,1.0,1.0,1.0,2
+33,Turn right ahead,1.0,1.0,1.0,5
+34,Turn left ahead,1.0,1.0,1.0,6
+35,Ahead only,1.0,1.0,1.0,14
+36,Go straight or right,1.0,1.0,1.0,4
+37,Go straight or left,0.0,0.0,0.0,0
+38,Keep right,1.0,1.0,1.0,24
+39,Keep left,1.0,1.0,1.0,3
+40,Roundabout mandatory,1.0,1.0,1.0,3
+41,End of no passing,0.0,0.0,0.0,0
+42,End of no passing by vehicles over 3.5t,1.0,1.0,1.0,1

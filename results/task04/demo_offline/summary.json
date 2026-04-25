@@ -1,0 +1,13 @@
+{
+  "model": "models/baseline_seed-123.pth",
+  "device": "cpu",
+  "img_size": 32,
+  "num_test_samples_used": 5881,
+  "accuracy": 0.9920081496238708,
+  "num_errors": 47,
+  "prediction_grid": "results/demo_offline/predictions_grid.png",
+  "misclassifications_grid": "results/demo_offline/misclassifications_top_confidence.png",
+  "confusion_matrix": "results/demo_offline/confusion_matrix.png",
+  "split_seed": 42,
+  "sample_seed": 42
+}

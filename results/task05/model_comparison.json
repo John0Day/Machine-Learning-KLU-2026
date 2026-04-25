@@ -1,0 +1,47 @@
+[
+  {
+    "model_name": "Baseline CNN",
+    "best_val_acc": 0.9965992178200986,
+    "test_acc": 0.994898826730148,
+    "test_loss": 0.020339070349401047,
+    "training_time_s": 275.6,
+    "num_params": 629291,
+    "epochs_trained": 20
+  },
+  {
+    "model_name": "Deep CNN",
+    "best_val_acc": 0.9979595306920592,
+    "test_acc": 0.9981295698010543,
+    "test_loss": 0.006095378071153075,
+    "training_time_s": 284.0,
+    "num_params": 936235,
+    "epochs_trained": 20
+  },
+  {
+    "model_name": "MobileNetV2",
+    "best_val_acc": 0.997619452474069,
+    "test_acc": 0.9965992178200986,
+    "test_loss": 0.013957622645115911,
+    "training_time_s": 518.7,
+    "num_params": 2562859,
+    "epochs_trained": 20
+  },
+  {
+    "model_name": "LeakyReLU CNN",
+    "best_val_acc": 0.9965992178200986,
+    "test_acc": 0.9945587485121578,
+    "test_loss": 0.01601207992277344,
+    "training_time_s": 271.5,
+    "num_params": 629291,
+    "epochs_trained": 20
+  },
+  {
+    "model_name": "Stride CNN",
+    "best_val_acc": 0.9954089440571331,
+    "test_acc": 0.995238904948138,
+    "test_loss": 0.017349498713054263,
+    "training_time_s": 236.9,
+    "num_params": 823051,
+    "epochs_trained": 16
+  }
+]

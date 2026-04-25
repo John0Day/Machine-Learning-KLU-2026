@@ -1,0 +1,22 @@
+{
+  "model_type": "deep",
+  "model_path": "models/deep_cnn.pth",
+  "device": "cpu",
+  "split_seed": 42,
+  "num_test_samples": 320,
+  "test_loss": 0.008853291600826197,
+  "test_acc": 0.996875,
+  "num_wrong": 1,
+  "confusion_matrix_counts": "results/task06/confusion_matrix_counts.png",
+  "confusion_matrix_normalized": "results/task06/confusion_matrix_normalized.png",
+  "classification_report_json": "results/task06/classification_report.json",
+  "classification_report_txt": "results/task06/classification_report.txt",
+  "classification_report_csv": "results/task06/classification_report_per_class.csv",
+  "bias_analysis_json": "results/task06/bias_analysis.json",
+  "bias_plot": "results/task06/bias_analysis_mean_accuracy.png",
+  "misclassifications_plot": "results/task06/misclassifications_top_confidence.png",
+  "misclassifications_plotted": 1,
+  "gradcam_plot": "results/task06/gradcam_examples.png",
+  "gradcam_items": 1,
+  "robustness_json": "results/task06/robustness_metrics.json"
+}

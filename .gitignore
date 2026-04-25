@@ -22,9 +22,6 @@ TASKS.md
 
 # Large data and generated model artifacts
 data/raw/
-models/*.pth
-models/*.pt
-results/*
 
 # Keep structure via placeholder files
 !data/.gitkeep
