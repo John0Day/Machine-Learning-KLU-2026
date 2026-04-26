@@ -12,13 +12,14 @@
 5. [Model Improvements](#5-model-improvements)
 6. [Model Evaluation](#6-model-evaluation)
 7. [Discussion](#7-discussion)
-8. [Conclusion](#8-conclusion)
+8. [Future Work](#8-future-work)
+9. [Conclusion](#9-conclusion)
 
 ---
 
 ## 1. Introduction
 
-Traffic sign recognition is a core component of modern advanced driver assistance systems (ADAS) and autonomous vehicles. A reliable classifier must handle a wide variety of visual conditions — varying illumination, partial occlusion, motion blur, and significant differences in sign size — while distinguishing between 43 distinct traffic sign categories with low error tolerance.
+Traffic sign recognition is a core component of modern advanced driver assistance systems (ADAS) and autonomous vehicles. A reliable classifier must handle varying illumination, partial occlusion, motion blur, and differences in sign size while distinguishing between 43 classes with low error tolerance.
 
 This project implements and evaluates a series of CNN architectures for traffic sign classification on the German Traffic Sign Recognition Benchmark (GTSRB), structured in six stages: dataset analysis, preprocessing, baseline modeling, architecture improvements, evaluation, and this report.
 
@@ -123,7 +124,7 @@ The baseline CNN consists of three convolutional blocks followed by a fully conn
 
 **Total trainable parameters: 629,291**
 
-Each convolutional block uses padding=1 to preserve spatial dimensions before pooling, BatchNorm to stabilize gradient flow, and ReLU as the activation function. Dropout(0.5) in the classifier regularizes the network by randomly dropping half the hidden units during training, preventing co-adaptation of neurons. The model outputs raw logits — no softmax is applied — because the CrossEntropyLoss function applies log-softmax internally, which is numerically more stable.
+Each convolutional block uses padding=1 to preserve spatial dimensions before pooling, BatchNorm to stabilize gradient flow, and ReLU activations. Dropout(0.5) in the classifier regularizes the network by randomly dropping half the hidden units during training. The model outputs raw logits — no softmax is applied — because CrossEntropyLoss applies log-softmax internally, which is numerically more stable.
 
 ### 4.2 Training Configuration
 
@@ -138,7 +139,7 @@ Each convolutional block uses padding=1 to preserve spatial dimensions before po
 | Early stopping patience | 5 |
 | Input size | 32×32 |
 
-Adam is chosen over plain SGD because it adapts the learning rate individually for each parameter, which typically leads to faster and more stable convergence. The ReduceLROnPlateau scheduler halves the learning rate whenever validation loss stops improving for three epochs, allowing fine-grained adjustments as training matures.
+Adam adapts the learning rate individually for each parameter, leading to faster and more stable convergence than plain SGD. ReduceLROnPlateau halves the learning rate whenever validation loss plateaus for three epochs.
 
 ### 4.3 Results
 
@@ -149,11 +150,11 @@ Two runs were conducted with different random seeds to verify stability:
 | 42   | 98.78%           | 98.55%       | 0.0621    |
 | 123  | 99.15%           | 99.29%       | 0.0451    |
 
-The performance is consistent across both seeds, confirming that the architecture and training pipeline are stable. The small difference between runs is attributable to random weight initialization and mini-batch ordering rather than structural instability.
+Results are consistent across both seeds, confirming pipeline stability. The small difference is attributable to random weight initialisation and mini-batch ordering.
 
 ![Baseline training curves (seed 42): training and validation loss and accuracy over epochs](results/task04/baseline_loss_curve_seed-42.png)
 
-The loss curves show smooth convergence with no signs of severe overfitting — the gap between training and validation accuracy remains small throughout training, and early stopping engages after the validation plateau is reached.
+The loss curves show smooth convergence with no signs of severe overfitting — the train/val gap remains small throughout, and early stopping engages after the validation plateau.
 
 ### 4.4 Why High Baseline Accuracy is Expected
 
@@ -272,7 +273,7 @@ The Top-5 accuracy of 99.98% means the correct class appears among the model's f
 
 ![Normalized confusion matrix of the Deep CNN on the test set](results/task06/deep/confusion_matrix_normalized.png)
 
-The confusion matrix is strongly diagonal, confirming that the model correctly classifies the vast majority of test samples. The few off-diagonal entries are concentrated among visually similar sign pairs — different speed limit signs and warning signs with comparable layouts.
+The confusion matrix is strongly diagonal. The few off-diagonal entries are concentrated among visually similar sign pairs — different speed limit signs and warning signs with comparable layouts.
 
 ### 6.3 Per-Class Accuracy
 
@@ -296,13 +297,13 @@ The worst-performing classes share a common characteristic: they are visually si
 
 ![Precision and recall per class for the Deep CNN](results/task06/deep/precision_recall_per_class.png)
 
-Precision and recall are consistently high across all 43 classes, with no systematic failure mode in any particular category. The few classes with slightly reduced scores correspond exactly to the visually ambiguous categories identified in the per-class accuracy analysis.
+Precision and recall are consistently high across all 43 classes. The few classes with slightly reduced scores correspond to the visually ambiguous categories identified above.
 
 ### 6.5 Misclassified Examples
 
 ![High-confidence misclassifications: cases where the model was wrong but confident](results/task06/deep/misclassifications_top_confidence.png)
 
-The misclassification grid shows the 11 test images the model predicted incorrectly. In most cases the error is understandable: the image quality is degraded, the sign is partially occluded, or the sign closely resembles another class. This confirms that remaining errors are concentrated in genuinely hard cases rather than systematic misclassifications of an entire category.
+The misclassification grid shows the 11 incorrectly predicted test images. In most cases the error is understandable: degraded image quality, partial occlusion, or strong visual similarity to another class. Errors are concentrated in genuinely hard cases, not systematic failures of an entire category.
 
 ### 6.6 Bias Analysis
 
@@ -318,7 +319,7 @@ A critical concern for real-world deployment is whether the model performs dispr
 
 The accuracy gap of only **0.34 pp** between the most and least represented classes demonstrates that the pipeline handles class imbalance effectively. Notably, several of the rarest classes — Speed limit (20km/h) with only 140 training images, Dangerous curve left with 145 — achieve 100% test accuracy. This result validates that the data augmentation strategy and training procedure generalize well even under significant class imbalance.
 
-This is a meaningful result for trustworthiness: a model that is accurate on average but fails systematically on rare classes would be unsuitable for deployment, as rare signs (e.g. road narrows, bicycles crossing) are precisely those that require reliable recognition in safety-critical situations.
+A model accurate on average but failing systematically on rare classes would be unsuitable for deployment — rare signs such as "road narrows" require reliable recognition precisely because they appear infrequently.
 
 ### 6.7 Robustness Testing
 
@@ -330,9 +331,7 @@ Real-world deployment involves conditions not present in clean test data. Two st
 | Gaussian Blur (kernel=5) | 97.01% | −2.80 pp |
 | Gaussian Noise (σ=0.1) | 71.86% | **−27.95 pp** |
 
-The model maintains strong performance under blur, which simulates motion blur or out-of-focus optics — conditions that commonly occur in moving vehicles. However, **Gaussian noise causes a dramatic accuracy drop to 71.86%**. This is a well-known vulnerability of CNNs trained exclusively on clean images: pixel-level noise that humans largely ignore can fundamentally alter the activation patterns in a convolutional network.
-
-This finding represents the most significant limitation of the current system and must be considered when assessing suitability for real deployment in environments with low-quality camera sensors.
+The model maintains strong performance under blur, which simulates motion blur or out-of-focus optics. However, **Gaussian noise causes a dramatic drop to 71.86%** — a well-known vulnerability of CNNs trained exclusively on clean images. This is the most significant limitation for real-world deployment with low-quality sensors.
 
 ### 6.8 Grad-CAM Interpretability
 
@@ -340,7 +339,7 @@ This finding represents the most significant limitation of the current system an
 
 Gradient-weighted Class Activation Mapping (Grad-CAM) highlights the image regions that most strongly influenced the model's predictions by computing the gradient of the predicted class score with respect to the final convolutional feature maps.
 
-The visualizations confirm that the model attends to the relevant sign regions — the shape, central symbol, and color — rather than background artifacts such as the sky, road surface, or surrounding vehicles. This is an important trustworthiness indicator: a model achieving high accuracy by exploiting spurious background correlations rather than the sign itself would be fragile under distribution shift. The Grad-CAM results provide evidence that this is not the case here.
+The visualizations confirm that the model attends to the relevant sign regions — shape, symbol, and color — rather than background artifacts. A model exploiting spurious background correlations would be fragile under distribution shift; the Grad-CAM results provide evidence this is not the case.
 
 ---
 
@@ -390,13 +389,29 @@ For real-world deployment in a safety-critical system, the noise sensitivity (71
 
 ---
 
-## 8. Conclusion
+## 8. Future Work
+
+The current system classifies pre-cropped traffic sign images. Several natural extensions would move it closer to real-world applicability:
+
+**Noise and blur augmentation.** Training with Gaussian noise, motion blur, and brightness variation would directly close the 27.95 pp robustness gap identified in Section 6.7 — a well-established technique with minimal additional cost.
+
+**Object detection integration.** The current pipeline requires pre-cropped sign images, which does not hold in real driving footage. Combining the classifier with a detection model (e.g. YOLO) that first locates signs in the full scene would enable end-to-end recognition from raw camera frames — the most impactful step toward real-world deployment.
+
+**Higher input resolution.** Upscaling from 32×32 to 64×64 pixels would preserve more spatial detail and likely reduce confusion between visually similar classes such as pedestrian and bicycle crossing signs.
+
+**Cross-validation.** Replacing the single 70/15/15 split with k-fold cross-validation would provide statistically more reliable performance estimates, particularly for rare classes with fewer than 200 training samples.
+
+**Domain adaptation.** Fine-tuning on signs from other countries or adverse weather conditions would reduce selection bias and improve generalisability beyond German roads.
+
+---
+
+## 9. Conclusion
 
 This project demonstrates that a compact from-scratch CNN can achieve near-perfect accuracy on the GTSRB traffic sign classification benchmark. The Deep CNN — a four-block convolutional network with 936,235 trainable parameters — reaches **99.81% top-1 test accuracy**, misclassifying only 11 out of 5,881 test images.
 
-The systematic comparison of five model variants shows that architectural depth is the most cost-effective improvement, while transfer learning offers diminishing returns on a dataset of this size. The bias analysis confirms that the pipeline handles class imbalance well, with only a 0.34 pp accuracy gap between the most and least frequent sign categories — a meaningful result for deployment trustworthiness. Grad-CAM visualizations confirm that the model bases its predictions on the sign itself rather than spurious background correlations.
+The systematic comparison of five model variants shows that architectural depth is the most cost-effective improvement, while transfer learning offers diminishing returns on a dataset of this size. The bias analysis confirms that the pipeline handles class imbalance well, with only a 0.34 pp accuracy gap between frequent and rare classes. Grad-CAM visualizations confirm that predictions are based on the sign itself rather than background correlations.
 
-The primary identified limitation is noise sensitivity: a 27.95 pp accuracy drop under Gaussian noise represents the most important gap between benchmark performance and real-world reliability. Targeted noise augmentation during training is the clearest path to closing this gap and constitutes the most valuable direction for future work.
+The primary limitation is noise sensitivity: a 27.95 pp accuracy drop under Gaussian noise is the clearest gap between benchmark performance and real-world reliability. Combining the classifier with an object detection stage and augmenting training with realistic perturbations are the two most impactful next steps toward a deployable system.
 
 ---
 

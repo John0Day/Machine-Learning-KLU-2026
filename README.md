@@ -1,181 +1,244 @@
 # Machine-Learning-KLU-2026
 
-Traffic sign classification project for the KLU Machine Learning course, based on the German Traffic Sign Recognition Benchmark (GTSRB).
+CNN-based traffic sign classification for the KLU Machine Learning course, using the German Traffic Sign Recognition Benchmark (GTSRB). The project trains and evaluates five CNN architectures, achieving up to **99.81% test accuracy**.
 
-## Quick Start (One Command)
+---
+
+## Quick Start
 
 ```bash
 ./scripts/setup_project.sh
 ```
+
 This single command will:
+1. Create a virtual environment (`.venv`) and install all dependencies
+2. Download and extract the GTSRB dataset into `data/raw/`
+3. Run dataset inspection to generate initial outputs in `results/`
 
-1. Create a local virtual environment (`.venv`)
-2. Install Python dependencies from `requirements.txt`
-3. Download and extract the official GTSRB training archives into `data/raw/`
+**Options:**
 
-If you want extracted folders only, run:
+| Flag | Effect |
+|------|--------|
+| `--skip-data` | Only install dependencies, skip dataset download |
+| `--force-data` | Re-download archives from scratch |
+| `--keep-zips` | Keep ZIP archives instead of deleting them |
+| `--force-install` | Force dependency reinstall |
 
-```bash
-./scripts/fetch_gtsrb.sh --extract --trash-zips
-```
-
-4. Run dataset inspection (`src/dataset.py`) to generate initial outputs in `results/`
-
-By default it prefers `python3.12`, then `python3.11`, then `python3.10`, then `python3`.
-Running it again is safe: unchanged dependencies are skipped, verified archives are reused, and extraction uses a cache marker.
-By default, ZIP files are moved to trash after extraction.
+---
 
 ## Project Structure
 
-```text
-/data/          dataset files (ignored by git)
-/src/           Python source files (dataset, model, train, evaluate)
-/models/        trained model weights (.pth/.pt)
-/results/       plots, metrics, confusion matrices
+```
+src/
+  dataset.py          Dataset inspection and visualisation (Task 02)
+  preprocessing.py    DataLoaders, transforms, augmentation (Task 03)
+  model.py            Baseline CNN architecture (Task 04)
+  model_improved.py   DeepCNN, LeakyReLUCNN, StrideCNN, MobileNetV2 (Task 05)
+  train.py            Baseline training script (Task 04)
+  train_improved.py   Multi-model training and comparison (Task 05)
+  evaluate.py         Full model evaluation with Grad-CAM (Task 06)
+  tune.py             Bayesian hyperparameter tuning with Optuna (Task 05)
+  autoencoder.py      Convolutional autoencoder for anomaly detection (Task 05)
+  visualize.py        t-SNE latent space visualisation (Task 05)
+  demo_offline.py     Presentation-ready prediction grids (no webcam)
+  demo_ui.py          Interactive Gradio web UI for all models
+
+models/               Trained model weights (.pth)
+results/              All generated plots, metrics, and JSON files
+tests/                Unit tests
+data/                 Raw dataset (excluded from git)
 ```
 
-## Data Source
+---
 
-The dataset pull script uses these official ERDA URLs by default:
+## Tasks
 
-- `https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Training_Images.zip`
-- `https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Training_HueHist.zip`
-- `https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Training_HOG.zip`
-- `https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Training_Haar.zip`
-
-These files are intentionally excluded from git because of their size.
-
-## Dataset Inspection (Task 02)
-
-Run:
+### Task 02 — Dataset Inspection
 
 ```bash
 .venv/bin/python src/dataset.py
 ```
 
-This generates:
+Outputs in `results/task03/`:
+- `class_distribution.png` — bar chart of per-class image counts
+- `sample_images_by_class.png` — one image per class grid
+- `resolution_distribution_top20.png` — top-20 most common resolutions
+- `class_mapping.csv` — class ID to name mapping
+- `dataset_stats.json` — summary statistics
 
-- `results/task03/class_distribution.png`
-- `results/task03/sample_images_by_class.png`
-- `results/task03/resolution_distribution_top20.png`
-- `results/task03/class_mapping.csv`
-- `results/task03/dataset_stats.json`
+---
 
-## Baseline Training (Task 04)
+### Task 03 — Preprocessing
 
-Run baseline model training:
+Preprocessing is handled automatically by `src/preprocessing.py`. The pipeline applies:
+- **Training**: Random rotation (±15°), color jitter, random affine, normalization
+- **Validation/Test**: Resize, normalize (deterministic)
+
+Split: **70% train / 15% val / 15% test** with fixed seed 42.
+
+---
+
+### Task 04 — Baseline Model
 
 ```bash
-.venv/bin/python src/train.py --epochs 10 --batch-size 64 --results-dir results/task04 --models-dir models
+.venv/bin/python src/train.py
 ```
 
-Run with an explicit run label (prevents output overwrite):
-
+With custom options:
 ```bash
-.venv/bin/python src/train.py --epochs 10 --batch-size 64 --seed 123 --run-name seed123 --results-dir results/task04 --models-dir models
+.venv/bin/python src/train.py --epochs 30 --seed 123 --run-name seed123 \
+    --results-dir results/task04 --models-dir models
 ```
 
 Outputs:
+- `models/baseline_seed-42.pth`
+- `results/task04/baseline_loss_curve_seed-42.png`
+- `results/task04/baseline_history_seed-42.json`
 
-- `models/baseline_<run_name>.pth` (default run name: `seed-<seed>`)
-- `results/task04/baseline_loss_curve_<run_name>.png`
-- `results/task04/baseline_history_<run_name>.json`
+**Baseline CNN**: 3 conv blocks (BatchNorm + ReLU + MaxPool) + FC classifier with Dropout(0.5). 629K parameters. Achieves ~99.29% test accuracy.
 
-## Offline Demo (Without Camera Detection)
+---
 
-Generate presentation-ready prediction visuals from the test split:
+### Task 05 — Model Improvements
+
+**Train and compare all five model variants:**
 
 ```bash
-.venv/bin/python src/demo_offline.py --model models/baseline_seed-123.pth --device cpu
+.venv/bin/python src/train_improved.py
 ```
 
-Demo outputs are written to `results/task04/demo_offline/`:
+Outputs in `results/task05/`:
+- `model_comparison.json` — accuracy, parameters, training time per model
+- `model_comparison_curves.png` — training accuracy curves
+- `model_comparison_summary.png` — accuracy vs. parameters vs. training time
 
-- `predictions_grid.png`
-- `misclassifications_top_confidence.png`
-- `confusion_matrix.png`
-- `summary.json`
+| Model | Test Accuracy | Parameters |
+|-------|:---:|:---:|
+| Baseline CNN | 99.49% | 629K |
+| **Deep CNN** ⭐ | **99.81%** | 936K |
+| MobileNetV2 | 99.66% | 2.56M |
+| LeakyReLU CNN | 99.46% | 629K |
+| Stride CNN | 99.52% | 823K |
 
-## Task 06 Evaluation
+**Hyperparameter tuning (Optuna):**
 
-Run full evaluation for the selected model (default: `deep`):
+```bash
+.venv/bin/python src/tune.py --n-trials 30 --epochs 10
+```
+
+Outputs in `results/`:
+- `best_hyperparams.json`
+- `tuning_results.png`
+
+**Latent space visualisation (t-SNE):**
+
+```bash
+.venv/bin/python src/visualize.py --model-path models/baseline_seed-42.pth
+```
+
+Output: `results/tsne_feature_space.png`
+
+**Autoencoder anomaly detection:**
+
+```bash
+# Train and evaluate
+.venv/bin/python src/autoencoder.py --mode both --device mps
+
+# Train only
+.venv/bin/python src/autoencoder.py --mode train
+
+# Evaluate only (requires trained model)
+.venv/bin/python src/autoencoder.py --mode evaluate
+```
+
+Outputs in `results/`:
+- `autoencoder_loss.png`
+- `autoencoder_error_distribution.png`
+- `autoencoder_reconstructions.png`
+
+---
+
+### Task 06 — Evaluation
+
+Run full evaluation for a specific model:
 
 ```bash
 .venv/bin/python src/evaluate.py --model-type deep --device mps
 ```
 
-CPU fallback:
+Available model types: `baseline`, `deep`, `leaky`, `stride`, `mobilenet`
 
-```bash
-.venv/bin/python src/evaluate.py --model-type deep --device cpu
-```
-
-Task 06 outputs are written to `results/task06/` (including per-model folders like `results/task06/deep/`):
-
-- `evaluation_summary.json`
-- `confusion_matrix_counts.png`
+Outputs in `results/task06/<model>/`:
 - `confusion_matrix_normalized.png`
-- `classification_report.txt`
-- `classification_report_per_class.csv`
-- `bias_analysis.json`
-- `bias_analysis_mean_accuracy.png`
+- `per_class_accuracy.png`
+- `precision_recall_per_class.png`
 - `misclassifications_top_confidence.png`
 - `gradcam_examples.png`
+- `bias_analysis_mean_accuracy.png`
 - `robustness_metrics.json`
-- `model_comparison.md`
-- `model_comparison.json`
+- `evaluation_summary.json`
+- `classification_report.txt`
 
-## Optional Commands
+---
 
-- Override dataset base URL:
+## Demo
 
-```bash
-./scripts/setup_project.sh --base-url "https://your-host.example.com/gtsrb"
-```
-
-- Skip dataset fetch (only install dependencies):
+### Offline Demo (no webcam)
 
 ```bash
-./scripts/setup_project.sh --skip-data
+.venv/bin/python src/demo_offline.py --model models/baseline_seed-42.pth
 ```
 
-- Re-download archives from scratch:
+Generates prediction grids and confusion matrix in `results/demo_offline/`.
+
+### Interactive Web UI
 
 ```bash
-./scripts/setup_project.sh --force-data
+# Install Gradio once
+pip install gradio
+
+# Launch the UI
+python src/demo_ui.py
 ```
 
-- Keep ZIP archives instead of moving them to trash:
+Open `http://localhost:7860` in your browser. Features:
+- Upload any traffic sign image
+- Select between all 5 trained models
+- View top prediction + top-5 confidence bar chart
+- Model description and comparison table
 
+For a public shareable link (useful for presentations):
 ```bash
-./scripts/setup_project.sh --keep-zips
+python src/demo_ui.py --share
 ```
 
-- Force dependency reinstall:
-
-```bash
-./scripts/setup_project.sh --force-install
-```
-
-- Verify already downloaded archives only:
-
-```bash
-./scripts/fetch_gtsrb.sh --verify-only
-```
-
-- Run local downloader safety test:
-
-```bash
-./scripts/test_fetch_gtsrb.sh
-```
+---
 
 ## Tests
-
-Run the Python unit tests:
 
 ```bash
 .venv/bin/python -m unittest discover -s tests -p "test_*.py" -v
 ```
+
+---
+
+## Report
+
+The full written project report is available at [`report.md`](report.md) (~5000 words).
+
+---
+
+## Data Source
+
+Official GTSRB archives from ERDA:
+- `GTSRB_Final_Training_Images.zip`
+- `GTSRB_Final_Training_HueHist.zip`
+- `GTSRB_Final_Training_HOG.zip`
+- `GTSRB_Final_Training_Haar.zip`
+
+Dataset files are excluded from git due to their size.
+
+---
 
 ## License
 
