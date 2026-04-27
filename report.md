@@ -156,86 +156,82 @@ To prevent the model from training too long and overfitting to the training set,
 
 ## 4. Baseline Model
 
-### 4.1 Architecture
+### 4.1 Architecture and Design Decisions
 
-The baseline CNN consists of three convolutional blocks followed by a fully connected classifier.
+Before training any model, we needed to decide what kind of neural network to use. Since traffic signs are visual objects with spatial structure, a Convolutional Neural Network (CNN) is the natural choice. CNNs are specifically designed to process images: they learn local spatial patterns through small filters that slide across the image, and they build up increasingly abstract representations layer by layer. Unlike a fully connected network, a CNN does not treat every pixel independently, which makes it far more efficient and better suited to recognizing shapes and symbols regardless of their exact position in the image.
+
+The baseline CNN consists of three convolutional blocks followed by a fully connected classifier, totalling **629,291 trainable parameters**.
 
 ![Architecture comparison: Baseline CNN (left) vs. Deep CNN (right)](results/diagrams/architecture_comparison.png)
 
-**Total trainable parameters: 629,291**
+We chose three blocks as a starting point because this is a well-established depth for compact CNNs on small images. With 32×32 pixel inputs, three consecutive MaxPool operations reduce the spatial dimensions to 4×4 before the classifier, which provides enough spatial compression to capture global structure while retaining enough detail for classification. Going shallower would limit the model's ability to learn abstract features; going deeper immediately would make the baseline harder to interpret and harder to improve upon systematically.
 
-Each convolutional block applies a 3×3 convolution with padding=1 (preserving spatial dimensions), followed by Batch Normalization, ReLU activation, and 2×2 MaxPooling that halves the spatial dimensions. The classifier uses Dropout(0.5) during training and outputs raw logits; CrossEntropyLoss handles the softmax internally for numerical stability.
+Each convolutional block follows the same structure: a 3×3 convolution, followed by Batch Normalization, a ReLU activation, and 2×2 MaxPooling. The 3×3 filter size is the standard choice in modern CNNs because it captures local spatial patterns with minimal parameters. Two stacked 3×3 convolutions cover the same area as a single 5×5 filter but with fewer parameters and an additional nonlinearity, which increases the model's representational capacity. Batch Normalization is applied after each convolution to keep the activations in a stable range across all layers, which prevents the training signal from vanishing or exploding in deeper parts of the network and generally speeds up convergence. MaxPooling halves the spatial resolution after each block, progressively focusing the network on larger-scale patterns rather than individual pixels.
 
-### 4.2 How Data Flows Through the Network
+The number of filters increases from 32 in the first block to 64 in the second and 128 in the third. This follows the convention that early layers detect simple local features such as edges and color gradients, while later layers must combine many of those features into more complex representations such as shapes, symbols, or numerals. More features require more channels, so the channel count grows as the spatial dimensions shrink.
 
-To make the architecture concrete, here is how a single 32×32 RGB image passes through the baseline CNN step by step:
+After the three convolutional blocks, the output is flattened into a single feature vector and passed through two fully connected layers. The first reduces the vector from 2,048 to 256 dimensions and applies Dropout with a rate of 0.5, which randomly zeroes half the activations during training to prevent the classifier from overfitting. The second layer maps the 256-dimensional representation to 43 output logits, one per traffic sign class. The final class probabilities are computed by applying softmax to these logits, though in practice this is handled internally by CrossEntropyLoss during training for numerical stability.
 
-**Input:** 3 × 32 × 32 (three color channels, 32×32 pixels each)
+### 4.2 How an Image Becomes a Prediction
 
-**Block 1:** Conv(3→32 filters, 3×3) → BatchNorm → ReLU → MaxPool(2×2):
-output shape `32 × 16 × 16`
+To make the architecture concrete, it helps to follow a single 32×32 RGB image through the network step by step. The goal is to understand not just the shapes, but what is actually happening at each stage.
 
-**Block 2:** Conv(32→64 filters, 3×3) → BatchNorm → ReLU → MaxPool(2×2):
-output shape `64 × 8 × 8`
+The image enters as a tensor of shape 3×32×32, representing three color channels at 32×32 pixels each. In Block 1, 32 different 3×3 filters slide across the image and each one responds to a different local pattern, such as a horizontal edge, a color transition, or a diagonal. The result is 32 feature maps of size 16×16 after MaxPooling. At this stage the network is detecting basic visual primitives. In Block 2, 64 filters operate on those 32 feature maps, now combining primitive features into more complex patterns such as corners or curves. The output is 64 feature maps of size 8×8. In Block 3, 128 filters build further on top of that, learning even more abstract representations such as circular outlines or specific color-shape combinations. The output is 128 feature maps of size 4×4.
 
-**Block 3:** Conv(64→128 filters, 3×3) → BatchNorm → ReLU → MaxPool(2×2):
-output shape `128 × 4 × 4`
+| Stage | Output Shape | What is being learned |
+|-------|-------------|----------------------|
+| Input | 3 × 32 × 32 | Raw pixel values |
+| After Block 1 | 32 × 16 × 16 | Edges, color gradients, simple textures |
+| After Block 2 | 64 × 8 × 8 | Corners, curves, color regions |
+| After Block 3 | 128 × 4 × 4 | Shapes, symbols, structural patterns |
+| After Flatten | 2,048 | Full feature summary of the image |
+| After FC1 | 256 | Compressed, class-discriminative representation |
+| After FC2 | 43 | One confidence score per traffic sign class |
 
-**Flatten:** `128 × 4 × 4` → `2,048`-dimensional feature vector
+The key insight is that spatial resolution decreases while the number of channels increases at every stage. The network is essentially trading spatial precision for semantic richness: early on it knows exactly where a pixel edge is, but later it knows what kind of sign is present without needing to track exact pixel positions. By the time the feature map reaches the classifier, the 2,048-dimensional vector encodes a compact summary of everything the network has learned to recognize as relevant for distinguishing traffic signs.
 
-**FC1:** Linear(2048→256) → ReLU → Dropout(0.5)
+### 4.3 Training Configuration
 
-**FC2:** Linear(256→43) → 43 logits, one per class
+A neural network's architecture determines what it can learn, but the training configuration determines how well it actually learns. The following settings were chosen to give the model the best conditions for stable and efficient convergence:
 
-Each MaxPool step halves the spatial resolution while each convolutional block doubles the number of feature maps. By the time the feature map reaches the classifier, the 2,048-dimensional vector encodes a rich summary of learned visual patterns from the original image. The final 43-dimensional output gives the model's confidence score for each traffic sign class before applying softmax.
+| Hyperparameter | Value | Reason |
+|---------------|-------|--------|
+| Optimizer | Adam | Adapts learning rate per parameter; converges faster and more reliably than standard SGD |
+| Initial learning rate | 1×10⁻³ | Standard Adam default; confirmed to be effective by the hyperparameter search in Section 5.6 |
+| LR scheduler | ReduceLROnPlateau | Automatically halves the learning rate when training stalls |
+| Loss function | CrossEntropyLoss | Standard choice for multi-class classification |
+| Batch size | 64 | Balances gradient stability, memory usage, and training speed |
+| Max epochs | 30 | Upper bound; early stopping typically engages well before this |
+| Early stopping patience | 5 | Stops training if validation accuracy does not improve for 5 consecutive epochs |
 
-### 4.3 Training Configuration and Parameter Rationale
+The optimizer choice deserves a closer explanation. Standard Stochastic Gradient Descent applies the same learning rate to every parameter in the network. This means that if some weights need large updates and others need small ones, SGD must compromise with a single global step size. Adam (Adaptive Moment Estimation) solves this by tracking a running estimate of both the gradient and its variance for each individual parameter, effectively giving each weight its own adaptive step size. In practice this makes Adam significantly more robust to the initial learning rate and leads to faster convergence, which is why it has become the default optimizer for most deep learning tasks.
 
-| Hyperparameter | Value | Rationale |
-|---------------|-------|-----------|
-| Optimizer | Adam | Adapts learning rate per parameter; faster convergence than SGD on image tasks |
-| Initial learning rate | 1×10⁻³ | Standard Adam default; confirmed by hyperparameter search |
-| LR scheduler | ReduceLROnPlateau | Halves LR when validation plateaus; rescues stalled training |
-| Loss function | CrossEntropyLoss | Standard for multi-class classification |
-| Batch size | 64 | Balances gradient noise, memory, and training speed |
-| Max epochs | 30 | Upper bound; early stopping engages before this |
-| Early stopping patience | 5 | Prevents overfitting without stopping too early |
-| Input size | 32×32 | Compact but sufficient resolution for sign recognition |
+Even with Adam, training can stall during the middle of training. This happens when the optimizer reaches a relatively flat region of the loss surface where gradients are very small. The ReduceLROnPlateau scheduler detects this automatically: whenever the validation loss has not improved for three consecutive epochs, it halves the learning rate. This allows the optimizer to take smaller, more precise steps and continue making progress. In practice we observed this behavior consistently: accuracy would plateau for a few epochs, the learning rate would drop, and training would resume improving.
 
-**Adam vs. SGD:** Standard Stochastic Gradient Descent (SGD) applies the same learning rate to every parameter. Adam (Adaptive Moment Estimation) tracks a running average of both gradients and squared gradients for each weight, effectively giving each parameter its own adaptive learning rate. This makes Adam significantly more robust to the choice of initial learning rate and typically converges faster on image classification tasks. For our architecture with hundreds of thousands of parameters, Adam was the natural choice.
+### 4.4 Why High Accuracy is Plausible Before Seeing the Results
 
-**ReduceLROnPlateau:** Even with Adam, training sometimes stalls; the optimizer reaches a region of the loss surface where gradients are small and progress stops. ReduceLROnPlateau detects this automatically: if validation loss does not improve for three consecutive epochs, it halves the learning rate. This allows the optimizer to take finer steps and escape the plateau. We observed this behavior consistently mid-training: accuracy would plateau for a few epochs, the learning rate would drop, and training would resume progress.
+Before presenting the results, it is worth explaining why strong baseline performance on GTSRB is expected rather than surprising. Understanding this upfront helps interpret the results correctly and avoids mistaking high accuracy for overfitting.
 
-**Why 3×3 filters:** The 3×3 convolution kernel is the standard choice in modern CNNs: it captures local spatial patterns with minimal parameters (only 9 weights per filter) and multiple stacked 3×3 layers achieve the same receptive field as a single large kernel at lower computational cost. Two stacked 3×3 convolutions cover a 5×5 region; three layers cover 7×7.
+Traffic signs are explicitly designed for fast and reliable human recognition. They use a small set of standardized shapes (circles, triangles, octagons), bold colors (red, blue, yellow), and unambiguous symbols or numerals. This means that each of the 43 classes has a visually distinct structure that is shared by every instance of that class across all lighting conditions and camera angles. For a classifier, this is the ideal scenario: the features that separate one class from another are consistent and strong, so even a relatively compact network can learn to separate them reliably.
 
-**Doubling filter counts:** Going from 32 to 64 to 128 filters per block follows the established convention that deeper layers should have more channels to represent increasingly complex, higher-dimensional feature spaces.
+Additionally, the GTSRB images are pre-cropped to the sign bounding box. The model never has to locate the sign within a larger scene; it only ever receives an image where the sign already fills the frame. This removes the hardest part of real-world traffic sign recognition and reduces the task to pure classification of well-framed images.
 
-### 4.4 Results
+For further context, Stallkamp et al. (2012) measured the average human recognition rate on GTSRB at **98.84%**. The fact that our baseline CNN reaches 99.29% on our internal test split does not indicate overfitting. It is consistent with the established literature on this benchmark and reflects the structural properties of the dataset rather than a flaw in the evaluation.
 
-Two runs were conducted with different random seeds to verify stability:
+### 4.5 Results
+
+The baseline was trained twice with different random seeds to verify that the results are stable and not dependent on a lucky initialization:
 
 | Seed | Best Val Accuracy | Test Accuracy | Test Loss |
 |------|------------------|--------------|-----------|
 | 42   | 98.78%           | 98.55%       | 0.0621    |
 | 123  | 99.15%           | 99.29%       | 0.0451    |
 
-Results are consistent across both seeds. The small difference is attributable to random weight initialisation and mini-batch ordering; both seeds converge to the same quality solution.
+Both runs converge to comparable accuracy. The small difference between seeds is attributable to random weight initialization and mini-batch ordering rather than any fundamental instability; both reach the same quality of solution.
 
 ![Baseline training curves (seed 42): training and validation loss and accuracy over epochs](results/task04/baseline_loss_curve_seed-42.png)
 
-The loss curves show smooth convergence with no signs of severe overfitting; the training and validation curves track closely throughout, and early stopping engages after the validation plateau.
-
-### 4.5 Why High Baseline Accuracy is Expected
-
-The near-perfect baseline accuracy is not surprising when you consider the specific properties of GTSRB.
-
-Traffic signs are explicitly **designed for human recognition**: they use standardized shapes (circles, triangles, octagons) with bold colors and unambiguous symbols. This means the dataset has very high inter-class variability (each of the 43 classes looks structurally distinct from all others) combined with very low intra-class variability (every instance of a class shares the same fundamental shape, color, and symbol). This is the ideal scenario for a classifier: the decision boundaries between classes are well-separated in feature space, which the t-SNE projection in Section 5.7 confirms visually.
-
-GTSRB images are also **pre-cropped to the sign bounding box**, meaning the model only ever sees the sign itself, with no distracting background and no need to localize the sign within a larger scene. This removes the hardest part of real-world recognition and frames the task as pure classification.
-
-Finally, with approximately 900 training images per class on average and relatively simple visual structure, the dataset provides enough signal to train a reliable classifier without requiring massive model capacity.
-
-For context: Stallkamp et al. (2012) measured the average human recognition rate on GTSRB at **98.84%**, which is already below the baseline CNN's 99.29%. This confirms that near-perfect CNN performance is not a sign of overfitting or data leakage, but is consistent with the established literature on this benchmark.
+The training curves for seed 42 show a typical healthy learning pattern. Both the training and validation loss decrease steadily in the first epochs, and the two curves track closely throughout, which indicates that the model is generalizing well rather than memorizing the training data. There is no point at which training loss continues to drop while validation loss increases, which would be the signature of overfitting. Early stopping engages once the validation accuracy stops improving, ensuring that the saved model reflects the best generalization achieved during training rather than an overfit later checkpoint.
 
 ---
 
