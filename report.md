@@ -54,30 +54,20 @@ The dataset covers a wide variety of sign categories: speed limit signs of diffe
 *The x-axis shows class IDs 0–42. The full class ID legend is provided in the table below.*
 **Class ID Legend (all 43 GTSRB classes):**
 
-| ID | Class Name | ID | Class Name |
-|----|------------|----|------------|
-| 0 | Speed limit (20 km/h) | 22 | Bumpy road |
-| 1 | Speed limit (30 km/h) | 23 | Slippery road |
-| 2 | Speed limit (50 km/h) | 24 | Road narrows on the right |
-| 3 | Speed limit (60 km/h) | 25 | Road work |
-| 4 | Speed limit (70 km/h) | 26 | Traffic signals |
-| 5 | Speed limit (80 km/h) | 27 | Pedestrians |
-| 6 | End of speed limit (80 km/h) | 28 | Children crossing |
-| 7 | Speed limit (100 km/h) | 29 | Bicycles crossing |
-| 8 | Speed limit (120 km/h) | 30 | Beware of ice/snow |
-| 9 | No passing | 31 | Wild animals crossing |
-| 10 | No passing for vehicles over 3.5t | 32 | End of all speed and passing limits |
-| 11 | Right-of-way at next intersection | 33 | Turn right ahead |
-| 12 | Priority road | 34 | Turn left ahead |
-| 13 | Yield | 35 | Ahead only |
-| 14 | Stop | 36 | Go straight or right |
-| 15 | No vehicles | 37 | Go straight or left |
-| 16 | Vehicles over 3.5t prohibited | 38 | Keep right |
-| 17 | No entry | 39 | Keep left |
-| 18 | General caution | 40 | Roundabout mandatory |
-| 19 | Dangerous curve left | 41 | End of no passing |
-| 20 | Dangerous curve right | 42 | End of no passing by vehicles over 3.5t |
-| 21 | Double curve | | |
+| ID | Class Name | ID | Class Name | ID | Class Name | ID | Class Name |
+|----|------------|----|------------|----|------------|----|------------|
+| 0 | Speed limit (20 km/h) | 11 | Right-of-way at next intersection | 22 | Bumpy road | 33 | Turn right ahead |
+| 1 | Speed limit (30 km/h) | 12 | Priority road | 23 | Slippery road | 34 | Turn left ahead |
+| 2 | Speed limit (50 km/h) | 13 | Yield | 24 | Road narrows on the right | 35 | Ahead only |
+| 3 | Speed limit (60 km/h) | 14 | Stop | 25 | Road work | 36 | Go straight or right |
+| 4 | Speed limit (70 km/h) | 15 | No vehicles | 26 | Traffic signals | 37 | Go straight or left |
+| 5 | Speed limit (80 km/h) | 16 | Vehicles over 3.5t prohibited | 27 | Pedestrians | 38 | Keep right |
+| 6 | End of speed limit (80 km/h) | 17 | No entry | 28 | Children crossing | 39 | Keep left |
+| 7 | Speed limit (100 km/h) | 18 | General caution | 29 | Bicycles crossing | 40 | Roundabout mandatory |
+| 8 | Speed limit (120 km/h) | 19 | Dangerous curve left | 30 | Beware of ice/snow | 41 | End of no passing |
+| 9 | No passing | 20 | Dangerous curve right | 31 | Wild animals crossing | 42 | End of no passing by vehicles over 3.5t |
+| 10 | No passing for vehicles over 3.5t | 21 | Double curve | 32 | End of all speed and passing limits |  |  |
+|
 
 The dataset is **not uniformly distributed**. The most frequent class is Speed limit (30 km/h) (class ID 1) with 1,552 training images, while the rarest class is Speed limit (20 km/h) (class ID 0) with only 140 images.
 
