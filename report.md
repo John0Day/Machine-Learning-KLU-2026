@@ -111,9 +111,9 @@ We chose a 70/15/15 split, which gives the model enough training data to learn w
 | Validation | 15% | 5,881 |
 | Test | 15% | 5,881 |
 
-The split is performed using **stratified sampling**, meaning the class distribution is preserved across all three subsets. Without stratification, a random split could assign most images of a rare class entirely to the training set, leaving the validation and test sets without enough examples of that class to evaluate fairly. With stratification, a rare class with only 140 total images still receives approximately 98 training, 21 validation, and 21 test images. All three splits therefore reflect the same class proportions as the full dataset.
+The split is performed using `torch.utils.data.random_split` with a fixed random seed (42). This is a simple random split, not a stratified one. In practice, because the dataset is large enough relative to the number of classes, the random split distributes the class proportions approximately evenly across all three subsets. A rare class with only 140 total images will receive roughly 98 training, 21 validation, and 21 test images by chance, but this is not guaranteed by the splitting method itself.
 
-A fixed random seed (42) is used for reproducibility. This ensures that every model variant in this project is trained and evaluated on exactly the same images, making the comparisons between architectures fair and meaningful.
+The fixed seed ensures that every model variant in this project is trained and evaluated on exactly the same images, making the comparisons between architectures fair and meaningful.
 
 ![Per-class sample distribution across training, validation, and test splits](results/preprocessing_split_distribution.png)
 
@@ -436,27 +436,101 @@ Several limitations should be noted when interpreting the results. All improved 
 
 ## 8. Future Work
 
-The current system classifies pre-cropped traffic sign images under clean conditions, which is the right starting point for understanding the model's capabilities but leaves several important gaps for real-world applicability. The most impactful immediate improvement would be adding noise and blur augmentation during training, which would directly close the 27.95 pp robustness gap identified in Section 6.7 at minimal additional cost. This is a well-established technique and requires no architectural changes.
+The current system classifies pre-cropped traffic sign images under clean conditions. This section describes the most impactful directions for extending the project, and shows how they map onto the existing code structure.
 
-The more fundamental step toward deployment is integrating the classifier with an object detection stage. In real driving footage, signs must first be located within the full camera frame before they can be classified. A practical system would consist of three components: a detection module (e.g. YOLO) that identifies sign bounding boxes in the raw frame, the CNN classifier that processes each cropped sign, and the anomaly filter (autoencoder) that declines to classify inputs it has never seen before. This extended architecture is illustrated below:
+### 8.1 Current Class Structure and Extension Points
 
+All five classifier models in this project share a common design: they inherit from PyTorch's `nn.Module` base class and consist of a feature extractor (`features`) and a classification head (`classifier`). The autoencoder follows the same base class but uses an encoder-decoder structure instead. The diagram below shows the current class hierarchy and marks the points where future extensions would attach:
+
+```mermaid
+classDiagram
+    class nn_Module {
+        <<PyTorch Base>>
+        +forward(x) Tensor
+    }
+
+    class BaselineCNN {
+        +features: Sequential
+        +classifier: Sequential
+        +forward(x) Tensor
+    }
+
+    class DeepCNN {
+        +features: Sequential
+        +classifier: Sequential
+        +forward(x) Tensor
+    }
+
+    class LeakyReLUCNN {
+        +features: Sequential
+        +classifier: Sequential
+        +forward(x) Tensor
+    }
+
+    class StrideCNN {
+        +features: Sequential
+        +classifier: Sequential
+        +forward(x) Tensor
+    }
+
+    class MobileNetTransfer {
+        +features: Sequential
+        +classifier: Sequential
+        +pool: AdaptiveAvgPool2d
+        +forward(x) Tensor
+    }
+
+    class ConvAutoencoder {
+        +encoder: Sequential
+        +decoder: Sequential
+        +threshold: float
+        +forward(x) Tensor
+        +is_anomaly(x) bool
+    }
+
+    class ObjectDetector {
+        <<future extension>>
+        +detect(frame) BoundingBoxes
+    }
+
+    class SignClassifier {
+        <<future extension>>
+        +model: nn_Module
+        +classify(crop) ClassLabel
+    }
+
+    class FullPipeline {
+        <<future extension>>
+        +detector: ObjectDetector
+        +classifier: SignClassifier
+        +anomaly_filter: ConvAutoencoder
+        +run(frame) Result
+    }
+
+    nn_Module <|-- BaselineCNN
+    nn_Module <|-- DeepCNN
+    nn_Module <|-- LeakyReLUCNN
+    nn_Module <|-- StrideCNN
+    nn_Module <|-- MobileNetTransfer
+    nn_Module <|-- ConvAutoencoder
+    nn_Module <|-- ObjectDetector
+    FullPipeline o-- ObjectDetector
+    FullPipeline o-- SignClassifier
+    FullPipeline o-- ConvAutoencoder
+    SignClassifier o-- nn_Module
 ```
-┌─────────────────────────────────────────────────┐
-│                Full Pipeline                     │
-│                                                  │
-│  CameraFrame → [Detector] → BoundingBoxes        │
-│                                  │               │
-│                             [Classifier]         │
-│                                  │               │
-│                          ClassLabel + Confidence │
-│                                  │               │
-│                          [AnomalyFilter]         │
-│                                  │               │
-│                        Accept / Reject           │
-└─────────────────────────────────────────────────┘
-```
 
-The Detector and AnomalyFilter are the two missing components; the Classifier already exists in this project. Beyond detection, increasing the input resolution from 32×32 to 64×64 pixels would preserve more spatial detail and likely reduce confusion between visually similar classes such as Pedestrians and Bicycles crossing, at the cost of larger models and longer training. Cross-validation over multiple splits would also provide statistically more reliable performance estimates, particularly for the rarest classes. Finally, domain adaptation through fine-tuning on signs from other countries or adverse weather conditions would reduce the selection bias introduced by GTSRB's exclusively German-roads origin and improve generalisability beyond this specific benchmark.
+The three classes marked as `future extension` are the components not yet implemented. `ObjectDetector` would wrap a detection model such as YOLO and locate sign bounding boxes in raw camera frames. `SignClassifier` would wrap any of the existing `nn.Module` models and apply it to each detected crop. `FullPipeline` would compose all three components into a deployable system. Because all classifiers already share the same `forward(x)` interface, any of the five existing models can be plugged into `SignClassifier` without changes to the surrounding pipeline code.
+
+### 8.2 Immediate Improvements
+
+The most impactful near-term improvement requires no architectural changes at all: adding Gaussian noise and blur augmentation to the training transforms in `preprocessing.py`. This would directly address the 27.95 pp accuracy drop under noise identified in Section 6.7 and requires only a few additional lines in the `get_train_transform` function.
+
+A second straightforward extension is increasing the input resolution from 32×32 to 64×64 pixels. This would preserve more spatial detail and is expected to reduce confusion between visually similar classes such as Pedestrians and Bicycles crossing. The `_infer_flatten_dim` method present in all model classes already handles variable input sizes automatically, so no architectural changes to the models would be needed.
+
+### 8.3 Longer-Term Extensions
+
+Beyond the immediate improvements, three longer-term directions would further strengthen the system. First, implementing the `ObjectDetector` component and integrating it with the existing classifier would transform the system from a standalone classifier into a full end-to-end pipeline capable of processing raw driving footage. Second, cross-validation over multiple data splits would provide statistically more reliable performance estimates, particularly for the rarest classes where a single split may not be representative. Third, domain adaptation through fine-tuning on signs from other countries or adverse weather conditions would reduce the selection bias introduced by GTSRB's exclusively German-roads origin and improve generalisability beyond this specific benchmark.
 
 ---
 
