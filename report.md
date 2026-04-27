@@ -81,6 +81,8 @@ The 39,209 training images are divided into three non-overlapping subsets using 
 
 The split distribution plot confirms that the class proportions are preserved across all three subsets — the relative frequency of each class is approximately equal in training, validation, and test sets. This stratified structure ensures that the validation and test sets are representative of the full class distribution and that evaluation metrics are not distorted by split imbalance.
 
+Note: GTSRB provides an official test set, but since its ground-truth labels were not used in this project pipeline, the original 39,209 labelled training images were stratified into train, validation, and held-out test subsets. Reported accuracy figures therefore reflect performance on this internal split and should not be directly compared with results evaluated on the official benchmark test set.
+
 The validation set is used during training to monitor generalization and apply early stopping. The test set is held out entirely and evaluated only once per model — evaluating on data that was seen during training or hyperparameter selection would produce overly optimistic results and undermine the trustworthiness of the reported metrics. Using a fixed seed ensures that all model variants are evaluated on identical splits, making comparisons fair.
 
 ### 3.2 Image Transformations
@@ -108,7 +110,7 @@ Augmentation artificially increases the effective diversity of the training set.
 
 ### 3.5 Mini-Batch Loading and Early Stopping
 
-Images are fed to the model in mini-batches of size 64. Mini-batch stochastic gradient descent introduces noise into the gradient estimates, which helps the optimizer escape poor local minima. The training DataLoader uses shuffling so that every mini-batch sees a fresh random sample each epoch.
+Images are fed to the model in mini-batches of size 64. Mini-batch training introduces stochasticity into the optimization, which helps the optimizer escape poor local minima. The training DataLoader uses shuffling so that every mini-batch sees a fresh random sample each epoch.
 
 Early stopping with patience 5 halts training when validation accuracy does not improve for five consecutive epochs. The checkpoint with the highest validation accuracy — not the last epoch — is restored for final evaluation. This prevents overfitting to the training set in later epochs and ensures that reported results reflect the model's best generalization, not its final state.
 
@@ -158,15 +160,13 @@ The loss curves show smooth convergence with no signs of severe overfitting — 
 
 ### 4.4 Why High Baseline Accuracy is Expected
 
-The near-perfect baseline accuracy is not coincidental — it is a direct consequence of properties intrinsic to the GTSRB dataset and the suitability of CNNs for this type of task.
+The near-perfect baseline accuracy reflects properties intrinsic to GTSRB rather than overfitting or data leakage.
 
-**Inter-class vs. intra-class variability.** Traffic signs are designed by humans to be maximally distinguishable from one another. The dataset therefore exhibits high inter-class variability (each class looks structurally different from all others) combined with low intra-class variability (all instances of a class share the same shape, color, and symbol). This is the ideal configuration for a classifier: the decision boundaries are well-separated in feature space, which is confirmed visually by the t-SNE projection of learned features (Section 5.7), where the 43 classes form clearly separated clusters.
+**Inter-class vs. intra-class variability.** Traffic signs are designed to be maximally distinguishable — the dataset exhibits high inter-class variability (each class looks structurally different) combined with low intra-class variability (all instances share the same shape, color, and symbol). The t-SNE projection in Section 5.7 provides visual evidence of this, with 43 well-separated clusters in feature space.
 
-**Reduced task complexity.** GTSRB images are pre-cropped to the bounding box of the sign. The model therefore solves a pure classification problem rather than the harder joint detection-and-classification problem encountered in unconstrained driving footage. Removing the localization requirement substantially reduces the difficulty of the task.
+**Reduced task complexity.** GTSRB images are pre-cropped to the sign bounding box, so the model solves pure classification rather than the harder joint detection-and-classification task encountered in unconstrained driving footage.
 
-**Dataset size and class structure.** With approximately 900 training samples per class and a relatively simple visual structure per class, the dataset is well-conditioned with respect to the bias-variance tradeoff — sufficient data to converge to a low-variance solution without memorizing training examples.
-
-**Human performance as a reference.** Stallkamp et al. (2012), who introduced the GTSRB benchmark, report an average human recognition rate of **98.84%** — lower than the baseline achieved here. This confirms that GTSRB is considered a largely solved benchmark in the literature, and that near-perfect CNN performance is consistent with established results rather than a sign of overfitting or data leakage.
+**Human performance as a reference.** Stallkamp et al. (2012) report a human recognition rate of **98.84%** — below the baseline achieved here. Near-perfect CNN performance is therefore consistent with established results in the literature.
 
 ---
 
@@ -194,17 +194,19 @@ Together, these four variants form a structured ablation study — each changes 
 | LeakyReLU CNN | 99.46% | 32 | 629,291 | 271.5 s |
 | Stride CNN | 99.52% | 28 | 823,051 | 236.9 s |
 
+Because the test set contains 5,881 samples, a difference of 0.1 percentage points corresponds to approximately six images. Accuracy differences below this threshold should not be overinterpreted as meaningful improvements.
+
 ![Model comparison summary: test accuracy, accuracy vs. parameters, and training time](results/task05/model_comparison_summary.png)
 
 ![Training accuracy curves for all five model variants](results/task05/model_comparison_curves.png)
 
 ### 5.2 Variant A — Deep CNN
 
-The Deep CNN adds a fourth convolutional block (128→256 filters) and expands the classifier from 256 to 512 hidden units, as shown in the architecture diagram in Section 4.1 (right side). Additional depth allows the network to learn increasingly abstract representations: early layers detect edges and gradients, deeper layers combine these into shape- and symbol-level features. This variant achieves the **highest test accuracy of 99.81%** — only 11 wrong predictions out of 5,881 — with only a 49% parameter increase over the baseline. Training time is nearly identical (284 s vs. 276 s), making it the most cost-effective improvement overall.
+The Deep CNN adds a fourth convolutional block (128→256 filters, 3×3 kernels, BatchNorm, ReLU, MaxPool) and expands the classifier from 256 to 512 hidden units, as shown in Section 4.1 (right). All other settings — Dropout(0.5), same augmentation pipeline and data split — are identical to the baseline. Additional depth allows the network to learn increasingly abstract representations: early layers detect edges, deeper layers combine these into shape- and symbol-level features. This variant achieves the **highest test accuracy of 99.81%** — only 11 wrong predictions out of 5,881 — with only a 49% parameter increase over the baseline. Training time is nearly identical (284 s vs. 276 s), making it the most cost-effective improvement overall.
 
 ### 5.3 Variant B — MobileNetV2 (Transfer Learning)
 
-MobileNetV2, pretrained on ImageNet (1.2 million images, 1,000 classes), was used as a feature extractor with a custom two-layer classifier head adapted for the 43 GTSRB classes. All weights including the backbone were fine-tuned during training.
+MobileNetV2 (Sandler et al., 2018), pretrained on ImageNet (1.2 million images, 1,000 classes), was used with a custom two-layer classifier head adapted for the 43 GTSRB classes. Inputs were resized to 32×32 pixels and normalized using GTSRB channel statistics; all backbone weights were fine-tuned during training.
 
 Transfer learning is motivated by the fact that low-level visual features — edges, textures, gradients — are shared across many image domains. The pretrained backbone provides a strong initialization, particularly beneficial for the rarest GTSRB classes with fewer than 200 training samples.
 
@@ -224,7 +226,7 @@ The Stride CNN achieves 99.52% test accuracy and is the **fastest to train** (23
 
 ### 5.6 Hyperparameter Tuning
 
-To systematically search for optimal training hyperparameters, Bayesian optimisation was applied using the Optuna framework with a Tree-structured Parzen Estimator (TPE) sampler. The search space covered the following dimensions:
+To systematically search for optimal training hyperparameters, Bayesian optimisation was applied using the Optuna framework (Akiba et al., 2019) with a Tree-structured Parzen Estimator (TPE) sampler. The search space covered the following dimensions:
 
 | Hyperparameter | Search Range |
 |---------------|-------------|
@@ -234,11 +236,11 @@ To systematically search for optimal training hyperparameters, Bayesian optimisa
 | Optimizer | Adam, SGD |
 | Weight decay | 1×10⁻⁵ to 1×10⁻³ (log scale) |
 
-A MedianPruner terminated unpromising trials early based on intermediate validation accuracy, reducing the total compute budget. Thirty trials of ten epochs each were run on the StrideCNN architecture. The search is designed to inform future training runs and validate that the manually chosen default configuration (Adam, lr=1×10⁻³, batch size=64) lies in a competitive region of the hyperparameter space.
+A MedianPruner terminated unpromising trials early, reducing the total compute budget. Thirty trials of ten epochs each were run on the StrideCNN architecture. This search was exploratory; due to compute constraints, the best-found configuration was not used to retrain all final models. It serves to validate that the manually chosen default (Adam, lr=1×10⁻³, batch size=64) lies in a competitive region of the hyperparameter space.
 
 ### 5.7 Latent Space Visualisation
 
-To understand what the network has learned internally, feature vectors were extracted from the penultimate layer of the baseline CNN (before the final linear classifier) and projected to two dimensions using t-SNE (t-distributed Stochastic Neighbor Embedding) with perplexity 30. Up to 2,000 validation samples were used to keep the computation tractable.
+To understand what the network has learned internally, feature vectors were extracted from the penultimate layer of the baseline CNN (before the final linear classifier) and projected to two dimensions using t-SNE (van der Maaten & Hinton, 2008) with perplexity 30. Up to 2,000 validation samples were used to keep the computation tractable.
 
 This analysis applies the dimensionality reduction concept from Lecture 7. If the 43 classes form distinct clusters in the 2D projection, the network has learned to separate them in its internal representation space — providing interpretable evidence beyond accuracy numbers alone. Visually similar classes such as different speed limit signs would be expected to appear close together, while structurally distinct classes such as stop signs and yield signs should be well separated.
 
@@ -250,7 +252,7 @@ The architecture follows the encoder–bottleneck–decoder structure: the encod
 
 $$\mathcal{L}(\theta) = \frac{1}{n} \sum_{i=1}^{n} (\hat{a}_i - a_i)^2$$
 
-After training, the reconstruction error serves as an anomaly score. A threshold at the 95th percentile of the validation error distribution is used to flag inputs as anomalous — images of known signs that the autoencoder has learned to reconstruct well receive low error, while degraded, occluded, or unknown inputs produce high error and are flagged. This provides a safety mechanism for deployment: rather than forcing every input into one of 43 classes, the combined system can decline to classify inputs that fall outside the known distribution.
+After training, the reconstruction error serves as an anomaly score. A threshold at the 95th percentile of the validation error distribution is used to flag inputs as anomalous — images of known signs that the autoencoder has learned to reconstruct well receive low error, while degraded, occluded, or unknown inputs produce high error and are flagged. This component was implemented as a proof-of-concept to demonstrate the anomaly detection principle from Lecture 7; quantitative evaluation on out-of-distribution samples was beyond the scope of this project. In a deployed system, this approach would provide a safety mechanism allowing the combined classifier to decline predictions on inputs outside the known distribution.
 
 ---
 
@@ -317,9 +319,7 @@ A critical concern for real-world deployment is whether the model performs dispr
 | Rare classes (bottom 10) | ~169 per class | 99.52% |
 | Gap | — | **0.34 percentage points** |
 
-The accuracy gap of only **0.34 pp** between the most and least represented classes demonstrates that the pipeline handles class imbalance effectively. Notably, several of the rarest classes — Speed limit (20km/h) with only 140 training images, Dangerous curve left with 145 — achieve 100% test accuracy. This result validates that the data augmentation strategy and training procedure generalize well even under significant class imbalance.
-
-A model accurate on average but failing systematically on rare classes would be unsuitable for deployment — rare signs such as "road narrows" require reliable recognition precisely because they appear infrequently.
+The 0.34 pp accuracy gap between the most and least represented classes suggests that augmentation and training mitigate class imbalance effectively — notably, several of the rarest classes (Speed limit 20km/h: 140 images, Dangerous curve left: 145) achieve 100% test accuracy. These figures are based on a single training run and split; the absolute gap may vary across runs. A model accurate on average but failing on rare classes would be unsuitable for deployment — rare signs require reliable recognition precisely because they appear infrequently.
 
 ### 6.7 Robustness Testing
 
@@ -331,15 +331,15 @@ Real-world deployment involves conditions not present in clean test data. Two st
 | Gaussian Blur (kernel=5) | 97.01% | −2.80 pp |
 | Gaussian Noise (σ=0.1) | 71.86% | **−27.95 pp** |
 
-The model maintains strong performance under blur, which simulates motion blur or out-of-focus optics. However, **Gaussian noise causes a dramatic drop to 71.86%** — a well-known vulnerability of CNNs trained exclusively on clean images. This is the most significant limitation for real-world deployment with low-quality sensors.
+The model maintains strong performance under blur, which simulates motion blur or out-of-focus optics. However, **Gaussian noise causes a dramatic drop to 71.86%** — a well-known vulnerability of CNNs trained exclusively on clean images. The σ=0.1 noise level is applied to normalized pixel values in [0,1], representing moderate corruption. This result is the most significant limitation for real-world deployment with low-quality sensors.
 
 ### 6.8 Grad-CAM Interpretability
 
 ![Grad-CAM visualizations: image regions that most influenced the model's predictions](results/task06/deep/gradcam_examples.png)
 
-Gradient-weighted Class Activation Mapping (Grad-CAM) highlights the image regions that most strongly influenced the model's predictions by computing the gradient of the predicted class score with respect to the final convolutional feature maps.
+Gradient-weighted Class Activation Mapping (Grad-CAM; Selvaraju et al., 2017) highlights the image regions that most strongly influenced the model's predictions by computing the gradient of the predicted class score with respect to the final convolutional feature maps.
 
-The visualizations confirm that the model attends to the relevant sign regions — shape, symbol, and color — rather than background artifacts. A model exploiting spurious background correlations would be fragile under distribution shift; the Grad-CAM results provide evidence this is not the case.
+The visualizations provide evidence that the model attends to the relevant sign regions — shape, symbol, and color — rather than background artifacts. A model exploiting spurious background correlations would be fragile under distribution shift; the Grad-CAM results suggest this is not the case here.
 
 ---
 
@@ -347,43 +347,51 @@ The visualizations confirm that the model attends to the relevant sign regions �
 
 ### 7.1 Summary of Findings
 
-All five models exceed 99% test accuracy on the clean GTSRB test split, confirming that CNN-based classifiers are well-suited to this task. The key findings are:
+All five models exceed 99% test accuracy on the clean GTSRB test split, providing evidence that CNN-based classifiers are well-suited to this task. The key findings are:
 
-**Depth helps, but with diminishing returns.** Adding a fourth convolutional block (Deep CNN) increases accuracy by 0.32 pp over the baseline at minimal additional cost. This is the most effective improvement found.
+**Depth helps.** Adding a fourth convolutional block (Deep CNN) increases accuracy by 0.32 pp at minimal additional cost — the most cost-effective improvement.
 
-**Transfer learning is not necessary for GTSRB.** MobileNetV2 delivers smaller accuracy gains at significantly higher computational cost. The GTSRB training set (27,447 images) is large enough for from-scratch CNNs to learn excellent representations without ImageNet pretraining.
+**Transfer learning is not necessary here.** MobileNetV2 delivers smaller accuracy gains at 4× the parameters and 2× the training time. The GTSRB training set is large enough for from-scratch CNNs.
 
-**Activation function and downsampling choices have minimal impact.** Replacing ReLU with Leaky ReLU or MaxPool with strided convolutions produces no meaningful accuracy change, suggesting that BatchNorm is the dominant stabilizing factor, and that the choice of downsampling method is secondary.
+**Activation and downsampling choices have minimal impact.** Replacing ReLU with Leaky ReLU or MaxPool with strided convolutions produces no meaningful accuracy change, suggesting BatchNorm is the dominant stabilizing factor.
 
-**The model generalizes well across rare classes.** The 0.34 pp accuracy gap between frequent and rare classes confirms that the augmentation and training strategy mitigate class imbalance effectively, without requiring explicit reweighting or oversampling.
+**Class imbalance is handled effectively.** The 0.34 pp accuracy gap between frequent and rare classes provides evidence that the augmentation strategy mitigates imbalance without explicit reweighting.
 
-**Noise robustness is the main open challenge.** The 27.95 pp accuracy drop under Gaussian noise is the clearest limitation. This points to a concrete gap between benchmark performance and real-world reliability.
+**Noise robustness is the main open challenge.** The 27.95 pp drop under Gaussian noise is the clearest gap between benchmark performance and real-world reliability.
 
-### 7.2 Assumptions, Limitations, and Biases
+### 7.2 Research Questions Revisited
+
+| Research Question | Finding |
+|-------------------|---------|
+| Can a compact from-scratch CNN reach near-human accuracy? | Yes — Baseline CNN (629K params) reaches 99.49%, surpassing human performance (98.84%) |
+| Do architectural improvements meaningfully outperform the baseline? | Marginally — Deep CNN gains 0.32 pp; other variants show no meaningful improvement |
+| Does transfer learning from ImageNet provide an advantage? | Not meaningfully — MobileNetV2 gains 0.17 pp at 4× the cost |
+| How robust is the best model to real-world degradations? | Blur: −2.80 pp (robust); Noise σ=0.1: −27.95 pp (significant vulnerability) |
+| Does the model treat rare and frequent classes equally? | Near-equally — 0.34 pp gap (single run estimate) between most and least frequent classes |
+
+### 7.3 Assumptions, Limitations, and Biases
 
 **Fixed 32×32 resolution.** Downsampling all images to 32×32 makes the pipeline fast and lightweight but discards spatial detail. Some visually similar classes (e.g. pedestrian vs. bicycle crossing signs) might be more reliably distinguished at higher resolution (64×64 or 96×96), at the cost of larger models and longer training.
 
 **Single random seed for improved models.** While two seeds were compared for the baseline, the improved model variants were each trained once. Performance estimates would be statistically more reliable with multiple independent runs.
 
-**Clean training data.** No noise or blur augmentation was applied during training. The model was optimized for clean inputs only, which directly explains its poor noise robustness. A production system would require noise injection during training or a preprocessing denoising step.
+**Clean training data.** No noise or blur augmentation was applied during training, which directly explains the poor noise robustness (Section 6.7). A production system would require noise injection or a denoising preprocessing step.
 
-**Fixed data split.** The 70/15/15 split is applied once with a fixed seed. Cross-validation would provide a more robust estimate of generalization performance but was not applied here due to the computational cost of training five model variants.
-
-**Benchmark vs. deployment gap.** The GTSRB test set shares the same distribution as the training data. In real deployment, signs may appear under conditions not represented in the dataset — unusual weather, different countries, damaged or vandalized signs. Performance under distribution shift was not evaluated beyond the noise and blur robustness tests.
+**Fixed data split.** The 70/15/15 split is applied once with a fixed seed. Cross-validation would provide more robust performance estimates but was not applied due to the computational cost of training five variants.
 
 Beyond these technical limitations, several systematic biases affect the trustworthiness of the results and must be considered explicitly:
 
-**Selection bias.** GTSRB was recorded exclusively on German roads under a limited range of conditions. Signs from other countries, differently styled variants, or extreme conditions (heavy rain, snow, night) are absent from the training distribution. A classifier trained on this data cannot be assumed to generalise beyond it.
+**Selection bias.** GTSRB was recorded exclusively on German roads. Signs from other countries, extreme conditions (heavy rain, snow, night), or differently styled variants are absent from the training distribution; generalisation beyond it cannot be assumed.
 
 **Class frequency bias.** The 11× imbalance between the most and least frequent classes creates a systematic risk that the model optimises disproportionately for common classes. Although the measured gap is small (0.34 pp), failures on rare signs such as "road narrows" are safety-critical precisely because they appear less often in training.
 
-**Representation bias.** The dataset contains no damaged, faded, or vandalized signs. The model has no experience with degraded signs common in real environments. Gaussian noise tests partially probe this, but do not cover realistic damage patterns such as occlusion or physical deformation.
+**Representation bias.** The dataset contains no damaged, faded, or vandalized signs. Gaussian noise tests partially probe this gap but do not cover realistic patterns such as occlusion or physical deformation.
 
 **Measurement bias.** All images were captured from a single camera system. Differences in sensor quality, mounting angle, and lens characteristics across vehicles are not represented, and performance may degrade on data from different sensors.
 
-### 7.3 Suitability Assessment
+### 7.4 Suitability Assessment
 
-For the purpose of this course project — demonstrating CNN-based traffic sign classification on a standard benchmark — the approach is fully suitable. The Deep CNN achieves near-perfect accuracy (99.81%), generalizes well across class frequencies, and the Grad-CAM analysis confirms it learns meaningful visual features.
+For the purpose of this course project — demonstrating CNN-based traffic sign classification on a standard benchmark — the approach is fully suitable. The Deep CNN achieves near-perfect accuracy (99.81%), generalizes well across class frequencies, and the Grad-CAM analysis provides evidence that it learns meaningful visual features.
 
 For real-world deployment in a safety-critical system, the noise sensitivity (71.86% accuracy under σ=0.1 Gaussian noise) would need to be addressed before the system could be considered reliable. The most practical path forward would be augmenting the training set with noise and blur perturbations, which is a well-established technique for improving CNN robustness at minimal cost.
 
@@ -407,11 +415,9 @@ The current system classifies pre-cropped traffic sign images. Several natural e
 
 ## 9. Conclusion
 
-This project demonstrates that a compact from-scratch CNN can achieve near-perfect accuracy on the GTSRB traffic sign classification benchmark. The Deep CNN — a four-block convolutional network with 936,235 trainable parameters — reaches **99.81% top-1 test accuracy**, misclassifying only 11 out of 5,881 test images.
+The central question was whether a compact from-scratch CNN can solve GTSRB reliably. It can: the Deep CNN reaches **99.81% test accuracy** with 936K parameters, misclassifying only 11 of 5,881 test images. The structured comparison of five variants shows that one additional convolutional block is the most cost-effective improvement; transfer learning, alternative activations, and learned downsampling offer no meaningful advantage on this dataset.
 
-The systematic comparison of five model variants shows that architectural depth is the most cost-effective improvement, while transfer learning offers diminishing returns on a dataset of this size. The bias analysis confirms that the pipeline handles class imbalance well, with only a 0.34 pp accuracy gap between frequent and rare classes. Grad-CAM visualizations confirm that predictions are based on the sign itself rather than background correlations.
-
-The primary limitation is noise sensitivity: a 27.95 pp accuracy drop under Gaussian noise is the clearest gap between benchmark performance and real-world reliability. Combining the classifier with an object detection stage and augmenting training with realistic perturbations are the two most impactful next steps toward a deployable system.
+The pipeline handles class imbalance well (0.34 pp accuracy gap, single-run estimate) and Grad-CAM provides evidence that the model learns sign-relevant features rather than background artifacts. The principal limitation is noise sensitivity (−27.95 pp at σ=0.1 on normalized inputs), which is the clearest remaining gap between benchmark performance and real-world reliability. Noise augmentation during training and integration with an object detector are the two most impactful steps toward deployment.
 
 ---
 
