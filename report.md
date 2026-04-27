@@ -52,19 +52,6 @@ The dataset covers a wide variety of sign categories: speed limit signs of diffe
 ![Class distribution across all 43 GTSRB traffic sign categories](results/task03/class_distribution.png)
 
 *The x-axis shows class IDs 0–42. The full class ID legend is provided in the table below.*
-
-The dataset is **not uniformly distributed**. The most frequent class is Speed limit (30 km/h) (class ID 1) with 1,552 training images, while the rarest class is Speed limit (20 km/h) (class ID 0) with only 140 images.
-
-| Metric | Value |
-|--------|-------|
-| Total training images | 39,209 |
-| Number of classes | 43 |
-| Most frequent class | Speed limit (30 km/h): 1,552 images |
-| Least frequent class | Speed limit (20 km/h): 140 images |
-| Imbalance ratio (max/min) | ~11× |
-
-The **imbalance ratio of ~11×** means that the model sees roughly eleven times more examples of the most common sign than of the rarest one during training. This creates a risk that the model learns frequent classes very reliably while rare classes receive insufficient training signal, which can lead to worse performance on precisely the signs that appear infrequently in real traffic.
-
 **Class ID Legend (all 43 GTSRB classes):**
 
 | ID | Class Name | ID | Class Name |
@@ -91,6 +78,19 @@ The **imbalance ratio of ~11×** means that the model sees roughly eleven times 
 | 19 | Dangerous curve left | 41 | End of no passing |
 | 20 | Dangerous curve right | 42 | End of no passing by vehicles over 3.5t |
 | 21 | Double curve | | |
+
+The dataset is **not uniformly distributed**. The most frequent class is Speed limit (30 km/h) (class ID 1) with 1,552 training images, while the rarest class is Speed limit (20 km/h) (class ID 0) with only 140 images.
+
+| Metric | Value |
+|--------|-------|
+| Total training images | 39,209 |
+| Number of classes | 43 |
+| Most frequent class | Speed limit (30 km/h): 1,552 images |
+| Least frequent class | Speed limit (20 km/h): 140 images |
+| Imbalance ratio (max/min) | ~11× |
+
+The **imbalance ratio of ~11×** means that the model sees roughly eleven times more examples of the most common sign than of the rarest one during training. This creates a risk that the model learns frequent classes very reliably while rare classes receive insufficient training signal, which can lead to worse performance on precisely the signs that appear infrequently in real traffic.
+
 
 ### 2.3 Visual Samples and Class Similarity
 
