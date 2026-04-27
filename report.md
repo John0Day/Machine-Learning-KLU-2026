@@ -23,14 +23,6 @@ Traffic sign recognition is a core component of modern advanced driver assistanc
 
 This project implements and evaluates a series of CNN architectures for traffic sign classification on the German Traffic Sign Recognition Benchmark (GTSRB), structured in six stages: dataset analysis, preprocessing, baseline modeling, architecture improvements, evaluation, and this report.
 
-The central research questions are:
-
-- Can a compact, from-scratch CNN reach near-human accuracy on GTSRB?
-- Do architectural improvements (depth, activation functions, strided convolutions) meaningfully outperform the baseline?
-- Does transfer learning from ImageNet provide an advantage on this specialized dataset?
-- How robust is the best model to real-world image degradations such as noise and blur?
-- Does the model treat rare and frequent traffic sign classes equally well?
-
 ---
 
 ## 2. Dataset
@@ -359,17 +351,7 @@ All five models exceed 99% test accuracy on the clean GTSRB test split, providin
 
 **Noise robustness is the main open challenge.** The 27.95 pp drop under Gaussian noise is the clearest gap between benchmark performance and real-world reliability.
 
-### 7.2 Research Questions Revisited
-
-| Research Question | Finding |
-|-------------------|---------|
-| Can a compact from-scratch CNN reach near-human accuracy? | Yes — Baseline CNN (629K params) reaches 99.49%, surpassing human performance (98.84%) |
-| Do architectural improvements meaningfully outperform the baseline? | Marginally — Deep CNN gains 0.32 pp; other variants show no meaningful improvement |
-| Does transfer learning from ImageNet provide an advantage? | Not meaningfully — MobileNetV2 gains 0.17 pp at 4× the cost |
-| How robust is the best model to real-world degradations? | Blur: −2.80 pp (robust); Noise σ=0.1: −27.95 pp (significant vulnerability) |
-| Does the model treat rare and frequent classes equally? | Near-equally — 0.34 pp gap (single run estimate) between most and least frequent classes |
-
-### 7.3 Assumptions, Limitations, and Biases
+### 7.2 Assumptions, Limitations, and Biases
 
 **Fixed 32×32 resolution.** Downsampling all images to 32×32 makes the pipeline fast and lightweight but discards spatial detail. Some visually similar classes (e.g. pedestrian vs. bicycle crossing signs) might be more reliably distinguished at higher resolution (64×64 or 96×96), at the cost of larger models and longer training.
 
@@ -389,7 +371,7 @@ Beyond these technical limitations, several systematic biases affect the trustwo
 
 **Measurement bias.** All images were captured from a single camera system. Differences in sensor quality, mounting angle, and lens characteristics across vehicles are not represented, and performance may degrade on data from different sensors.
 
-### 7.4 Suitability Assessment
+### 7.3 Suitability Assessment
 
 For the purpose of this course project — demonstrating CNN-based traffic sign classification on a standard benchmark — the approach is fully suitable. The Deep CNN achieves near-perfect accuracy (99.81%), generalizes well across class frequencies, and the Grad-CAM analysis provides evidence that it learns meaningful visual features.
 
