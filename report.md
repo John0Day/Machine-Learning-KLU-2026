@@ -67,7 +67,6 @@ The dataset covers a wide variety of sign categories: speed limit signs of diffe
 | 8 | Speed limit (120 km/h) | 19 | Dangerous curve left | 30 | Beware of ice/snow | 41 | End of no passing |
 | 9 | No passing | 20 | Dangerous curve right | 31 | Wild animals crossing | 42 | End of no passing by vehicles over 3.5t |
 | 10 | No passing for vehicles over 3.5t | 21 | Double curve | 32 | End of all speed and passing limits |  |  |
-|
 
 The dataset is **not uniformly distributed**. The most frequent class is Speed limit (30 km/h) (class ID 1) with 1,552 training images, while the rarest class is Speed limit (20 km/h) (class ID 0) with only 140 images.
 
@@ -86,7 +85,7 @@ The **imbalance ratio of ~11×** means that the model sees roughly eleven times 
 
 ![One representative image per class](results/task03/sample_images_by_class.png)
 
-The sample grid shows one image per class (IDs 0–42, left to right, top to bottom). We verified the labels against the GTSRB class mapping. For example, the image at position 4 (class ID 4) correctly shows a Speed limit (70 km/h) sign. The grid illustrates two important challenges. First, images within a class vary considerably in brightness, contrast, viewing angle, and background. This is the intra-class variation the model must learn to ignore. Second, many classes share the same visual template and differ only in a small detail: speed limit signs differ only in their displayed number, and end-of-restriction signs share a similar grey circle design. This inter-class similarity is a source of potential confusion for the classifier.
+The sample grid shows one image per class (IDs 0–42, left to right, top to bottom). We verified the labels against the GTSRB class mapping. The grid illustrates two important challenges. First, images within a class vary considerably in brightness, contrast, viewing angle, and background. This is the intra-class variation the model must learn to ignore. Second, many classes share the same visual template and differ only in a small detail: speed limit signs differ only in their displayed number, and end-of-restriction signs share a similar grey circle design. This inter-class similarity is a source of potential confusion for the classifier.
 
 ### 2.4 Benchmark Context and Evaluation Setup
 
@@ -102,7 +101,9 @@ In this project, the official test set was not used because its ground-truth lab
 
 ### 3.1 Data Split
 
-The 39,209 training images are divided into three non-overlapping subsets using a fixed random seed (42) for reproducibility:
+Before any model is trained, the 39,209 labelled images from the GTSRB training set must be divided into three non-overlapping subsets: one for training, one for validation, and one for final testing. This separation is essential because a model evaluated on data it has already seen during training would appear to perform better than it actually does on new inputs. The validation set serves a different role from the test set: it is used continuously during training to monitor whether the model is still improving or beginning to overfit. The test set is only used once at the very end, after all training and model selection decisions have been made, to produce an unbiased performance estimate.
+
+We chose a 70/15/15 split, which gives the model enough training data to learn well while reserving a sufficiently large test set for reliable evaluation:
 
 | Split | Fraction | Images |
 |-------|----------|--------|
@@ -110,40 +111,46 @@ The 39,209 training images are divided into three non-overlapping subsets using 
 | Validation | 15% | 5,881 |
 | Test | 15% | 5,881 |
 
+The split is performed using **stratified sampling**, meaning the class distribution is preserved across all three subsets. Without stratification, a random split could assign most images of a rare class entirely to the training set, leaving the validation and test sets without enough examples of that class to evaluate fairly. With stratification, a rare class with only 140 total images still receives approximately 98 training, 21 validation, and 21 test images. All three splits therefore reflect the same class proportions as the full dataset.
+
+A fixed random seed (42) is used for reproducibility. This ensures that every model variant in this project is trained and evaluated on exactly the same images, making the comparisons between architectures fair and meaningful.
+
 ![Per-class sample distribution across training, validation, and test splits](results/preprocessing_split_distribution.png)
 
-*The x-axis shows class IDs 0–42 (same mapping as Section 2.2: class 0 = Speed limit 20 km/h, class 14 = Stop, class 17 = No entry, class 38 = Keep right). Each bar group shows how many images of that class appear in each split.*
-
-The split preserves the class proportions across all three subsets (stratified split), so the relative frequency of each class is approximately equal in training, validation, and test sets. This ensures that evaluation metrics are not distorted by split imbalance: a rare class with only 140 total images ends up with roughly 98 training, 21 validation, and 21 test images.
-
-The validation set is used during training to monitor generalization and apply early stopping. The test set is held out entirely and evaluated only once per model. Using a fixed seed ensures that all model variants are evaluated on identical splits, making comparisons fair.
+*The x-axis shows class IDs 0–42 using the same mapping as Section 2.2. Each bar group shows how many images of that class appear in each split.*
 
 ### 3.2 Image Transformations
 
-All images are resized to **32×32 pixels** before processing. We chose this resolution as a deliberate tradeoff: it is compact enough for fast training on consumer hardware while retaining enough spatial detail for the model to distinguish sign shapes, symbols, and colors. Higher resolutions like 64×64 would increase computational cost substantially without guaranteed accuracy gains, a tradeoff we revisit in the Future Work section.
+The GTSRB images arrive at different resolutions, ranging from 15×15 to over 250×250 pixels. To feed them into a neural network, all images must first be brought to a uniform size. We resize every image to **32×32 pixels**. This resolution is a deliberate tradeoff: it is compact enough for fast training on consumer hardware while retaining enough spatial detail for the model to distinguish sign shapes, symbols, and numbers. A higher resolution such as 64×64 would substantially increase the memory and computation required per training step without guaranteeing meaningful accuracy gains on a task where the discriminative features are largely shape- and color-based rather than fine-grained texture. This tradeoff is revisited in the Future Work section.
 
-**Training transforms** apply stochastic augmentations to increase effective diversity:
+For the training set, we apply a set of random augmentations before each image is passed to the model. The purpose of augmentation is to expose the model to more varied versions of the same sign during training, so that it learns to recognize signs under conditions it may not have seen in the original data:
 
 | Transform | Parameters | Purpose |
-|-----------|-----------|---------|
-| Random Rotation | ±15° | Simulates tilted camera angles |
-| Color Jitter | brightness ±0.4, contrast ±0.4, saturation ±0.3 | Simulates lighting and weather variation |
-| Random Affine | translate ±10% | Simulates off-center sign placement |
-| Normalize | mean=(0.3337, 0.3064, 0.3171), std=(0.2672, 0.2564, 0.2629) | Centers input distribution |
+|-----------|------------|---------|
+| Random Rotation | ±15° | Simulates a camera mounted at a slight angle or a sign that is not perfectly upright |
+| Color Jitter | brightness ±0.4, contrast ±0.4, saturation ±0.3 | Simulates different lighting conditions, times of day, and weather |
+| Random Affine | translate ±10% | Simulates a sign that is not perfectly centered in the image frame |
+| Normalize | mean=(0.3337, 0.3064, 0.3171), std=(0.2672, 0.2564, 0.2629) | Centers and scales each color channel to a consistent range |
 
-**Validation and test transforms** are fully deterministic: only resize, convert to tensor, and normalize. No augmentation is applied during evaluation, so measured accuracy honestly reflects model performance on unmodified inputs.
+These augmentations are applied randomly and independently for each image in each training epoch, so the model effectively never sees the exact same version of an image twice. This acts as a form of regularization and is especially important for the rarest sign categories, where only 140 to 200 original training images are available.
+
+For the validation and test sets, no augmentation is applied. These transforms are fully deterministic: resize, convert to tensor, and normalize. Keeping the evaluation inputs clean ensures that measured accuracy reflects how well the model handles real unmodified images, rather than being influenced by the randomness of augmentation.
 
 ### 3.3 Normalization
 
-Pixel values are converted from [0, 255] to floating-point [0.0, 1.0], then normalized per channel using the mean and standard deviation computed from the GTSRB training set. Without normalization, large differences in pixel scales across channels distort the loss surface and slow convergence.
+Normalization is applied to all three splits and deserves a separate explanation. After resizing, pixel values are integers in the range [0, 255]. We first convert them to floating-point values in [0.0, 1.0] by dividing by 255, and then normalize each color channel individually by subtracting the channel mean and dividing by the channel standard deviation. Both statistics are computed from the training set only, and the same values are then applied to the validation and test sets.
+
+The reason for normalization is that gradient-based optimization works most efficiently when the input features are on a similar scale and centered near zero. If one color channel has systematically higher values than another, the network's weights must compensate for this imbalance rather than focusing on the actual structure of the image. Normalization removes this problem and makes the loss surface smoother, which in practice leads to faster and more stable convergence during training.
 
 ### 3.4 Data Augmentation as Regularization
 
-Augmentation artificially increases the effective diversity of the training set. The model never sees the exact same pixel values twice, which prevents memorization of specific training examples. This is particularly important for the rarest sign categories with fewer than 200 training samples.
+As described in Section 3.2, augmentation is applied during training but not during evaluation. It is worth explaining why this combination works as regularization. When the same image appears in multiple training epochs with slightly different rotations, brightness levels, and positions, the model cannot simply memorize the pixel pattern of a specific training image to get that example correct. Instead, it is forced to learn features that remain consistent across these variations, such as the circular outline of a speed limit sign or the red triangle of a warning sign. This generalization pressure is precisely what prevents the model from overfitting to the training data. The effect is most pronounced for rare sign classes, where augmentation can multiply the effective number of distinct training examples the model encounters over the course of training.
 
 ### 3.5 Mini-Batch Loading and Early Stopping
 
-Images are fed to the model in mini-batches of size 64. Mini-batch training introduces stochasticity into the optimization, which helps the optimizer escape poor local minima. Early stopping with patience 5 halts training when validation accuracy does not improve for five consecutive epochs, restoring the best-seen checkpoint for evaluation.
+During training, images are not processed one at a time or all at once. Instead, they are grouped into mini-batches of 64 images, and the model's weights are updated after each batch. This approach introduces controlled randomness into the optimization process: because each gradient update is computed from a random subset of the training data rather than the full dataset, the optimizer explores a noisier but often more productive path through the loss surface, which helps it avoid getting stuck in poor local minima. A batch size of 64 was chosen as a practical balance between training speed, memory usage, and gradient stability.
+
+To prevent the model from training too long and overfitting to the training set, we use early stopping with a patience of 5. This means training is automatically halted if the validation accuracy does not improve for five consecutive epochs. When training stops, the model weights from the epoch with the highest validation accuracy are restored for final evaluation. This ensures that we always evaluate the best version of the model rather than an overfit later version, and it also saves training time by avoiding unnecessary epochs once the model has converged.
 
 ---
 
