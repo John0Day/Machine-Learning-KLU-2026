@@ -35,6 +35,7 @@ import torch.nn as nn
 from sklearn.manifold import TSNE
 
 from model import BaselineCNN
+from model_improved import DeepCNN
 from preprocessing import get_dataloaders
 
 
@@ -188,7 +189,10 @@ if __name__ == "__main__":
 
     # Load model
     print(f"Loading model from {args.model_path} …")
-    model = BaselineCNN(num_classes=43, input_size=args.img_size).to(device)
+    if "deep" in str(args.model_path).lower():
+        model = DeepCNN(num_classes=43, input_size=args.img_size).to(device)
+    else:
+        model = BaselineCNN(num_classes=43, input_size=args.img_size).to(device)
     checkpoint = torch.load(args.model_path, map_location=device)
     state_dict = checkpoint.get("model_state_dict", checkpoint)
     model.load_state_dict(state_dict)
