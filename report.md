@@ -62,7 +62,7 @@ The sample grid illustrates two complementary challenges. Within each class, ima
 
 ### 2.3 Benchmark Context and Evaluation Setup
 
-GTSRB was used in the IJCNN 2011 competition, where participants were evaluated on a separate official test set of **12,630 images**. The best submitted system, a committee of CNNs, reached **99.46% accuracy**, surpassing the reported human recognition rate of **98.84%** (Stallkamp et al., 2012). Because the official test labels were not available in our pipeline, all accuracy figures in this report are computed on an internal 15% hold-out split and are not directly comparable to the competition leaderboard. They are valid for comparing our five model variants because all are evaluated under identical conditions on the same internal split.
+GTSRB was used in the IJCNN 2011 competition, where participants were evaluated on a separate official test set of **12,630 images**. The best submitted system, a committee of CNNs, reached **99.46% accuracy**, surpassing the reported human recognition rate of **98.84%** (Stallkamp et al., 2012). Because the official test labels were not available in our pipeline, all accuracy figures in this report are computed on an internal 15% hold-out split and are not directly comparable to the competition leaderboard. They are valid for comparing the five evaluated models because all are evaluated under identical conditions on the same internal split.
 
 ### 2.4 Data Split
 
@@ -132,7 +132,7 @@ Spatial resolution decreases while channel count increases at every stage. By th
 | Hyperparameter | Value | Notes |
 |---------------|-------|-------|
 | Optimizer | Adam | Adapts learning rate per parameter using past gradients and their variance; more stable and less sensitive to initial learning rate than plain SGD |
-| Initial learning rate | 1×10⁻³ | Standard Adam default; confirmed effective by the hyperparameter search in Section 4.6 |
+| Initial learning rate | 1×10⁻³ | Standard Adam default; close to the best learning rate found in the hyperparameter search |
 | LR scheduler | ReduceLROnPlateau (patience=3, factor=0.5) | Halves the learning rate when validation loss does not improve for 3 consecutive epochs, allowing finer updates near convergence |
 | Loss function | CrossEntropyLoss | Standard multi-class classification loss; handles softmax internally |
 | Batch size | 64 | Balances gradient stability, memory usage, and training speed |
@@ -158,7 +158,7 @@ Both seeds produce comparable accuracy, confirming that results are not dependen
 
 The seed-42 training curves show training and validation loss decreasing steadily, with both curves tracking closely throughout. There is no clear divergence between training and validation loss, suggesting no strong overfitting during this run.
 
-**Canonical baseline for model comparison.** The model comparison in Section 4 uses a separate run in which all five model variants were trained under identical conditions with a maximum of 20 epochs. In that run the baseline reached **99.49% test accuracy** (30 wrong out of 5,881 test images). This is the canonical figure for all model comparisons. The two seed runs above serve only to confirm stability.
+**Canonical baseline for model comparison.** The model comparison in Section 4 uses a separate run in which all five evaluated models were trained under identical conditions with a maximum of 20 epochs. In that run the baseline reached **99.49% test accuracy** (30 wrong out of 5,881 test images). This is the canonical figure for all model comparisons. The two seed runs above serve only to confirm stability.
 
 Stallkamp et al. (2012) report an average human recognition rate of 98.84% on the official GTSRB benchmark. Baseline accuracies around 99% on our internal split are therefore not surprising, although the figures are not directly comparable because they are based on different evaluation sets.
 
@@ -214,9 +214,29 @@ The Stride CNN achieves 99.52% test accuracy, which is within the noise threshol
 
 ### 4.6 Parameter Sensitivity
 
-A full hyperparameter sensitivity analysis was planned using Optuna with a Tree-structured Parzen Estimator (TPE), covering learning rate, dropout, batch size, optimizer choice, and weight decay. Since the search was not completed in time for the final evaluation, its results are not used to support the model comparison in this report.
+To assess whether our manually chosen hyperparameters fall in a robust region of the search space, we used Optuna with a Tree-structured Parzen Estimator (TPE) to search over five hyperparameters on the Stride CNN architecture. The search ran 30 trials with a maximum of 10 epochs per trial.
 
-The model comparison therefore relies on a fixed training setup applied consistently across all variants. This keeps the comparison fair, but it also means that the reported results reflect performance under one selected hyperparameter configuration rather than fully optimized settings for each architecture.
+| Hyperparameter | Search Range |
+|---------------|-------------|
+| Learning rate | 1×10⁻⁴ to 1×10⁻² (log scale) |
+| Dropout rate | 0.2 to 0.6 |
+| Batch size | 32, 64, 128 |
+| Optimizer | Adam, SGD |
+| Weight decay | 1×10⁻⁵ to 1×10⁻³ (log scale) |
+
+The best trial (trial 6) reached **99.91% validation accuracy** with the following configuration:
+
+| Hyperparameter | Best Value |
+|---------------|-----------|
+| Learning rate | 1.24×10⁻³ |
+| Dropout | 0.274 |
+| Batch size | 32 |
+| Optimizer | Adam |
+| Weight decay | 6.98×10⁻⁴ |
+
+![Optuna optimization history over 30 trials](results/tuning_results.png)
+
+The top 5 trials all used Adam and batch size 32. The main takeaways are qualitative: Adam consistently outperformed SGD across all top-performing trials. The optimal learning rate (1.24×10⁻³) is close to our default of 1×10⁻³, confirming that the default was already in a reasonable range. The best dropout (0.274) is lower than our default of 0.5, suggesting that the Stride CNN architecture requires less regularization than the baseline, possibly because this architecture was less prone to overfitting under the tested settings. Batch size 32 was consistently preferred over 64 or 128, likely because smaller batches provide noisier but more frequent gradient updates, which appears beneficial for this architecture. These results support the conclusion that the manually chosen training defaults are reasonable and that the reported results are unlikely to be the product of an especially lucky configuration.
 
 ### 4.7 Latent Space Visualisation
 
