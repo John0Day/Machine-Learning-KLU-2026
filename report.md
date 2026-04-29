@@ -214,20 +214,9 @@ The Stride CNN achieves 99.52% test accuracy, which is within the noise threshol
 
 ### 4.6 Parameter Sensitivity
 
-> **⚠️ Work in Progress:** The Optuna hyperparameter search (30 trials × 10 epochs) is currently running. This section will be updated with the full quantitative results once the run completes. The search setup and parameter ranges are described below.
+A full hyperparameter sensitivity analysis was planned using Optuna with a Tree-structured Parzen Estimator (TPE), covering learning rate, dropout, batch size, optimizer choice, and weight decay. Since the search was not completed in time for the final evaluation, its results are not used to support the model comparison in this report.
 
-To assess whether our manually chosen hyperparameters fall in a robust region of the search space, we used Optuna with a Tree-structured Parzen Estimator (TPE) to search over five hyperparameters on the Stride CNN architecture:
-
-| Hyperparameter | Search Range |
-|---------------|-------------|
-| Learning rate | 1×10⁻⁴ to 1×10⁻² (log scale) |
-| Dropout rate | 0.2 to 0.6 |
-| Batch size | 32, 64, 128 |
-| Optimizer | Adam, SGD |
-| Weight decay | 1×10⁻⁵ to 1×10⁻³ (log scale) |
-
-The search was exploratory and run on the Stride CNN rather than all model variants. The main takeaway is qualitative: Adam consistently outperformed SGD across trials, and performance was relatively stable across learning rates in the range 5×10⁻⁴ to 2×10⁻³. Batch size had minimal effect on accuracy and mainly affected training speed. Dropout below 0.3 tended to produce slightly higher validation loss. These observations support the conclusion that the chosen default hyperparameters are reasonable and that the results are unlikely to be the product of a particularly lucky configuration.
-
+The model comparison therefore relies on a fixed training setup applied consistently across all variants. This keeps the comparison fair, but it also means that the reported results reflect performance under one selected hyperparameter configuration rather than fully optimized settings for each architecture.
 ### 4.7 Latent Space Visualisation
 
 To examine what the Deep CNN has learned internally, 512-dimensional feature vectors were extracted from the penultimate fully connected layer for 2,000 validation samples and projected to two dimensions using t-SNE (perplexity 30).
