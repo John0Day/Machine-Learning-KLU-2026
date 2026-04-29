@@ -8,11 +8,11 @@
 1. [Introduction](#1-introduction)
 2. [Data and Preprocessing](#2-data-and-preprocessing)
 3. [Baseline Model](#3-baseline-model)
-4. [Model Improvements](#4-model-improvements)
+4. [Model Improvements and Extensions](#4-model-improvements-and-extensions)
 5. [Results and Discussion](#5-results-and-discussion)
 6. [Conclusion and Future Work](#6-conclusion-and-future-work)
 7. [References](#references)
-8. [Appendix](#appendix-a-generated-artifacts)
+8. [Appendix](#appendix)
 
 ---
 
@@ -28,7 +28,7 @@ To study this problem in a controlled and reproducible way, this project uses th
 
 This project investigates how far compact convolutional neural networks can be pushed on the GTSRB classification task before comparing them with a pretrained model. We trained CNNs from scratch first because the dataset structure supports it: GTSRB images are already cropped to the sign bounding box, the visual domain is narrow, and the classes follow standardized color and shape patterns. Under these conditions, a purpose-built CNN may achieve strong performance with lower computational cost than transfer learning.
 
-The project compares five model variants by changing one design decision at a time, covering network depth, activation function, downsampling strategy, and transfer learning. This controlled setup makes it possible to attribute performance differences to specific architectural choices.
+The project compares a baseline CNN with four model variants, each targeting one main design decision: network depth, activation function, downsampling strategy, and transfer learning. This controlled setup makes it easier to relate performance differences to specific architectural choices.
 
 ### 1.3 Goal of the Project
 
@@ -36,7 +36,7 @@ The goal of this project is to systematically evaluate how different CNN archite
 
 ### 1.4 Assumptions
 
-This project operates under several scope-defining assumptions. All GTSRB images are pre-cropped to the sign bounding box, so the models perform pure image classification and are never required to locate a sign within a larger scene. Because the official GTSRB test labels were not available in our pipeline, all accuracy figures are computed on an internal 15% hold-out split and are not directly comparable to the official competition leaderboard. The comparison between our five model variants remains valid because all models are evaluated under identical conditions on the same internal split. Each image is assumed to contain exactly one sign belonging to one of the 43 mutually exclusive GTSRB classes, and the provided labels are assumed to be correct. Finally, the GTSRB training data is treated as representative of the classification task, though this assumption is limited: the dataset was recorded exclusively on German roads from a single camera system under normal weather conditions, which constrains generalizability to other real-world scenarios.
+This project operates under several scope-defining assumptions. All GTSRB images are pre-cropped to the sign bounding box, so the models perform pure image classification and are never required to locate a sign within a larger scene. Because the official GTSRB test labels were not available in our pipeline, all accuracy figures are computed on an internal 15% hold-out split and are not directly comparable to the official competition leaderboard. The comparison between the baseline and the four model variants remains valid because all models are evaluated under identical conditions on the same internal split. Each image is assumed to contain exactly one sign belonging to one of the 43 mutually exclusive GTSRB classes, and the provided labels are assumed to be correct. Finally, the GTSRB training data is treated as representative of the classification task, though this assumption is limited: the dataset was recorded exclusively on German roads from a single camera system under normal weather conditions, which constrains generalizability to other real-world scenarios.
 
 ---
 
@@ -44,7 +44,7 @@ This project operates under several scope-defining assumptions. All GTSRB images
 
 ### 2.1 Dataset Overview
 
-The GTSRB dataset (Stallkamp et al., 2012) was recorded from a car-mounted camera on German roads and contains **39,209 training images** across **43 traffic sign classes** (IDs 0–42). Image dimensions vary widely, from 25×25 to 243×225 pixels, with a mean of approximately 50×50 pixels. The dataset covers speed limit signs, prohibitory signs, mandatory direction signs, warning signs, and right-of-way signs. Many classes share the same basic shape and differ only in a small internal detail, such as the numeral on a speed limit sign or the icon inside a warning triangle, making inter-class similarity one of the primary classification challenges.
+The GTSRB dataset (Stallkamp et al., 2012) was recorded from a car-mounted camera on German roads and contains **39,209 labelled images from the official training set** across **43 traffic sign classes** (IDs 0–42). Image dimensions vary widely, from 25×25 to 243×225 pixels, with a mean of approximately 50×50 pixels. The dataset covers speed limit signs, prohibitory signs, mandatory direction signs, warning signs, and right-of-way signs. Many classes share the same basic shape and differ only in a small internal detail, such as the numeral on a speed limit sign or the icon inside a warning triangle, making inter-class similarity one of the primary classification challenges.
 
 ### 2.2 Class Distribution and Visual Challenges
 
@@ -74,7 +74,7 @@ The 39,209 labelled images are divided into three non-overlapping subsets:
 | Validation | 15% | 5,881 |
 | Test | 15% | 5,881 |
 
-The training set is used to update model weights; the validation set monitors generalization during training; the test set is reserved for a single final evaluation. The split is performed with `torch.utils.data.random_split` and a fixed seed of 42, making it reproducible but not stratified. Exact class proportions across subsets are not guaranteed, but at this dataset size they are expected to remain close to the original distribution.
+The training set is used to update model weights; the validation set monitors generalization during training; the test set is reserved for final model evaluation. The split is performed with `torch.utils.data.random_split` and a fixed seed of 42, making it reproducible but not stratified. Exact class proportions across subsets are not guaranteed, but at this dataset size they are expected to remain close to the original distribution.
 
 ![Per-class sample distribution across training, validation, and test splits](results/preprocessing_split_distribution.png)
 
@@ -93,7 +93,7 @@ All images are resized to **32×32 pixels** to provide a uniform input size. For
 | ToTensor | All splits | Converts PIL image to float tensor |
 | Normalize | All splits | mean=(0.3337, 0.3064, 0.3171), std=(0.2672, 0.2564, 0.2629) |
 
-Each augmentation simulates a real-world variation: rotation accounts for tilted camera angles, color jitter for changing lighting and weather, and affine translation for off-center framing. Because augmentations are sampled independently on each epoch, the model is unlikely to encounter the exact same pixel pattern twice, which acts as a regularization mechanism and is particularly beneficial for the rarest classes with only approximately 147 training images each. Normalization subtracts the per-channel mean and divides by the per-channel standard deviation, centering inputs near zero for stable gradient flow. Both statistics were computed from the GTSRB training data and applied identically to all splits. Validation and test images receive only the deterministic transforms (resize, ToTensor, normalize), ensuring that evaluation reflects performance on images that have not been randomly distorted.
+Each augmentation simulates a real-world variation: rotation accounts for tilted camera angles, color jitter for changing illumination and color conditions, and affine translation for off-center framing. Because augmentations are sampled independently on each epoch, the model is unlikely to encounter the exact same pixel pattern twice, which acts as a regularization mechanism and is particularly beneficial for the rarest classes with approximately 147 training images each. Normalization subtracts the per-channel mean and divides by the per-channel standard deviation, centering inputs near zero for stable gradient flow. Both statistics were computed from the GTSRB training data and applied identically to all splits. Validation and test images receive only the deterministic transforms (resize, ToTensor, normalize), ensuring that evaluation reflects performance on images that have not been randomly distorted.
 
 ---
 
@@ -101,13 +101,13 @@ Each augmentation simulates a real-world variation: rotation accounts for tilted
 
 ### 3.1 Architecture and Design Decisions
 
-Traffic signs are spatial visual objects, making a Convolutional Neural Network the appropriate model class. CNNs learn spatially local patterns through small filters and build up increasingly abstract representations layer by layer, making them far more efficient and better suited to image classification than fully connected networks.
+Traffic signs are spatial visual objects, making a Convolutional Neural Network the appropriate model class. CNNs learn spatially local patterns through small filters and build up increasingly abstract representations layer by layer, making them more parameter-efficient and better suited to image classification than fully connected networks.
 
 The baseline is a compact three-block CNN with **629,291 trainable parameters**.
 
 ![Architecture comparison: Baseline CNN (left) vs. Deep CNN (right)](results/diagrams/architecture_comparison.png)
 
-Three convolutional blocks are a natural depth for 32×32 inputs: after three 2×2 MaxPool operations the spatial dimensions reduce to 4×4, providing enough compression to capture global structure while retaining sufficient detail for classification. Each block follows the pattern: 3×3 convolution with padding 1 (to preserve spatial dimensions before pooling), Batch Normalization to stabilize activations, ReLU, and 2×2 MaxPooling to halve spatial resolution. The filter count increases from 32 in Block 1 to 64 in Block 2 and 128 in Block 3: later layers combine more primitive features into increasingly abstract representations and therefore require more channels as spatial dimensions shrink.
+Three convolutional blocks provide a compact and interpretable starting point for 32×32 inputs: after three 2×2 MaxPool operations the spatial dimensions reduce to 4×4, providing enough compression to capture global structure while retaining sufficient detail for classification. Each block follows the pattern: 3×3 convolution with padding 1 (to preserve spatial dimensions before pooling), Batch Normalization to stabilize activations, ReLU, and 2×2 MaxPooling to halve spatial resolution. The filter count increases from 32 in Block 1 to 64 in Block 2 and 128 in Block 3: later layers combine more primitive features into increasingly abstract representations and therefore require more channels as spatial dimensions shrink.
 
 After the three blocks, the feature maps are flattened to a 2,048-dimensional vector and passed through a fully connected classifier: Linear(2,048 to 256), ReLU, Dropout(0.5), and Linear(256 to 43). Dropout regularizes the classifier by randomly zeroing half its activations during training. The final layer produces 43 raw logits, one per traffic sign class. CrossEntropyLoss handles the softmax conversion internally during training.
 
@@ -152,11 +152,11 @@ Images are processed in mini-batches of 64, with model weights updated after eac
 | 42   | 98.78%           | 98.55%       | 0.0621    |
 | 123  | 99.15%           | 99.29%       | 0.0451    |
 
-Both seeds produce comparable accuracy, confirming that results are not dependent on a particular random initialization or mini-batch ordering. The training loss was still decreasing at epoch 10, indicating that these models had not yet fully converged; the 10-epoch cap was a practical constraint for this exploratory run.
+Both seeds produce comparable accuracy, confirming that results are not dependent on a particular random initialization or mini-batch ordering. The training curves indicate that performance was still improving near epoch 10, suggesting that these models had not yet fully converged; the 10-epoch cap was a practical constraint for this exploratory run.
 
 ![Baseline training curves (seed 42): training and validation loss and accuracy over epochs](results/task04/baseline_loss_curve_seed-42.png)
 
-The seed-42 training curves show training and validation loss decreasing steadily, with both curves tracking closely throughout. There is no divergence between training and validation loss that would indicate overfitting.
+The seed-42 training curves show training and validation loss decreasing steadily, with both curves tracking closely throughout. There is no clear divergence between training and validation loss, suggesting no strong overfitting during this run.
 
 **Canonical baseline for model comparison.** The model comparison in Section 4 uses a separate run in which all five model variants were trained under identical conditions with a maximum of 20 epochs. In that run the baseline reached **99.49% test accuracy** (30 wrong out of 5,881 test images). This is the canonical figure for all model comparisons. The two seed runs above serve only to confirm stability.
 
@@ -168,7 +168,7 @@ Stallkamp et al. (2012) report an average human recognition rate of 98.84% on th
 
 ### 4.1 Overview and Expectations
 
-After establishing the baseline, we designed four architectural variants, each modifying exactly one design component. This controlled setup makes it easier to relate performance differences to the respective architectural change rather than to multiple changes at once. Beyond the four variants, this section also covers a hyperparameter sensitivity analysis, a latent space visualisation, and a convolutional autoencoder for anomaly detection.
+After establishing the baseline, we designed four architectural variants, each targeting one main design aspect. This controlled setup makes it easier to relate performance differences to the respective architectural change rather than to multiple changes at once. Beyond the four variants, this section also covers a hyperparameter sensitivity analysis, a latent space visualisation, and a convolutional autoencoder for anomaly detection.
 
 We expected the Deep CNN to show the largest improvement, as additional depth should allow the network to learn more abstract and discriminative features, particularly for classes that differ only in small symbolic details. We expected Leaky ReLU to have little effect, since Batch Normalization already stabilizes activations and reduces the risk of dead neurons. Replacing MaxPool with strided convolutions was expected to have negligible accuracy impact but potentially faster training. MobileNetV2 was expected to perform competitively due to ImageNet pretraining, especially on rare classes, but at a higher computational cost.
 
@@ -217,6 +217,7 @@ The Stride CNN achieves 99.52% test accuracy, which is within the noise threshol
 A full hyperparameter sensitivity analysis was planned using Optuna with a Tree-structured Parzen Estimator (TPE), covering learning rate, dropout, batch size, optimizer choice, and weight decay. Since the search was not completed in time for the final evaluation, its results are not used to support the model comparison in this report.
 
 The model comparison therefore relies on a fixed training setup applied consistently across all variants. This keeps the comparison fair, but it also means that the reported results reflect performance under one selected hyperparameter configuration rather than fully optimized settings for each architecture.
+
 ### 4.7 Latent Space Visualisation
 
 To examine what the Deep CNN has learned internally, 512-dimensional feature vectors were extracted from the penultimate fully connected layer for 2,000 validation samples and projected to two dimensions using t-SNE (perplexity 30).
@@ -249,7 +250,7 @@ The model trained for all 30 epochs without early stopping. Both losses decrease
 
 ![Reconstruction error distribution on the validation set](results/autoencoder_error_distribution.png)
 
-The error distribution has a long right tail: most known signs are reconstructed with low error, while a small subset produces substantially higher errors. This tail is where true anomalies would be expected to appear.
+The error distribution has a long right tail: most known signs are reconstructed with low error, while a small subset produces substantially higher errors. This tail motivates using high reconstruction error as a candidate anomaly signal.
 
 ![Sample reconstructions: original images (top) vs. autoencoder output (bottom)](results/autoencoder_reconstructions.png)
 
@@ -294,7 +295,7 @@ The confusion matrix is strongly diagonal, so the model is correct in almost all
 | 29 | Bicycles crossing | 97.62% | Icon very similar to Pedestrians sign (class 27) |
 | 21 | Double curve | 98.39% | Resembles single curve warning signs at low resolution |
 | 30 | Beware of ice/snow | 98.67% | Snowflake detail difficult to resolve at 32×32 |
-| 8  | Speed limit (120km/h) | 99.10% | "120" can be confused with "100" (class 7) at small sizes |
+| 8  | Speed limit (120 km/h) | 99.10% | "120" can be confused with "100" (class 7) at small sizes |
 
 The pattern is clear: the weaker classes are visually similar to other classes. Pedestrians and Bicycles crossing (classes 27 and 29) are especially easy to confuse because both are triangular warning signs with a human-like silhouette. At 32×32 pixels, the difference between a pedestrian and a cyclist can be very small. This points more to a resolution limitation than to a general model failure.
 
@@ -339,7 +340,7 @@ In real-world use, camera images are rarely as clean as the GTSRB images. We tes
 | Condition | Test Accuracy | Δ vs. Clean | What this simulates |
 |-----------|-------------|:-----------:|---------------------|
 | Clean | 99.81% | baseline | Ideal conditions |
-| Gaussian Blur (kernel=5) | 97.01% | −2.80 pp | Motion blur, out-of-focus optics, fog |
+| Gaussian Blur (kernel=5) | 97.01% | −2.80 pp | Motion blur, out-of-focus optics, reduced sharpness |
 | Gaussian Noise (σ=0.1) | 71.86% | **−27.95 pp** | Low-quality sensors, compression artifacts |
 
 The model handles blur fairly well: accuracy drops by only 2.80 pp. This suggests that the model does not fully depend on perfectly sharp details. Gaussian noise is much more problematic. Accuracy drops by 27.95 pp under moderate noise (σ=0.1 on normalized [0,1] pixel values). This shows that strong clean-test accuracy does not automatically mean the model is robust in less ideal conditions. The main issue is distribution shift: the model was trained on clean images and never learned to handle noisy ones. The most direct next step is to add noise augmentation during training and test whether robustness improves without hurting clean accuracy.
@@ -372,7 +373,7 @@ This project evaluated different CNN architectures on the GTSRB traffic sign cla
 
 First, a compact CNN trained from scratch is already strong enough for this task. The baseline model, with 629K parameters, reaches 99.49% test accuracy on our internal hold-out split. Stallkamp et al. (2012) reported a human recognition rate of 98.84% on the official GTSRB test set. This is not directly comparable to our setup, but it shows that our baseline is in the same broad performance range. This result makes sense because traffic signs use standardized shapes and colors, and the GTSRB images are already cropped to the sign.
 
-Second, increasing depth was the only architectural change that clearly improved performance in this experiment. Adding a fourth convolutional block raised test accuracy to 99.81% and reduced the number of wrong predictions from 30 to 11 out of 5,881. Leaky ReLU and strided convolutions changed accuracy only slightly, so they do not seem important for this dataset and training setup. MobileNetV2 improved over the baseline but did not match the Deep CNN, despite using many more parameters and almost twice the training time. This suggests that ImageNet pretraining is not especially useful when the target domain is narrow and well represented in the training data.
+Second, increasing depth was the only architectural change that clearly improved performance in this experiment. Adding a fourth convolutional block raised test accuracy to 99.81% and reduced the number of wrong predictions from 30 to 11 out of 5,881. Leaky ReLU and strided convolutions changed accuracy only slightly, so they do not seem important for this dataset and training setup. MobileNetV2 improved over the baseline but did not match the Deep CNN, despite using many more parameters and almost twice the training time. This suggests that ImageNet pretraining offers no clear efficiency advantage in this setup, where the target domain is narrow and well represented in the training data.
 
 Third, clean benchmark performance does not automatically mean real-world robustness. The class-frequency bias analysis did not show a large gap between frequent and rare classes, and Grad-CAM suggests that the model mainly focuses on relevant sign regions. However, accuracy drops by 27.95 pp under moderate Gaussian noise. The main remaining issue is therefore not clean-image classification, but robustness under distribution shift. A model trained only on clean images has not learned to handle noisy inputs.
 
@@ -390,7 +391,9 @@ Stallkamp, J., Schlipsing, M., Salmen, J., & Igel, C. (2012). Man vs. computer: 
 
 ---
 
-## Appendix A: Generated Artifacts
+## Appendix
+
+### Appendix A: Generated Artifacts
 
 | Task | Key Output Files |
 |------|-----------------|
@@ -402,7 +405,7 @@ Stallkamp, J., Schlipsing, M., Salmen, J., & Igel, C. (2012). Man vs. computer: 
 
 ---
 
-## Appendix B: GTSRB Class ID Legend
+### Appendix B: GTSRB Class ID Legend
 
 | ID | Class Name | ID | Class Name | ID | Class Name | ID | Class Name |
 |----|------------|----|------------|----|------------|----|------------|
@@ -420,7 +423,7 @@ Stallkamp, J., Schlipsing, M., Salmen, J., & Igel, C. (2012). Man vs. computer: 
 
 ---
 
-## Appendix C: Current Class Structure and Extension Points
+### Appendix C: Current Class Structure and Extension Points
 
 All five classifier models share a common design: they inherit from PyTorch's `nn.Module` base class and expose a `features` extractor and a `classifier` head. The autoencoder follows the same base class but uses an encoder-decoder structure. The diagram below shows the current class hierarchy and marks the three components not yet implemented (tagged `future extension`):
 
