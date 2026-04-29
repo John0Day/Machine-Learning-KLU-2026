@@ -216,7 +216,7 @@ The Stride CNN achieves 99.52% test accuracy, which is within the noise threshol
 
 > **⚠️ Work in Progress:** The Optuna hyperparameter search (30 trials × 10 epochs) is currently running. This section will be updated with the full quantitative results once the run completes. The search setup and parameter ranges are described below.
 
-To assess whether our manually chosen hyperparameters fall in a robust region of the search space, we used Optuna (Akiba et al., 2019) with a Tree-structured Parzen Estimator (TPE) to search over five hyperparameters on the Stride CNN architecture:
+To assess whether our manually chosen hyperparameters fall in a robust region of the search space, we used Optuna with a Tree-structured Parzen Estimator (TPE) to search over five hyperparameters on the Stride CNN architecture:
 
 | Hyperparameter | Search Range |
 |---------------|-------------|
@@ -230,7 +230,7 @@ The search was exploratory and run on the Stride CNN rather than all model varia
 
 ### 4.7 Latent Space Visualisation
 
-To examine what the Deep CNN has learned internally, 512-dimensional feature vectors were extracted from the penultimate fully connected layer for 2,000 validation samples and projected to two dimensions using t-SNE (van der Maaten & Hinton, 2008) with perplexity 30.
+To examine what the Deep CNN has learned internally, 512-dimensional feature vectors were extracted from the penultimate fully connected layer for 2,000 validation samples and projected to two dimensions using t-SNE (perplexity 30).
 
 ![t-SNE projection of Deep CNN feature vectors for 2,000 validation samples across all 43 classes](results/tsne_feature_space.png)
 
@@ -359,7 +359,7 @@ The model handles blur fairly well: accuracy drops by only 2.80 pp. This suggest
 
 ![Grad-CAM visualizations: image regions that most influenced the model's predictions](results/task06/deep/gradcam_examples.png)
 
-Gradient-weighted Class Activation Mapping (Grad-CAM; Selvaraju et al., 2017) helps show which parts of an image influenced the model's prediction. It uses gradients from the final convolutional layer to highlight regions that contributed most to the predicted class.
+Gradient-weighted Class Activation Mapping (Grad-CAM) highlights which regions of an input image contributed most to the model's prediction. It does this by computing the gradient of the predicted class score with respect to the activations in the final convolutional layer and using them as spatial importance weights.
 
 The visualizations suggest that the model mainly focuses on relevant sign regions, such as shape, symbol, and color, instead of background elements like sky, road, or nearby objects. This is useful because a model that relies on background patterns would likely fail when the scene changes. Grad-CAM does not prove exactly how the model reasons, but it supports the idea that the model learned sign-relevant features.
 
@@ -398,16 +398,6 @@ The limitations in Section 5.10 suggest several next steps. The most important o
 ## References
 
 Stallkamp, J., Schlipsing, M., Salmen, J., & Igel, C. (2012). Man vs. computer: Benchmarking machine learning algorithms for traffic sign recognition. *Neural Networks*, 32, 323–332. https://doi.org/10.1016/j.neunet.2012.02.016
-
-Sandler, M., Howard, A., Zhu, M., Zhmoginov, A., & Chen, L.-C. (2018). MobileNetV2: Inverted residuals and linear bottlenecks. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*, 4510–4520.
-
-LeCun, Y., Bottou, L., Bengio, Y., & Haffner, P. (1998). Gradient-based learning applied to document recognition. *Proceedings of the IEEE*, 86(11), 2278–2324.
-
-Akiba, T., Sano, S., Yanase, T., Ohta, T., & Koyama, M. (2019). Optuna: A next-generation hyperparameter optimization framework. *Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining*, 2623–2631.
-
-Selvaraju, R. R., Cogswell, M., Das, A., Vedantam, R., Parikh, D., & Batra, D. (2017). Grad-CAM: Visual explanations from deep networks via gradient-based localization. *Proceedings of the IEEE International Conference on Computer Vision (ICCV)*, 618–626.
-
-van der Maaten, L., & Hinton, G. (2008). Visualizing data using t-SNE. *Journal of Machine Learning Research*, 9, 2579–2605.
 
 ---
 
