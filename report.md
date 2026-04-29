@@ -1,4 +1,4 @@
-# CNN Traffic Sign Classification: Final Report - "STILL WOKRING ON IT, NOT THE FINAL VERSION"
+# CNN Traffic Sign Classification: Final Report - "STILL WORKING ON IT, NOT THE FINAL VERSION"
 **German Traffic Sign Recognition Benchmark (GTSRB)**
 
 ---
