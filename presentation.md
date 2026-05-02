@@ -22,11 +22,12 @@ style: |
   }
   h2 {
     color: var(--color-mid);
-    font-size: 1.5em;
+    font-size: 1.45em;
+    margin-bottom: 12px;
   }
   h3 {
     color: var(--color-accent);
-    font-size: 1.1em;
+    font-size: 1.05em;
     margin-bottom: 4px;
   }
   strong { color: var(--color-accent); }
@@ -37,16 +38,20 @@ style: |
     font-style: normal;
     font-size: 0.95em;
   }
-  table { font-size: 0.82em; width: 100%; }
-  th { background: var(--color-mid); color: #fff; }
+  table { font-size: 0.82em; width: 100%; border-collapse: collapse; }
+  th { background: var(--color-mid); color: #fff; padding: 6px 10px; }
+  td { padding: 5px 10px; border-bottom: 0.5px solid #e0e0e0; }
+  tr:last-child td { border-bottom: none; }
   section.title {
     background: var(--color-dark);
     color: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: flex-start;
+    padding-left: 72px;
   }
-  section.title h1 { color: #ffffff; border-color: var(--color-accent); font-size: 2em; }
+  section.title h1 { color: #ffffff; border-color: var(--color-accent); font-size: 2.1em; }
   section.title h2 { color: #cccccc; font-size: 1.2em; }
   section.title p  { color: #aaaaaa; }
   section.divider {
@@ -57,7 +62,7 @@ style: |
     justify-content: center;
     text-align: center;
   }
-  section.divider h1 { color: #ffffff; border-color: var(--color-accent); text-align: center; }
+  section.divider h1 { color: #ffffff; border-color: var(--color-accent); text-align: center; font-size: 2.2em; }
   section.image-focus {
     background: #ffffff;
     display: flex;
@@ -68,78 +73,69 @@ style: |
     padding-left: 56px;
     padding-right: 56px;
   }
-  section.image-focus h1,
   section.image-focus h2 {
     width: 100%;
-    font-size: 1.25em;
+    font-size: 1.2em;
     margin-bottom: 10px;
     text-align: center;
   }
-  section.image-focus p {
-    width: 100%;
-    text-align: center;
-  }
+  section.image-focus p { width: 100%; text-align: center; }
   section.image-focus img {
     display: block;
     margin-left: auto;
     margin-right: auto;
     max-width: 92%;
-    max-height: 74vh;
+    max-height: 72vh;
     object-fit: contain;
-  }
-  section.image-focus strong {
-    display: block;
-    text-align: center;
   }
   .highlight-row { background: #fdebd0; font-weight: bold; }
   .kicker {
     color: var(--color-accent);
-    font-size: 0.72em;
+    font-size: 0.70em;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .lead {
-    font-size: 1.35em;
+    font-size: 1.3em;
     font-weight: 700;
     line-height: 1.25;
     color: var(--color-dark);
-    margin: 8px 0 18px 0;
+    margin: 6px 0 16px 0;
   }
-  .muted {
-    color: #6c757d;
-  }
+  .muted { color: #6c757d; }
   .cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .cards-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 18px;
-    margin-top: 18px;
+    margin-top: 16px;
   }
   .card {
     background: var(--color-light);
     border-left: 5px solid var(--color-accent);
     border-radius: 10px;
-    padding: 16px 18px;
-    min-height: 110px;
+    padding: 14px 16px;
   }
-  .card h3 {
-    margin-top: 0;
-    margin-bottom: 8px;
-  }
+  .card h3 { margin-top: 0; margin-bottom: 6px; }
   .kpi-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    margin-top: 22px;
+    gap: 16px;
+    margin-top: 20px;
   }
   .kpi {
     background: #ffffff;
     border: 2px solid #e5e8e8;
     border-radius: 12px;
-    padding: 18px 16px;
+    padding: 16px 14px;
     text-align: center;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
   }
   .kpi .number {
     color: var(--color-accent);
@@ -149,55 +145,65 @@ style: |
   }
   .kpi .label {
     color: var(--color-mid);
-    font-size: 0.78em;
-    margin-top: 6px;
+    font-size: 0.75em;
+    margin-top: 5px;
   }
   .takeaway {
     background: #fff5f2;
     border-left: 6px solid var(--color-accent);
-    border-radius: 8px;
-    padding: 14px 18px;
-    font-size: 1.05em;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 18px;
+    font-size: 0.97em;
     margin-top: 16px;
   }
   .two-col {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 28px;
     align-items: start;
+    margin-top: 14px;
   }
   .step-label {
     display: inline-block;
     background: var(--color-dark);
     color: #ffffff;
     border-radius: 999px;
-    padding: 4px 12px;
-    font-size: 0.72em;
+    padding: 3px 11px;
+    font-size: 0.70em;
     font-weight: 700;
-    margin-right: 8px;
+    margin-right: 7px;
   }
   section.divider .subtitle {
-    color: #d9d9d9;
+    color: #d0d6de;
     font-size: 1.0em;
-    margin-top: 8px;
+    margin-top: 10px;
+  }
+  .big-stat {
+    font-size: 3.5em;
+    font-weight: 800;
+    color: var(--color-accent);
+    line-height: 1.0;
+    margin: 10px 0 4px 0;
+  }
+  .big-stat-label {
+    font-size: 0.9em;
+    color: var(--color-mid);
   }
 ---
 
 <!-- _class: title -->
 <!-- _paginate: false -->
 
-<div class="kicker">Machine Learning Project | KLU 2026</div>
+<div class="kicker">Machine Learning Project · KLU 2026</div>
 
-# CNN Traffic Sign Classification
+# Compact CNN Architectures for Traffic Sign Classification
 
-## What actually improves performance on GTSRB?
+## An experimental comparison on GTSRB
 
-German Traffic Sign Recognition Benchmark
+<p style="margin-top: 18px; font-size: 0.9em;">German Traffic Sign Recognition Benchmark · 43 classes · 39,209 images</p>
 
 <!--
-Speaker notes:
-Open with the core question, not just the dataset name. The presentation is about identifying which design decisions actually matter for traffic sign classification. Keep it brief -- the next slide explains why the problem matters.
-Time: 0:30
+This project compares five CNN architectures for traffic sign classification on GTSRB. We will cover the problem structure, our experimental setup, what the results show, and where the key limitations are.
 -->
 
 ---
@@ -205,299 +211,239 @@ Time: 0:30
 <!-- _class: divider -->
 <!-- _paginate: false -->
 
-# 1. Why this problem matters
+# The Problem
 
-<div class="subtitle">Traffic signs are simple by design, but not always simple for a model.</div>
-
----
-
-## Why This Matters
-
-<div class="kicker">Problem framing</div>
-
-<div class="lead">A traffic sign classifier must make reliable decisions from imperfect visual input.</div>
-
-<div class="cards">
-  <div class="card">
-    <h3>Safety relevance</h3>
-    <p>Speed limits, priority signs, and stop signs directly affect driving decisions.</p>
-  </div>
-  <div class="card">
-    <h3>Visual degradation</h3>
-    <p>Illumination, blur, distance, and occlusion reduce available information.</p>
-  </div>
-  <div class="card">
-    <h3>Decision pressure</h3>
-    <p>The system ultimately has to output one traffic sign class, not a vague suggestion.</p>
-  </div>
-</div>
-
-<div class="takeaway">
-<strong>Guiding question:</strong> Can a compact CNN trained from scratch reach very high accuracy, and which design choices actually matter?
-</div>
-
-<p class="muted">The reported human recognition rate on the official GTSRB benchmark is 98.84%. We use this as context, not as a directly comparable evaluation target.</p>
+<div class="subtitle">A large real-world dataset with two structural challenges built in.</div>
 
 <!--
-Speaker notes:
-Motivate the problem briefly. Emphasise the safety relevance and the gap between clean benchmark images and real-world visual degradation. Be explicit that the human benchmark is context only, because our evaluation uses an internal hold-out split.
-Time: 1:00
+Before the models, a brief look at what makes this task harder than it first appears.
 -->
 
 ---
 
-<!-- _class: divider -->
-<!-- _paginate: false -->
+## GTSRB: a real-world classification benchmark with structural challenges
 
-# 2. The experiment setup
+<div class="kicker">Dataset</div>
 
-<div class="subtitle">A controlled dataset, a compact baseline, and four targeted model variants.</div>
-
----
-
-## The GTSRB Dataset
-
-<div class="kicker">Dataset foundation</div>
-
-<div class="lead">GTSRB provides a controlled classification task with realistic visual variation.</div>
+<div class="lead">39,209 labelled images across 43 classes — captured from a car-mounted camera on real German roads.</div>
 
 <div class="kpi-row">
   <div class="kpi"><div class="number">39,209</div><div class="label">labelled images</div></div>
-  <div class="kpi"><div class="number">43</div><div class="label">traffic sign classes</div></div>
-  <div class="kpi"><div class="number">70/15/15</div><div class="label">internal split</div></div>
+  <div class="kpi"><div class="number">43</div><div class="label">sign classes</div></div>
+  <div class="kpi"><div class="number">10.7×</div><div class="label">max class imbalance</div></div>
 </div>
 
-<br>
-
-<div class="two-col">
-  <div>
-    <span class="step-label">Scope</span> Images are pre-cropped to the sign bounding box, so this is a classification task, not detection.
-  </div>
-  <div>
-    <span class="step-label">Caveat</span> Official test labels were not available, so our results are not directly comparable to the GTSRB leaderboard.
-  </div>
+<div class="two-col" style="margin-top: 20px;">
+  <div><span class="step-label">Scope</span> Images are pre-cropped to the sign boundary. This is a pure classification task — not detection.</div>
+  <div><span class="step-label">Reference</span> The reported human recognition rate on GTSRB is <strong>98.84%</strong>. We use this as a broad performance reference, not a direct comparison target.</div>
 </div>
 
 <!--
-Speaker notes:
-Introduce the dataset using the three key numbers. Highlight that images come pre-cropped -- the model only has to classify, not locate signs. Mention the evaluation caveat early and honestly: our split is internal. The comparison between our five models is still valid because all are evaluated under identical conditions.
-Time: 1:00
+GTSRB provides pre-cropped sign images — the model only needs to classify, not locate. The human benchmark of 98.84% is a published reference point. Our evaluation uses an internal split, so direct numerical comparison to that figure has limits.
 -->
 
 ---
 
-<!-- _class: divider -->
-<!-- _paginate: false -->
+## Two structural challenges compound the difficulty of this task
 
-# 3. The model logic
-
-<div class="subtitle">Start simple, then test one main design idea at a time.</div>
-
----
-
-<!-- _class: image-focus -->
-
-## Dataset Overview: Class Distribution
-
-![](results/task03/class_distribution.png)
-
-**Key point:** the dataset covers 43 classes, but the class frequencies are uneven.
-
-<!--
-Speaker notes:
-Use this slide mainly visually. Point to the uneven bar heights and explain that this motivates the next slide on class imbalance. Keep this short.
-Time: 0:25
--->
-
----
-
-## Dataset Challenge 1: Class Imbalance
-
-The 43 classes are **not equally represented**:
-
-| | Count |
-|---|---|
-| Most frequent class (Speed limit 50 km/h) | **2,250 images** |
-| Rarest classes (three classes) | **210 images each** |
-| Imbalance ratio | **approx. 10.7x** |
-
-After splitting:
-- Rarest classes contribute roughly **147 training images** each
-- Risk: weaker generalisation for underrepresented classes
-
-<!--
-Speaker notes:
-Focus on the imbalance. 10.7x is substantial. Mention that the rarest classes get only about 147 training examples in the split. This motivates both the augmentation strategy and the bias analysis later in the presentation.
-Time: 0:45
--->
-
----
-
-## Dataset Challenge 2: Visual Ambiguity
-
-**Within each class:** variation in brightness, contrast, and viewing angle
-
-**Across classes:** many signs differ only in a **small internal detail**
-
-- Speed limit signs: same circular shape, differ only in the numeral
-- Warning signs: same triangular shape, differ only in the inner symbol
-
-> At 32x32 pixels, these differences may span only a few pixels.
-
-<!--
-Speaker notes:
-Introduce the visual ambiguity concept first. The next slide shows the sample grid in full size so the audience can actually see the similarities between classes.
-Time: 0:25
--->
-
----
-
-<!-- _class: image-focus -->
-
-## Dataset Challenge 2: Sample Images
-
-![](results/task03/sample_images_by_class.png)
-
-**Key point:** many classes share the same outer shape and differ only in small internal details.
-
-<!--
-Speaker notes:
-Use the sample grid to illustrate the inter-class similarity problem. Speed limits and triangular warning signs are the clearest examples. Do not explain every class. Use it as visual evidence for why the task is challenging even though accuracy later becomes very high.
-Time: 0:35
--->
-
----
-
-## Preprocessing and Augmentation
-
-All images are resized to **32x32 pixels** before training.
-
-**Training images** receive random augmentations on every pass:
-
-| Augmentation | Simulates |
-|---|---|
-| Random rotation (up to 15 degrees) | Tilted camera angle |
-| Brightness and contrast variation | Changing illumination |
-| Small random image shifts | Off-centre framing |
-
-**Validation and test images** receive only resize and normalisation -- no random changes.
-
-<br>
-
-Augmentation **increases effective training variety** and is especially beneficial for rare classes with few original images.
-
-<!--
-Speaker notes:
-Keep this slide brief. Explain the principle: augmentation artificially creates variation so the model does not memorise exact pixel patterns. The key point is that val and test transforms are deterministic -- otherwise evaluation would be noisy.
-Time: 1:00
--->
-
----
-
-## Baseline CNN Architecture
-
-**Three-stage feature extraction followed by classification**
-
-- **Stage 1:** Extract low-level features (edges, colours, gradients)
-- **Stage 2:** Combine into mid-level patterns (corners, curves, regions)
-- **Stage 3:** Build high-level representations (shapes, symbols)
-- **Classifier:** Map features to 43 traffic sign classes
-
-<br>
-
-At each stage: spatial resolution is reduced, the number of feature channels grows.
-
-**629,291 trainable parameters** total.
-
-<!--
-Speaker notes:
-Explain the architecture conceptually, not as code. The key idea is the hierarchy: simple patterns in early stages, complex ones later. The next slide shows the architecture diagram in full size.
-Time: 1:00
--->
-
----
-
-<!-- _class: image-focus -->
-
-## Baseline vs. Deep CNN Architecture
-
-![](results/diagrams/architecture_comparison.png)
-
-**Key point:** the Deep CNN adds one extra feature extraction stage, increasing depth while keeping the model compact.
-
-<!--
-Speaker notes:
-Use this slide to visually connect the baseline and Deep CNN. Point out that the Deep CNN is not a completely different model, but a controlled extension of the baseline. Keep the explanation conceptual.
-Time: 0:30
--->
-
----
-
-
-## Four Model Variants
-
-Each variant targets **one main design aspect** relative to the baseline:
-
-| Variant | What changes | Hypothesis |
-|---|---|---|
-| **Deep CNN** | Adds a fourth feature extraction stage | More depth captures finer detail |
-| **MobileNetV2** | Uses a model pretrained on ImageNet | Transfer learning may help rare classes |
-| **LeakyReLU CNN** | Changes the activation function | Prevents neurons from becoming permanently inactive |
-| **Stride CNN** | Replaces fixed pooling with learned downsampling | Preserves more spatial information |
-
-<br>
-
-All five models trained under **identical conditions**: same optimiser, same data split, same augmentation, capped at 20 epochs.
-
-<!--
-Speaker notes:
-Emphasise the controlled design: one change at a time. This makes it possible to attribute differences in performance to the specific change. Briefly explain the hypothesis behind each variant. The expectations were: depth should help most, activation and downsampling expected to be neutral, transfer learning expected to be competitive but expensive.
-Time: 1:30
--->
-
----
-
-## What Each Variant Tests
-
-<div class="kicker">Model logic</div>
-
-<div class="lead">The variants are not just different models. Each one tests a specific design assumption.</div>
+<div class="kicker">Problem structure</div>
 
 <div class="cards">
   <div class="card">
-    <h3>Depth</h3>
-    <p>Can an extra feature extraction stage improve recognition of small symbols and numbers?</p>
+    <h3>Class imbalance</h3>
+    <p>The most frequent class has <strong>2,250</strong> images. The rarest have <strong>210</strong>. After our 70/15/15 split, the rarest classes train on roughly <strong>147 examples</strong> each.</p>
   </div>
   <div class="card">
-    <h3>Transfer learning</h3>
-    <p>Does a pretrained image model help, or is GTSRB specific enough to learn from scratch?</p>
+    <h3>Visual ambiguity</h3>
+    <p>Speed limit signs share the same circular shape and differ only by numeral. At 32×32 pixels, "80" and "30" are nearly indistinguishable.</p>
   </div>
   <div class="card">
-    <h3>Training mechanics</h3>
-    <p>Do activation choice or learned downsampling meaningfully change performance?</p>
+    <h3>Within-class variation</h3>
+    <p>Lighting, blur, contrast, and camera angle vary within each class. The model must generalise across these conditions from limited training data.</p>
   </div>
 </div>
 
 <div class="takeaway">
-<strong>Purpose:</strong> each variant turns one modelling assumption into a measurable experiment.
+<strong>Implication:</strong> high accuracy on a clean benchmark is a necessary condition but not a sufficient one. The harder problems are rare-class performance, visual ambiguity at low resolution, and input degradation.
 </div>
 
 <!--
-Speaker notes:
-Use this slide to make the model variants easier to understand conceptually. The Deep CNN tests whether more depth helps with small visual details. MobileNetV2 tests whether pretrained general visual features are useful. LeakyReLU and Stride CNN test whether training mechanics or downsampling choices matter. This prepares the audience for the result that only depth produced a meaningful improvement.
-Time: 0:45
+Three challenges compound here. Rare classes have very little training data. Visual ambiguity means some distinctions are at the limit of what 32×32 resolution can convey. And within-class variation requires generalisation, not pattern memorisation.
 -->
+
+---
+
+<!-- _class: image-focus -->
+
+## Class distribution: the most frequent class has more than 10× the training data of the rarest
+
+![](results/task03/class_distribution.png)
+
+**After splitting, the rarest classes train on roughly 147 images each — compared to over 1,500 for the most frequent.**
+
+<!--
+The imbalance is immediately visible. Speed limit 50 dominates on the left; the rare classes on the right have a fraction of the data. Whether this gap translates into a per-class accuracy gap is something we test explicitly later.
+-->
+
+---
+
+<!-- _class: image-focus -->
+
+## At 32×32 pixels, numerals and similar warning symbols are the main source of visual ambiguity
+
+![](results/task03/sample_images_by_class.png)
+
+**This is the actual input the model receives. Speed limit signs and warning triangles with similar silhouettes are the hardest classes to distinguish.**
+
+<!--
+This shows what the model works with. The circular speed limit signs are nearly indistinguishable at this resolution — a direct constraint on achievable accuracy for those class pairs.
+-->
+
+---
 
 <!-- _class: divider -->
 <!-- _paginate: false -->
 
-# 4. What changed performance?
+# Our Approach
 
-<div class="subtitle">The answer was not bigger or pretrained. It was targeted depth.</div>
+<div class="subtitle">One baseline. Four targeted experiments. One variable changed at a time.</div>
+
+<!--
+The key design principle: isolate one architectural variable per experiment so that every result is directly interpretable.
+-->
 
 ---
 
-## Model Comparison: Results
+## Each variant tests one independent design assumption
+
+<div class="kicker">Experimental design</div>
+
+<div class="lead">Changing one variable at a time ensures that observed differences can be attributed to a specific cause.</div>
+
+<div class="cards">
+  <div class="card">
+    <h3>More depth</h3>
+    <p>Does a fourth extraction stage improve recognition of fine numerals and symbols at 32×32?</p>
+  </div>
+  <div class="card">
+    <h3>Transfer learning</h3>
+    <p>Does ImageNet pretraining give a meaningful advantage on a focused, domain-specific dataset?</p>
+  </div>
+  <div class="card">
+    <h3>Training mechanics</h3>
+    <p>Do activation function or downsampling strategy meaningfully affect what the model learns?</p>
+  </div>
+</div>
+
+<div class="takeaway">
+<strong>Design rationale:</strong> without this isolation, any accuracy difference could originate from multiple sources simultaneously. With it, each result maps to a single cause.
+</div>
+
+<!--
+A controlled design is necessary to draw conclusions. If multiple variables change at once, we cannot attribute observed differences to specific causes. Each design question becomes its own experiment, and a null result is itself informative.
+-->
+
+---
+
+## The baseline processes images in three hierarchical stages
+
+<div class="kicker">Baseline architecture — 629K parameters</div>
+
+<div class="lead">Each stage extracts increasingly abstract representations from the input image.</div>
+
+<div class="cards">
+  <div class="card">
+    <h3><span class="step-label">Stage 1</span> Low-level features</h3>
+    <p>32 filters detect edges, colour boundaries, and brightness gradients. Spatial resolution halved via pooling.</p>
+  </div>
+  <div class="card">
+    <h3><span class="step-label">Stage 2</span> Structural patterns</h3>
+    <p>64 filters combine Stage 1 outputs into corners, curves, and sign contours. Resolution halved again.</p>
+  </div>
+  <div class="card">
+    <h3><span class="step-label">Stage 3</span> Sign representations</h3>
+    <p>128 filters assemble sign-level features — numerals in circles, symbols in triangles. Output: a 2,048-value feature vector.</p>
+  </div>
+</div>
+
+<div class="takeaway">
+<strong>Classifier:</strong> the 2,048-value vector is passed to a fully connected layer that maps it to one of 43 classes. The full pipeline is trained end to end on GTSRB.
+</div>
+
+<!--
+Three convolutional stages build progressively abstract representations — from raw pixel gradients to sign-level features. The 2,048-dimensional output vector is then classified. This is the reference architecture that all four variants modify.
+-->
+
+---
+
+## Each variant targets one specific question about the baseline
+
+<div class="kicker">Variant motivation</div>
+
+| Variant | Hypothesis tested | Change made |
+|---|---|---|
+| **Deep CNN** | 3 stages may not resolve fine numerals at 32×32 | Added a 4th stage with 256 filters (+307K params) |
+| **MobileNetV2** | Scratch training on 39K images may underfit rare classes | Replaced network with one pretrained on 1.2M images |
+| **LeakyReLU CNN** | ReLU may cause dead neurons and limit gradient flow | Replaced ReLU activation with LeakyReLU |
+| **Stride CNN** | MaxPooling may discard spatially relevant detail | Replaced pooling with learnable stride-2 convolution |
+
+<div class="takeaway">
+<strong>Each variant is a testable hypothesis.</strong> A null result — no improvement — is also informative: it indicates the baseline already handles that aspect adequately.
+</div>
+
+<!--
+The variants are not arbitrary — each targets a known limitation or open question. The table makes the hypothesis and the change explicit. I will now show which ones held up.
+-->
+
+---
+
+## All five models were trained under identical conditions
+
+<div class="kicker">Training setup</div>
+
+<div class="two-col">
+  <div>
+    <p><strong>Augmentation — training set only</strong></p>
+    <ul>
+      <li>Rotation ±15° — simulates tilted camera angle</li>
+      <li>Brightness and contrast variation</li>
+      <li>Small translation shifts</li>
+    </ul>
+    <p style="margin-top: 10px;" class="muted">Validation and test: resize and normalise only. No stochastic transforms — evaluation is fully reproducible.</p>
+  </div>
+  <div>
+    <p><strong>Fixed across all models</strong></p>
+    <ul>
+      <li>Optimiser: Adam, lr = 0.001</li>
+      <li>Split: 70 / 15 / 15, seed 42</li>
+      <li>Max 20 epochs with early stopping</li>
+      <li>Test set: 5,881 images, fixed order</li>
+    </ul>
+  </div>
+</div>
+
+<!--
+Identical training conditions are what make the architectural comparison valid. Any accuracy difference between models is attributable to architecture alone. Augmentation is applied to training only — evaluation conditions are fixed and reproducible.
+-->
+
+---
+
+<!-- _class: divider -->
+<!-- _paginate: false -->
+
+# Results
+
+<div class="subtitle">All models reached high accuracy on the internal split. One stood out on the cost–accuracy tradeoff.</div>
+
+<!--
+Here are the results. I will highlight the main pattern, then show the two most instructive comparisons in detail.
+-->
+
+---
+
+## All five models achieve above 99% accuracy on the internal test split
+
+<div class="kicker">Full results</div>
 
 | Model | Test Accuracy | Wrong / 5,881 | Parameters | Training Time |
 |---|---:|---:|---:|---:|
@@ -509,60 +455,89 @@ Time: 0:45
 
 <br>
 
-All five models exceed **99% test accuracy** on the internal split.
+All five models achieve above **99%** accuracy on this internal split. For context, the published human benchmark on GTSRB is **98.84%** — though direct comparison is limited by our internal evaluation setup.
+
+<p class="muted" style="font-size: 0.85em; margin-top: 8px;">All results from single training runs (seed 42). Differences below ~0.1 pp (≈ 6 images on this test set) should be treated as potentially unstable without multi-seed validation.</p>
 
 <!--
-Speaker notes:
-Present the table without interpretation first. Let the audience absorb the numbers. Point out that all models are above 99% -- the baseline is already strong. Mention that 0.1 percentage points corresponds to roughly 6 images on 5,881, so small differences are not meaningful. The next slide highlights what matters.
-Time: 0:30
+Every model exceeds 99% — the task is tractable for compact CNNs on this benchmark. Differences are small in absolute terms, so I will focus on the result that stands out in both error count and cost efficiency.
 -->
 
 ---
 
-## Model Comparison: Best Result
+## One additional extraction stage reduced errors by 63% at minimal added cost
 
-| Model | Test Accuracy | Wrong / 5,881 | Parameters | Training Time |
-|---|---:|---:|---:|---:|
-| Baseline CNN | 99.49% | 30 | 629K | 275.6 s |
-| **Deep CNN** | **99.81%** | **11** | **936K** | **284.0 s** |
-| MobileNetV2 | 99.66% | 20 | 2.56M | 518.7 s |
-| LeakyReLU CNN | 99.46% | 32 | 629K | 271.5 s |
-| Stride CNN | 99.52% | 28 | 823K | 236.9 s |
+<div class="kicker">Main finding</div>
 
-<br>
+<div class="kpi-row">
+  <div class="kpi"><div class="number">99.81%</div><div class="label">Deep CNN — test accuracy</div></div>
+  <div class="kpi"><div class="number">11</div><div class="label">wrong predictions / 5,881</div></div>
+  <div class="kpi"><div class="number">+8 s</div><div class="label">extra training time vs. baseline</div></div>
+</div>
 
-The **Deep CNN** achieves the highest accuracy and the lowest error count.
-
-<!--
-Speaker notes:
-Draw attention to the Deep CNN row. It has the most errors eliminated: 30 down to 11. The parameter count grows moderately (629K to 936K), and training time is almost unchanged (275 vs 284 seconds). This is the key result.
-Time: 0:30
--->
-
----
-
-## Model Comparison: Key Takeaway
-
-<div class="kicker">Main result</div>
-
-<div class="lead">The Deep CNN delivered the best accuracy-cost tradeoff.</div>
-
-| Model | Test Accuracy | Wrong / 5,881 | Parameters | Training Time |
-|---|---:|---:|---:|---:|
-| Baseline CNN | 99.49% | 30 | 629K | 275.6 s |
-| **Deep CNN** | **99.81%** | **11** | **936K** | **284.0 s** |
-| MobileNetV2 | 99.66% | 20 | 2.56M | 518.7 s |
-| LeakyReLU CNN | 99.46% | 32 | 629K | 271.5 s |
-| Stride CNN | 99.52% | 28 | 823K | 236.9 s |
-
-<div class="takeaway">
-<strong>Interpretation:</strong> the Deep CNN reduced errors from 30 to 11 with moderate parameter growth and almost unchanged training time. MobileNetV2 improved over the baseline, but not efficiently.
+<div class="two-col" style="margin-top: 16px;">
+  <div>
+    <p>The Deep CNN adds a single 4th convolutional stage (256 filters) to the baseline. Wrong predictions dropped from <strong>30 to 11</strong> — a 63% reduction in errors.</p>
+    <p style="margin-top: 10px;">Parameter count increased from 629K to <strong>936K</strong>. Training time increased by just 8 seconds.</p>
+  </div>
+  <div>
+    <p>All other variants either matched or fell below baseline accuracy while adding computational cost.</p>
+    <p style="margin-top: 10px;">Depth was the only design change that produced a consistent accuracy improvement on this dataset and split.</p>
+    <p class="muted" style="font-size: 0.85em; margin-top: 8px;">Single run — multi-seed validation would be needed to confirm the magnitude of this advantage.</p>
+  </div>
 </div>
 
 <!--
-Speaker notes:
-Deliver the main message clearly. The Deep CNN is the best tradeoff. MobileNetV2 is the counterargument to transfer learning here: more expensive, less accurate than the Deep CNN. LeakyReLU and Stride CNN show that not every plausible architectural change is worth making.
-Time: 1:00
+The 63% error reduction from one additional stage is the strongest signal in the results. The cost is negligible. All other variants showed no consistent improvement over the baseline — depth was the only effective variable.
+-->
+
+---
+
+## MobileNetV2 showed no accuracy advantage over the Deep CNN at significantly higher cost
+
+<div class="kicker">Transfer learning comparison</div>
+
+<div class="two-col">
+  <div>
+    <p><strong>MobileNetV2</strong></p>
+    <ul>
+      <li>Pretrained on ImageNet — 1.2M images</li>
+      <li><strong>2.56M parameters</strong> — about 4× the baseline, 2.7× the Deep CNN</li>
+      <li><strong>518.7 s training</strong> — 1.8× the Deep CNN</li>
+      <li>Test accuracy: <strong>99.66%</strong></li>
+    </ul>
+  </div>
+  <div>
+    <p><strong>Deep CNN</strong></p>
+    <ul>
+      <li>Trained from scratch on GTSRB only</li>
+      <li><strong>936K parameters</strong></li>
+      <li><strong>284.0 s training</strong></li>
+      <li>Test accuracy: <strong>99.81%</strong></li>
+    </ul>
+  </div>
+</div>
+
+<div class="takeaway">
+<strong>Interpretation:</strong> for this task and data volume, a purpose-built compact model outperformed the pretrained general model at lower cost. This result is specific to this setting — transfer learning may be more effective in lower-data regimes or with domain-adapted pretraining.
+</div>
+
+<!--
+MobileNetV2 had a structural advantage: 1.2M pretraining images, 4× more parameters than the baseline. Yet the Deep CNN trained from scratch outperformed it here. The finding is bounded by this specific task and dataset — it does not generalise to transfer learning in general.
+-->
+
+---
+
+<!-- _class: image-focus -->
+
+## The Deep CNN achieves the best accuracy at near-baseline training cost
+
+![](results/task05/model_comparison_summary.png)
+
+**Higher parameter count and longer training time did not produce better accuracy in this experiment.**
+
+<!--
+This chart makes the cost–accuracy tradeoff visible across all five models. MobileNetV2 sits furthest right in cost, yet below the Deep CNN in accuracy. The Deep CNN is the Pareto-optimal choice in this comparison.
 -->
 
 ---
@@ -570,276 +545,194 @@ Time: 1:00
 <!-- _class: divider -->
 <!-- _paginate: false -->
 
-# 5. The benchmark gap
+# Error Analysis
 
-<div class="subtitle">High clean accuracy does not automatically mean real-world robustness.</div>
-
----
-
-<!-- _class: image-focus -->
-
-## Model Comparison: Visual Summary
-
-![](results/task05/model_comparison_summary.png)
-
-**Key point:** the Deep CNN gives the best accuracy-cost tradeoff.
+<div class="subtitle">11 wrong predictions on 5,881 test images. A consistent pattern.</div>
 
 <!--
-Speaker notes:
-Use the visual summary to reinforce the table result. Emphasize that the Deep CNN improves accuracy without a major increase in training time, while MobileNetV2 is much more expensive.
-Time: 0:25
+With only 11 errors, we could inspect each one individually. Here is what they show.
 -->
 
 ---
 
-## Best Model Evaluation: Deep CNN
+## Remaining errors show a consistent pattern linked to visual similarity
 
-**Test set performance:**
+<div class="kicker">Error analysis — Deep CNN</div>
 
-| Metric | Value |
-|---|---|
-| Top-1 accuracy | **99.81%** |
-| Top-5 accuracy | **99.98%** |
-| Wrong classifications | **11 out of 5,881** |
+<div class="lead">All errors occur at class boundaries where two signs are near-identical at 32×32 pixels.</div>
 
-<br>
+| Example class | Per-class accuracy | Likely cause |
+|---|:---:|---|
+| Pedestrians | 97.62% | Same triangular shape as other warning signs |
+| Bicycles crossing | 97.62% | Near-identical silhouette to Pedestrians at this resolution |
+| Speed limit 120 km/h | 99.10% | "120" vs. "100" — few-pixel difference at 32×32 |
 
-The Deep CNN was selected because it had the best accuracy-cost tradeoff.
-
-Top-5 accuracy of 99.98% means: in all but **one** test case, the correct class was among the top 5 predictions.
+<div class="takeaway">
+<strong>Interpretation:</strong> the error pattern is consistent with a resolution constraint — the model may lack sufficient pixel information to resolve certain class boundaries. This observation is based on visual inspection. Top-5 accuracy of 99.98% provides supporting evidence: the correct class appeared in the top 5 predictions in all but one test case.
+</div>
 
 <!--
-Speaker notes:
-Present the key metrics first. Do not go into the confusion matrix yet. The next slide shows it in full size so the audience can actually see the diagonal structure.
-Time: 0:40
+Every error involves a class pair that looks nearly identical at 32×32. This is consistent with a resolution limitation rather than systematic model bias. Top-5 accuracy of 99.98% supports this interpretation — the correct answer was almost always among the model's most confident predictions.
 -->
 
 ---
 
 <!-- _class: image-focus -->
 
-## Confusion Matrix: Mostly Diagonal
+## The confusion matrix shows near-perfect diagonal with minimal off-diagonal activity
 
 ![](results/task06/deep/confusion_matrix_normalized.png)
 
-**Key point:** errors are rare and mostly occur between visually similar classes.
+**Top-5 accuracy: 99.98% — the correct class appeared in the model's top 5 predictions in all but one of 5,881 test cases.**
 
 <!--
-Speaker notes:
-Use the confusion matrix visually. The important point is the strong diagonal, not the individual cell values. Explain that the few off-diagonal values indicate confusions between similar signs.
-Time: 0:35
+The strong diagonal confirms accurate classification across almost all classes. The few off-diagonal values cluster around visually similar pairs — consistent with the error pattern discussed on the previous slide.
 -->
 
 ---
 
-## Best Model Evaluation: Where Errors Occur
+## The 11× class imbalance produced a 0.34 pp accuracy gap between frequent and rare classes
 
-**Five weakest classes:**
+<div class="kicker">Bias analysis</div>
 
-| Class | Accuracy | Why difficult |
-|---|:---:|---|
-| Pedestrians | 97.62% | Similar shape to General caution |
-| Bicycles crossing | 97.62% | Near-identical silhouette to Pedestrians |
-| Double curve | 98.39% | Looks like single curve at 32x32 |
-| Beware of ice/snow | 98.67% | Fine snowflake detail lost at low resolution |
-| Speed limit 120 km/h | 99.10% | "120" vs "100" differ by only a few pixels |
+<div class="kpi-row">
+  <div class="kpi"><div class="number">99.87%</div><div class="label">mean accuracy — 10 most frequent classes</div></div>
+  <div class="kpi"><div class="number">99.52%</div><div class="label">mean accuracy — 10 rarest classes</div></div>
+  <div class="kpi"><div class="number">0.34 pp</div><div class="label">gap</div></div>
+</div>
 
 <br>
 
-All remaining errors are **visually explainable** -- not random failures.
+Several rare classes reach **100%** accuracy on the test split. The augmentation strategy appears to have partially compensated for the data shortage in rare classes.
+
+<p class="muted" style="font-size: 0.88em; margin-top: 14px;">Caveat: one training run, one fixed split. Rare classes have very few test images — a single missed prediction shifts per-class accuracy significantly. This result is indicative, not conclusive without multi-seed validation.</p>
 
 <!--
-Speaker notes:
-Show that the errors are concentrated in genuinely hard cases, not spread randomly. The next slide gives the per-class plot in full size.
-Time: 0:40
+An 11-fold data imbalance produced only a 0.34 pp accuracy gap. This is a positive signal, but the caveat matters: rare classes have too few test images for a stable estimate. Multi-seed validation would be needed to confirm whether this gap is representative.
 -->
 
 ---
 
 <!-- _class: image-focus -->
 
-## Per-Class Accuracy
-
-![](results/task06/deep/per_class_accuracy.png)
-
-**Key point:** the weaker classes are visually similar to other signs, especially at 32x32 resolution.
-
-<!--
-Speaker notes:
-Use the plot as visual support for the previous table. The exact values are less important than the pattern: most classes are near perfect, and the weaker ones have a visual explanation.
-Time: 0:25
--->
-
----
-
-## Bias Analysis: Frequent vs. Rare Classes
-
-**Does the model perform worse on rare classes?**
-
-| Group | Avg. training images | Mean test accuracy |
-|---|:---:|:---:|
-| 10 most frequent classes | approx. 1,374 | **99.87%** |
-| 10 rarest classes | approx. 169 | **99.52%** |
-| Gap | | **0.34 percentage points** |
-
-<br>
-
-- Only **0.34 pp** difference despite an **11x class imbalance**
-- Several rare classes reach **100%** accuracy
-- One training run, one fixed split -- this result should not be over-interpreted
-
-<!--
-Speaker notes:
-The key message is reassuring: class imbalance did not translate into a large accuracy gap. But add the caution: with so few test images per rare class, a single mistake changes accuracy significantly. The next slide shows the bias plot in full size.
-Time: 0:45
--->
-
----
-
-<!-- _class: image-focus -->
-
-## Bias Analysis: Visual Summary
-
-![](results/task06/deep/bias_analysis_mean_accuracy.png)
-
-**Key point:** frequent and rare classes perform similarly on this split.
-
-<!--
-Speaker notes:
-Use the visual summary to reinforce the small gap. Point out that this does not prove there is no bias in general, but it suggests no strong class-frequency bias in this experiment.
-Time: 0:25
--->
-
----
-
-<!-- _class: image-focus -->
-
-## Interpretability: Grad-CAM
+## Grad-CAM indicates that predictions are driven by the sign region, not background context
 
 ![](results/task06/deep/gradcam_examples.png)
 
-**Key point:** the model focuses on sign shape, symbol, and colour, not mainly on background.
+**Activation maps concentrate on the sign shape and internal symbol — consistent with task-relevant feature learning.**
 
 <!--
-Speaker notes:
-Explain Grad-CAM simply: it highlights the regions that most influenced the prediction. The key observation is that the model looks at the sign itself, not the sky or road behind it. A model that relies on background patterns would be fragile in new scenes.
-Time: 0:35
+Grad-CAM highlights which image regions most influenced each prediction. Activations concentrate on the sign itself rather than the surrounding scene. This is consistent with the model learning task-relevant features — though Grad-CAM provides supportive evidence, not a formal proof of interpretability.
 -->
 
 ---
 
-<!-- _class: image-focus -->
+<!-- _class: divider -->
+<!-- _paginate: false -->
 
-## Interpretability: Latent Space Structure
+# Robustness
 
-![](results/tsne_feature_space.png)
-
-**Key point:** most traffic sign classes form distinct clusters, while overlap remains mainly among visually similar classes.
+<div class="subtitle">Clean benchmark accuracy does not predict performance under input degradation.</div>
 
 <!--
-Speaker notes:
-Explain t-SNE briefly: it projects the model's internal representations into 2D so we can inspect whether classes are separated. Distinct clusters mean the model has learned class-discriminative features. Overlap among speed limit signs and warning signs is consistent with the error analysis.
-Time: 0:35
+The results so far describe performance on clean, well-cropped test images. Here is what changes when that condition does not hold.
 -->
 
 ---
 
-## Robustness Testing: Results
+## Gaussian noise causes a 27.95 pp accuracy drop — the primary practical limitation
 
-The model was tested with two common image distortions **without any retraining**:
+<div class="kicker">Robustness test — no retraining</div>
 
-| Condition | Test Accuracy | Drop |
-|---|---:|---:|
-| Clean images | 99.81% | baseline |
-| Gaussian Blur (5x5 kernel) | 97.01% | -2.80 pp |
-| Gaussian Noise | 71.86% | **-27.95 pp** |
+<div class="kpi-row">
+  <div class="kpi"><div class="number">99.81%</div><div class="label">clean test images</div></div>
+  <div class="kpi"><div class="number">97.01%</div><div class="label">Gaussian blur — −2.8 pp</div></div>
+  <div class="kpi"><div class="number" style="color: #c0392b;">71.86%</div><div class="label">Gaussian noise — −27.95 pp</div></div>
+</div>
 
 <br>
 
-The model was trained **only on clean images**, so this test reveals how well it generalises to degraded inputs.
+The model tolerates moderate blur reasonably well. Under Gaussian noise, accuracy drops from **99.81%** to **71.86%** — an increase of **1,647 wrong predictions** on the same 5,881 test images.
+
+<div class="takeaway">
+<strong>Cause:</strong> this is a distribution shift failure. The model was trained exclusively on clean images and has no learned response to noise. The benchmark result and the noise result describe two different operating conditions — only one of which is realistic in practice.
+</div>
 
 <!--
-Speaker notes:
-Present the full table first. Blur is handled reasonably -- only 2.8 pp drop. But noise is a serious problem. Let that number sit for a moment before moving to the next slide.
-Time: 0:30
+Blur tolerance is actually encouraging — the model has learned features that are not entirely dependent on sharp pixel boundaries. The noise result is the key limitation: a 27.95 pp drop is large enough to matter in any real application. The cause is not model capacity — it is that noise was absent from the training distribution.
 -->
 
 ---
 
-## Robustness Testing: The Noise Problem
+## Key constraints and three concrete follow-up directions
 
-| Condition | Test Accuracy | Drop |
-|---|---:|---:|
-| Clean images | 99.81% | baseline |
-| Gaussian Blur (5x5 kernel) | 97.01% | -2.80 pp |
-| **Gaussian Noise** | **71.86%** | **-27.95 pp** |
+<div class="kicker">Limitations and next steps</div>
 
-<br>
-
-Under moderate Gaussian noise, accuracy drops from **99.81%** to **71.86%**. This corresponds to roughly **1,600 additional errors** on the same test set.
-
-> **Clean benchmark accuracy does not automatically mean real-world robustness.**
+<div class="two-col">
+  <div>
+    <p><strong>Constraints on these results</strong></p>
+    <ul>
+      <li>Internal split — not comparable to the official GTSRB leaderboard</li>
+      <li>Pre-cropped images — classification only, no sign detection</li>
+      <li>Single run per model — small differences may not be stable across seeds</li>
+      <li>32×32 input resolution — fine detail is lost</li>
+      <li>GTSRB: German roads, controlled weather conditions only</li>
+    </ul>
+  </div>
+  <div>
+    <p><strong>Three highest-priority next steps</strong></p>
+    <ul>
+      <li><strong>Add noise and blur augmentation during training</strong> — most direct fix for the robustness gap</li>
+      <li><strong>Repeat with multiple seeds and splits</strong> — validate stability of the Deep CNN advantage</li>
+      <li><strong>Test at 64×64 resolution</strong> — expected to reduce confusion in similar-class pairs</li>
+    </ul>
+  </div>
+</div>
 
 <!--
-Speaker notes:
-Highlight the noise row clearly. A 27.95 pp drop is large. Explain why: the model was never exposed to noisy images during training. This is a classic distribution shift problem. The blur result is actually encouraging -- the model has learned something more abstract than just sharp pixels. But noise adds high-frequency variation that the model has never seen.
-Time: 0:45
+The most actionable limitation is the noise result — augmentation training directly addresses it without requiring a new architecture. Multi-seed validation and higher resolution are the two other priorities before drawing stronger conclusions from this comparison.
 -->
 
 ---
 
-## Robustness Testing: Key Message and Limitations
+<!-- _class: divider -->
+<!-- _paginate: false -->
 
-> **The main remaining challenge is not clean-image classification. It is robustness under distribution shift.**
+# Conclusion
 
-<br>
-
-**Study limitations to keep in mind:**
-
-- Results are based on an **internal hold-out split**, not the official GTSRB test set
-- All images are **pre-cropped** -- the model cannot locate signs in full road scenes
-- Each model was trained **only once** with a fixed split -- small accuracy differences may not be stable
-- Input resolution of **32x32 pixels** may remove fine visual details
-- The model was never trained on **noisy or blurred inputs**
-- GTSRB was recorded on **German roads with a single camera** under normal weather conditions
+<div class="subtitle">Depth improved accuracy. Robustness under noise remains unresolved.</div>
 
 <!--
-Speaker notes:
-Be honest about the limitations. The internal split caveat is important -- we cannot compare directly to the official leaderboard. The pre-cropping caveat sets clear scope: this is a classification system, not a detection system. The resolution and noise points motivate the future work on the next slide.
-Time: 0:30
+Three findings to close with.
 -->
 
 ---
 
-## Conclusion and Future Work
+## Three findings from this experiment
 
-<div class="kicker">Final message</div>
-
-<div class="lead">For GTSRB, the bottleneck is no longer clean-image classification. It is robustness.</div>
+<div class="kicker">Summary</div>
 
 <div class="cards">
   <div class="card">
-    <h3>1. Compact works</h3>
-    <p>Baseline CNN reaches 99.49% on the internal test split.</p>
+    <h3>Compact CNNs are sufficient here</h3>
+    <p>A 629K-parameter baseline trained from scratch reaches <strong>99.49%</strong> on this internal split — in the same broad performance range as the reported human benchmark of 98.84%.</p>
   </div>
   <div class="card">
-    <h3>2. Depth helps</h3>
-    <p>Deep CNN improves to 99.81% and reduces errors from 30 to 11.</p>
+    <h3>Depth was the effective variable</h3>
+    <p>One additional extraction stage reduced errors by <strong>63%</strong> at near-zero added cost. Transfer learning, activation choice, and downsampling strategy showed no consistent improvement.</p>
   </div>
   <div class="card">
-    <h3>3. Noise hurts</h3>
-    <p>Accuracy drops by 27.95 pp under Gaussian noise.</p>
+    <h3>Robustness is the open problem</h3>
+    <p>A <strong>27.95 pp</strong> drop under Gaussian noise shows that clean benchmark accuracy does not reflect degraded-input performance. Distribution shift is the primary unresolved challenge.</p>
   </div>
 </div>
 
-<div class="takeaway">
-<strong>Next steps:</strong> train with noise and blur augmentation, test higher input resolution, and repeat the comparison across multiple seeds and splits.
+<div class="takeaway" style="margin-top: 20px;">
+<strong>The benchmark result is strong on clean images. Extending it to degraded or out-of-distribution conditions requires explicit robustness work — the most important next step for this architecture.</strong>
 </div>
 
 <!--
-Speaker notes:
-Summarise the presentation as a story. The baseline already works well, depth is the only clear architectural improvement, and robustness is the real practical weakness. End with concrete next steps rather than a generic future-work list.
-Time: 1:15
+Compact CNNs work well on GTSRB under controlled conditions. Depth was the only design change that consistently improved results. The noise result carries the most practical weight — it defines what this architecture still cannot do, and points directly to where future work should focus.
 -->
 
 ---
@@ -852,8 +745,7 @@ Time: 1:15
 ## Questions?
 
 <!--
-Speaker notes:
-Leave time for questions. If asked about implementation details, keep answers conceptual. If asked about the worst-performing classes, refer to the Pedestrians and Bicycles crossing example. If asked about future work, mention noise augmentation as the single highest-priority next step.
+Thank you. Backup slides are available on the autoencoder extension, hyperparameter sensitivity analysis, full limitations table, and t-SNE feature space visualisation.
 -->
 
 ---
@@ -865,57 +757,66 @@ Leave time for questions. If asked about implementation details, keep answers co
 
 ---
 
-## Backup: Autoencoder for Anomaly Detection
+## Backup: Anomaly Detection via Autoencoder
 
-**Problem:** A standard classifier always assigns one of its 43 known classes -- even for inputs it has never seen.
+<div class="kicker">Extension — proof of concept</div>
 
-**Approach:** Train a separate compression model that learns to reconstruct known traffic signs.
+<div class="lead">A standard classifier always assigns one of its 43 known classes — even for inputs it has never seen.</div>
 
-- Compress each image to a compact 128-dimensional representation
-- Reconstruct the image from that representation
-- Measure the **reconstruction error**
-- Images with **high error** are flagged as potentially anomalous
-
-| Metric | Value |
-|---|---|
-| Final validation loss | 0.5118 |
-| Anomaly threshold (95th percentile) | 1.091 |
-| Images flagged on validation set | 294 out of 5,881 (5.0%) |
-
-> This is a **proof of concept** -- no true out-of-distribution test set was available to validate detection capability.
+<div class="two-col">
+  <div>
+    <p><strong>Approach</strong></p>
+    <p>A compression autoencoder learns to reconstruct known traffic signs via a 128-dimensional bottleneck. Unfamiliar inputs do not fit the learned compression pattern — they reconstruct poorly, producing elevated reconstruction error as an anomaly signal.</p>
+    <br>
+    <p><strong>Threshold</strong></p>
+    <p>Set at the 95th percentile of validation reconstruction errors (1.091). This defines a 5% false positive rate on in-distribution data.</p>
+  </div>
+  <div>
+    <p><strong>Results on the validation set</strong></p>
+    <table>
+      <tr><th>Metric</th><th>Value</th></tr>
+      <tr><td>Latent size</td><td>128 dimensions</td></tr>
+      <tr><td>Final reconstruction loss</td><td>0.5118</td></tr>
+      <tr><td>Anomaly threshold (95th pct.)</td><td>1.091</td></tr>
+      <tr><td>Images flagged</td><td>294 / 5,881 (5%)</td></tr>
+    </table>
+    <br>
+    <p class="muted" style="font-size: 0.88em;">No true out-of-distribution test set was available. The method is implementable — its real-world detection performance is not yet validated.</p>
+  </div>
+</div>
 
 <!--
-Speaker notes:
-Explain the autoencoder idea simply: if the model has only learned to compress and reconstruct known traffic signs, then an unknown input will produce a poor reconstruction and therefore a high error. The threshold is set so that 5% of known signs are flagged -- a baseline false positive rate. Without out-of-distribution data we cannot measure true detection performance.
+The autoencoder adds an "I don't know" capability alongside the classifier. The method works in principle but remains unvalidated without a real OOD test set. This is a proof of concept, not a production-ready component.
 -->
 
 ---
 
 ## Backup: Hyperparameter Sensitivity (Optuna)
 
-**Goal:** Verify that our manually chosen training settings are in a robust region.
+<div class="kicker">Extension — 30-trial Bayesian search</div>
 
-Method: Bayesian search over 30 trials, each trained for 10 epochs on the Stride CNN.
+**Goal:** verify that manually chosen training settings are not fragile.
 
 | Hyperparameter | Search range | Best value found |
 |---|---|:---:|
-| Learning rate | 0.0001 to 0.01 | **0.00124** |
-| Dropout rate | 0.2 to 0.6 | **0.274** |
-| Batch size | 32, 64, or 128 | **32** |
-| Optimiser | Adam or SGD | **Adam** |
-| Weight decay | very small range | **0.000698** |
+| Learning rate | 0.0001 – 0.01 | **0.00124** |
+| Dropout rate | 0.2 – 0.6 | **0.274** |
+| Batch size | 32, 64, 128 | **32** |
+| Optimiser | Adam / SGD | **Adam** |
+| Weight decay | 1×10⁻⁵ – 1×10⁻² | **0.000698** |
 
-**Best trial:** 99.91% validation accuracy
+**Best trial (trial 6):** 99.91% validation accuracy
 
-- Adam dominated all top-5 trials
-- Best learning rate (0.00124) is very close to our default (0.001)
+- Adam dominated all top-5 trials — SGD was not competitive on this task
+- Best learning rate (0.00124) is close to our default (0.001)
 - Optimal dropout (0.274) is lower than our default (0.5)
 
-> Our default settings are in a reasonable region of the search space.
+<div class="takeaway">
+<strong>Our default settings sit in a robust region of the search space.</strong>
+</div>
 
 <!--
-Speaker notes:
-Explain Optuna briefly: it is a Bayesian search method that uses results from earlier trials to guide the next ones, rather than searching randomly. The key takeaway is reassuring: our defaults were not lucky guesses. Adam's dominance is also informative -- SGD was not competitive here.
+Optuna uses earlier trial results to guide subsequent ones. The key finding: our manual defaults were not fragile. The optimal learning rate is very close to our choice. The one notable gap is dropout — lower regularisation appears preferable.
 -->
 
 ---
@@ -924,17 +825,32 @@ Explain Optuna briefly: it is a Bayesian search method that uses results from ea
 
 | Limitation | Impact |
 |---|---|
-| Internal hold-out split only | Results not directly comparable to official GTSRB leaderboard |
-| Pre-cropped images | System cannot locate signs in full road scenes |
+| Internal hold-out split only | Not directly comparable to official GTSRB leaderboard |
+| Pre-cropped images | Cannot locate signs — classification only, not detection |
 | Single training run per model | Small accuracy differences may not be stable across seeds |
-| 32x32 input resolution | Fine details (numerals, small symbols) may be lost |
+| 32×32 input resolution | Fine details (numerals, symbols) may be partially lost |
 | No noise or blur augmentation during training | Model not robust to degraded inputs |
-| GTSRB recorded on German roads, single camera, normal weather | Limited generalisation to other regions, conditions, or sign standards |
-| Rare classes have few test images | A single missed prediction changes their per-class accuracy significantly |
+| GTSRB: German roads, single camera, controlled weather | Limited generalisation to other regions, conditions, or sign standards |
+| Rare classes have few test images | A single missed prediction shifts per-class accuracy significantly |
 
 <!--
-Speaker notes:
-Use this slide if the audience asks for more detail about the limitations. Each row corresponds to a concrete, actionable insight. The most important ones for a follow-up project are: noise augmentation, higher resolution, and multiple seeds.
+Use this slide for detailed questions about methodology. The most actionable limitations for follow-up work are noise augmentation, multi-seed validation, and higher resolution.
+-->
+
+---
+
+<!-- _class: image-focus -->
+
+## Backup: t-SNE Feature Space (Deep CNN)
+
+![](results/tsne_feature_space.png)
+
+**2,000 validation samples projected to 2D from the Deep CNN's 512-dimensional internal feature space (perplexity = 30).**
+
+Most classes form distinct clusters. Overlap concentrates among speed limit signs and visually similar warning triangles — consistent with the per-class error pattern.
+
+<!--
+Distinct clusters indicate that the model has learned to separate classes in its internal representation space. The overlapping speed limit cluster directly explains where the remaining errors originate.
 -->
 
 ---
@@ -943,38 +859,31 @@ Use this slide if the audience asks for more detail about the limitations. Each 
 
 | Slide | Topic | Time |
 |---|---|:---:|
-| 1 | Title | 0:30 |
-| 2 | Divider: Why this problem matters | 0:10 |
-| 3 | Problem and Motivation | 1:00 |
-| 4 | Divider: The experiment setup | 0:10 |
-| 5 | Dataset Overview | 1:00 |
-| 6 | Class Distribution (image) | 0:25 |
-| 7 | Class Imbalance | 0:45 |
-| 8 | Visual Ambiguity | 0:25 |
-| 9 | Sample Images (image) | 0:35 |
-| 10 | Preprocessing | 1:00 |
-| 11 | Divider: The model logic | 0:10 |
-| 12 | Baseline Architecture | 1:00 |
-| 13 | Baseline vs Deep CNN (image) | 0:30 |
-| 14 | Model Variants | 1:30 |
-| 15 | What Each Variant Tests | 0:45 |
-| 16 | Divider: What changed performance? | 0:10 |
-| 17 | Model Comparison | 0:30 |
-| 18 | Model Comparison: Best | 0:30 |
-| 19 | Model Comparison: Key Takeaway | 1:00 |
-| 20 | Model Comparison: Visual Summary (image) | 0:25 |
-| 21 | Best Model Evaluation | 0:40 |
-| 22 | Confusion Matrix (image) | 0:35 |
-| 23 | Where Errors Occur | 0:40 |
-| 24 | Per-Class Accuracy (image) | 0:25 |
-| 25 | Bias Analysis | 0:45 |
-| 26 | Bias Analysis: Visual Summary (image) | 0:25 |
-| 27 | Grad-CAM (image) | 0:35 |
-| 28 | Latent Space Structure (image) | 0:35 |
-| 29 | Divider: The benchmark gap | 0:10 |
-| 30 | Robustness: Results | 0:30 |
-| 31 | Robustness: Noise Problem | 0:45 |
-| 32 | Robustness: Key Message | 0:30 |
-| 33 | Conclusion and Future Work | 1:15 |
-| 34 | Thank You | -- |
-| **Total** | | **~15:00** |
+| 1 | Title | 0:20 |
+| 2 | Divider — The Problem | 0:10 |
+| 3 | Dataset overview | 0:50 |
+| 4 | Two structural challenges | 0:45 |
+| 5 | Class distribution (visual) | 0:20 |
+| 6 | Sample images (visual) | 0:20 |
+| 7 | Divider — Our Approach | 0:10 |
+| 8 | Experimental design | 0:45 |
+| 9 | Baseline architecture | 0:50 |
+| 10 | Four variants | 1:00 |
+| 11 | Training conditions | 0:40 |
+| 12 | Divider — Results | 0:10 |
+| 13 | Full results | 0:40 |
+| 14 | Main finding: Deep CNN | 0:50 |
+| 15 | Transfer learning comparison | 0:50 |
+| 16 | Cost vs. accuracy (visual) | 0:25 |
+| 17 | Divider — Error Analysis | 0:10 |
+| 18 | Error pattern | 0:45 |
+| 19 | Confusion matrix (visual) | 0:25 |
+| 20 | Bias analysis | 0:45 |
+| 21 | Grad-CAM (visual) | 0:25 |
+| 22 | Divider — Robustness | 0:10 |
+| 23 | Robustness results | 0:50 |
+| 24 | Limitations and next steps | 0:50 |
+| 25 | Divider — Conclusion | 0:10 |
+| 26 | Summary | 0:55 |
+| 27 | Thank You | — |
+| **Total** | | **~14:45** |
