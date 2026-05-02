@@ -1,0 +1,134 @@
+[
+  {
+    "seed": 42,
+    "base_model": "Baseline CNN",
+    "model_name": "Baseline CNN (seed 42)",
+    "best_val_acc": 0.9945587485121578,
+    "test_acc": 0.9920081618772317,
+    "test_loss": 0.032309171939425486,
+    "training_time_s": 225.0,
+    "num_params": 629291,
+    "epochs_trained": 16
+  },
+  {
+    "seed": 42,
+    "base_model": "Deep CNN",
+    "model_name": "Deep CNN (seed 42)",
+    "best_val_acc": 0.997449413365074,
+    "test_acc": 0.9977894915830641,
+    "test_loss": 0.007713852400570683,
+    "training_time_s": 292.7,
+    "num_params": 936235,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 42,
+    "base_model": "MobileNetV2",
+    "model_name": "MobileNetV2 (seed 42)",
+    "best_val_acc": 0.9954089440571331,
+    "test_acc": 0.9943887094031627,
+    "test_loss": 0.01967737125731654,
+    "training_time_s": 529.9,
+    "num_params": 2562859,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 42,
+    "base_model": "Stride CNN",
+    "model_name": "Stride CNN (seed 42)",
+    "best_val_acc": 0.9955789831661283,
+    "test_acc": 0.9945587485121578,
+    "test_loss": 0.0177995081535827,
+    "training_time_s": 295.1,
+    "num_params": 823051,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 123,
+    "base_model": "Baseline CNN",
+    "model_name": "Baseline CNN (seed 123)",
+    "best_val_acc": 0.9981295698010543,
+    "test_acc": 0.9964291787111036,
+    "test_loss": 0.010424451467312195,
+    "training_time_s": 276.0,
+    "num_params": 629291,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 123,
+    "base_model": "Deep CNN",
+    "model_name": "Deep CNN (seed 123)",
+    "best_val_acc": 0.997449413365074,
+    "test_acc": 0.9982996089100493,
+    "test_loss": 0.007478088380054235,
+    "training_time_s": 288.9,
+    "num_params": 936235,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 123,
+    "base_model": "MobileNetV2",
+    "model_name": "MobileNetV2 (seed 123)",
+    "best_val_acc": 0.9972793742560789,
+    "test_acc": 0.9965992178200986,
+    "test_loss": 0.010522782995010515,
+    "training_time_s": 528.6,
+    "num_params": 2562859,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 123,
+    "base_model": "Stride CNN",
+    "model_name": "Stride CNN (seed 123)",
+    "best_val_acc": 0.9935385138581874,
+    "test_acc": 0.9930283965312022,
+    "test_loss": 0.025298106279235243,
+    "training_time_s": 207.5,
+    "num_params": 823051,
+    "epochs_trained": 14
+  },
+  {
+    "seed": 2026,
+    "base_model": "Baseline CNN",
+    "model_name": "Baseline CNN (seed 2026)",
+    "best_val_acc": 0.9972793742560789,
+    "test_acc": 0.9969392960380887,
+    "test_loss": 0.011844480937185129,
+    "training_time_s": 280.6,
+    "num_params": 629291,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 2026,
+    "base_model": "Deep CNN",
+    "model_name": "Deep CNN (seed 2026)",
+    "best_val_acc": 0.9955789831661283,
+    "test_acc": 0.9945587485121578,
+    "test_loss": 0.019049954335144486,
+    "training_time_s": 216.4,
+    "num_params": 936235,
+    "epochs_trained": 15
+  },
+  {
+    "seed": 2026,
+    "base_model": "MobileNetV2",
+    "model_name": "MobileNetV2 (seed 2026)",
+    "best_val_acc": 0.9937085529671824,
+    "test_acc": 0.9920081618772317,
+    "test_loss": 0.029934543711012156,
+    "training_time_s": 528.8,
+    "num_params": 2562859,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 2026,
+    "base_model": "Stride CNN",
+    "model_name": "Stride CNN (seed 2026)",
+    "best_val_acc": 0.9962591396021084,
+    "test_acc": 0.9959190613841183,
+    "test_loss": 0.012008276224018215,
+    "training_time_s": 300.2,
+    "num_params": 823051,
+    "epochs_trained": 20
+  }
+]

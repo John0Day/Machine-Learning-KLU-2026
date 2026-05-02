@@ -1,0 +1,54 @@
+[
+  {
+    "model": "Deep CNN",
+    "runs": 3,
+    "test_acc_mean": 0.9968826163350903,
+    "test_acc_std": 0.0016563667399198093,
+    "test_loss_mean": 0.011413965038589801,
+    "test_loss_std": 0.0054003176185088595,
+    "best_val_acc_mean": 0.9968259366320921,
+    "best_val_acc_std": 0.0008817292516070846,
+    "training_time_mean_s": 265.99999999999994,
+    "training_time_std_s": 35.10678946680636,
+    "num_params": 936235
+  },
+  {
+    "model": "Baseline CNN",
+    "runs": 3,
+    "test_acc_mean": 0.9951255455421414,
+    "test_acc_std": 0.002214138750170009,
+    "test_loss_mean": 0.01819270144797427,
+    "test_loss_std": 0.009998672421071263,
+    "best_val_acc_mean": 0.9966558975230969,
+    "best_val_acc_std": 0.0015229868891395687,
+    "training_time_mean_s": 260.53333333333336,
+    "training_time_std_s": 25.19594323607584,
+    "num_params": 629291
+  },
+  {
+    "model": "Stride CNN",
+    "runs": 3,
+    "test_acc_mean": 0.9945020688091595,
+    "test_acc_std": 0.0011807893587257965,
+    "test_loss_mean": 0.018368630218945387,
+    "test_loss_std": 0.005440454678799036,
+    "best_val_acc_mean": 0.9951255455421414,
+    "best_val_acc_std": 0.0011560436464530452,
+    "training_time_mean_s": 267.59999999999997,
+    "training_time_std_s": 42.54809043893744,
+    "num_params": 823051
+  },
+  {
+    "model": "MobileNetV2",
+    "runs": 3,
+    "test_acc_mean": 0.9943320297001644,
+    "test_acc_std": 0.001874719198383653,
+    "test_loss_mean": 0.02004489932111307,
+    "test_loss_std": 0.00792907818022098,
+    "best_val_acc_mean": 0.9954656237601315,
+    "best_val_acc_std": 0.001458332520576872,
+    "training_time_mean_s": 529.1,
+    "training_time_std_s": 0.571547606649399,
+    "num_params": 2562859
+  }
+]
