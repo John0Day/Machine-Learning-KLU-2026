@@ -15,7 +15,7 @@
   "image_dtype": "torch.float32",
   "pixel_min": -1.2489,
   "pixel_max": 2.7051,
-  "pixel_mean": -0.2981,
+  "pixel_mean": -0.0963,
   "normalization_mean": [
     0.3337,
     0.3064,
