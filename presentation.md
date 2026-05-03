@@ -211,19 +211,38 @@ style: |
     flex-direction: column;
     justify-content: center;
   }
+  .dataset-logos-badge {
+    position: absolute;
+    right: 48px;
+    bottom: 48px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 16px;
+  }
+  .dataset-logos-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dataset-logos-row img {
+    height: 40px !important;
+    width: auto !important;
+    max-width: none !important;
+    display: block;
+  }
 ---
 
 <!-- _class: title -->
 <!-- _paginate: false -->
 
-<div class="kicker">Machine Learning Project · KLU 2026</div>
+<div class="kicker">Machine Learning Project · KLU 2026 · Shayan Razi & John Schlotfeldt</div>
 
 # Compact CNN Architectures for Traffic Sign Classification
 
 ## Architecture, stability, and robustness on GTSRB
 
 <p style="margin-top: 18px; font-size: 0.9em;">
-German Traffic Sign Recognition Benchmark · 43 classes · 39,209 images
+German Traffic Sign Recognition Benchmark
 </p>
 <!--
 This project compares five CNN architectures for traffic sign classification on GTSRB. We will cover the problem structure, our experimental setup, the single-run and multi-seed results, and where the key limitations are.
@@ -234,9 +253,16 @@ This project compares five CNN architectures for traffic sign classification on 
 <!-- _class: divider -->
 <!-- _paginate: false -->
 
-# Context
+# The Dataset: German Traffic Sign Images from Ruhr University Bochum
 
-<div class="subtitle">What is the task, what is the dataset, and what makes it challenging?</div>
+<div class="subtitle">43 traffic sign classes and more than 39,000 labelled images.</div>
+
+<div class="dataset-logos-badge">
+  <div class="dataset-logos-row">
+    <img src="sources/Ruhr-Universität_Bochum_logo.svg" alt="Ruhr University Bochum Logo" />
+    <img src="sources/KLU_logo.png" alt="KLU Logo" />
+  </div>
+</div>
 
 <!--
 GTSRB — the German Traffic Sign Recognition Benchmark — was published by Stallkamp et al. in 2012 and collected from a forward-facing car-mounted camera on real German roads. Images are already cropped to the sign bounding box, which means the model only needs to classify — not locate — a sign. That makes the dataset well-suited for controlled architectural comparisons.
@@ -255,7 +281,7 @@ Before the approach, the next slides set up two structural properties of the dat
 <div class="two-col" style="margin-top: 24px;">
   <div>
     <p><strong>What is the task?</strong></p>
-    <p>Given a cropped image of a traffic sign, assign it to one of a fixed set of categories — speed limits, prohibitory signs, warnings, mandatory directions.</p>
+    <p>Given a cropped image of a traffic sign, assign it to one of a fixed set of categories speed limits, prohibitory signs, warnings, mandatory directions.</p>
   </div>
   <div>
     <p><strong>Why does it matter?</strong></p>
@@ -264,7 +290,7 @@ Before the approach, the next slides set up two structural properties of the dat
 </div>
 
 <div class="takeaway" style="margin-top: 28px;">
-<strong>This project:</strong> we compare five CNN architectures on GTSRB — a standard benchmark for this task — to understand which design choices actually matter and how stable the results are.
+<strong>This project:</strong> we compare five CNN architectures on GTSRB a standard benchmark for this task to understand which design choices actually matter and how stable the results are.
 </div>
 
 <!--
@@ -286,7 +312,7 @@ Brief motivation: why traffic sign classification, why CNNs, why a benchmark com
 </div>
 
 <div class="two-col" style="margin-top: 20px;">
-  <div><span class="step-label">Scope</span> Images are pre-cropped to the sign boundary. This is a pure classification task — not detection.</div>
+  <div><span class="step-label">Scope</span> Images are pre-cropped to the sign boundary. This is therefore a pure classification task, not a detection task in full-scene images.</div>
   <div><span class="step-label">Reference</span> The reported human recognition rate on GTSRB is <strong>98.84%</strong>. We use this as a broad performance reference, not a direct comparison target.</div>
 </div>
 
@@ -511,12 +537,12 @@ A null result is equally informative: it tells us the baseline already handles t
 
 <div class="two-col">
   <div>
-    <p><strong>Augmentation — training set only</strong></p>
+    <p><strong>Augmentation: training set only</strong></p>
     <ul>
-      <li>Rotation ±15° — simulates tilted camera angle</li>
+      <li>Rotation ±15° simulates tilted camera angle</li>
       <li>Brightness and contrast variation</li>
       <li>Small translation shifts</li>
-      <li>Val and test: resize and normalise only — no random transforms</li>
+      <li>Validation and test: resize and normalise only, with no random transforms</li>
     </ul>
   </div>
   <div>
@@ -531,7 +557,7 @@ A null result is equally informative: it tells us the baseline already handles t
 </div>
 
 <div class="takeaway">
-Any accuracy difference between models is attributable to architecture — not to different training conditions, data, or evaluation protocols.
+Any accuracy difference between models is attributable to architecture, not to differences in training conditions, data, or evaluation protocol.
 </div>
 
 <!--
@@ -655,7 +681,7 @@ With only 11 errors, we could inspect each one individually. Here is what they s
 </div>
 
 <div class="takeaway">
-<strong>Pattern:</strong> every error occurs at a class boundary where the distinguishing feature — a numeral or small symbol — occupies only a handful of pixels. Top-5 accuracy of <strong>99.98%</strong> confirms the correct class is almost always within the model's top predictions.
+<strong>Pattern:</strong> every error occurs at a class boundary where the distinguishing feature — a numeral or small symbol — occupies only a handful of pixels.
 </div>
 
 <!--
@@ -670,7 +696,7 @@ Every error involves a class pair that looks nearly identical at 32×32. This is
 
 ![](results/task06/deep/misclassifications_top_confidence.png)
 
-**All 11 errors involve class pairs that are nearly indistinguishable at 32×32 resolution — speed limits differing by one digit, or warning triangles with similar silhouettes.**
+**Representative examples of the 11 errors: mostly speed limits differing by one digit and warning triangles with very similar silhouettes.**
 
 <!--
 These are the actual misclassified examples. The pattern is consistent: every wrong prediction involves a class pair that shares the same basic shape at this resolution. This is a resolution constraint, not a model capacity problem — the correct class almost always appears in the top-5.
@@ -739,19 +765,19 @@ The results so far describe performance on clean, well-cropped test images. Here
 
 ---
 
-## Gaussian noise causes a 27.95 pp accuracy drop — the main robustness limitation
+## Gaussian noise causes a 27.95 pp accuracy drop, the main robustness limitation
 
 <div class="kicker">Robustness test — no retraining</div>
 
 <div class="kpi-row">
   <div class="kpi"><div class="number">99.81%</div><div class="label">clean test images</div></div>
-  <div class="kpi"><div class="number">97.01%</div><div class="label">Gaussian blur — −2.80 pp</div></div>
-  <div class="kpi"><div class="number" style="color: #c0392b;">71.86%</div><div class="label">Gaussian noise — −27.95 pp</div></div>
+  <div class="kpi"><div class="number">97.01%</div><div class="label">Gaussian blur −2.80 pp</div></div>
+  <div class="kpi"><div class="number" style="color: #c0392b;">71.86%</div><div class="label">Gaussian noise −27.95 pp</div></div>
 </div>
 
 <br>
 
-The model handles moderate blur reasonably well. Under Gaussian noise, accuracy drops from **99.81%** to **71.86%** — roughly **1,600 additional errors** on the same 5,881 test images.
+The model handles moderate blur reasonably well. Under Gaussian noise, accuracy drops from **99.81%** to **71.86%** roughly **1,600 additional errors** on the same 5,881 test images.
 
 <div class="takeaway">
 <strong>Cause:</strong> this is a distribution shift failure. The model was trained on clean images and was not exposed to noisy inputs during training. The clean benchmark result therefore does not fully describe performance under degraded real-world conditions.
@@ -763,7 +789,7 @@ Blur tolerance is actually encouraging — the model has learned features that a
 
 ---
 
-## This work is a controlled first step — three directions lead further
+## This work is a controlled first step — three directions for improvement
 
 <div class="kicker">Limitations and next steps</div>
 
@@ -771,17 +797,18 @@ Blur tolerance is actually encouraging — the model has learned features that a
   <div>
     <p><strong>Constraints to keep in mind</strong></p>
     <ul>
-      <li>Pre-cropped images — the model classifies, it does not locate signs</li>
-      <li>Clean benchmark conditions — robustness to noise and weather is limited</li>
-      <li>German roads only — generalisation to other sign systems is untested</li>
+      <li>Pre-cropped images: the model classifies signs but does not locate them</li>
+      <li>Image sizes larger than 32x32 pixels require more computational resources</li>
+      <li>Clean benchmark conditions: robustness to noise and weather remains limited</li>
+      <li>German roads only: generalisation to other sign systems is untested</li>
     </ul>
   </div>
   <div>
     <p><strong>Next steps</strong></p>
     <ul>
-      <li><strong>Short term:</strong> add noise and blur augmentation — direct fix for the robustness gap</li>
+      <li><strong>Short term:</strong> add noise and blur augmentation to the baseline model to address the robustness gap</li>
       <li><strong>Medium term:</strong> validate across independent data splits to confirm ranking stability</li>
-      <li><strong>Longer term: object detection</strong> — move from classifying pre-cropped signs to finding and recognising them in a live camera stream</li>
+      <li><strong>Longer term (object detection):</strong> move from classifying pre-cropped signs to finding and recognising them in a live camera stream</li>
     </ul>
   </div>
 </div>
@@ -816,11 +843,11 @@ Three findings to close with.
 <div class="cards">
   <div class="card">
     <h3>Compact CNNs are sufficient here</h3>
-    <p>A 629K-parameter baseline trained from scratch reaches <strong>99.49%</strong> on this internal split — in the same broad performance range as the reported human benchmark of 98.84%.</p>
+    <p>A 629K-parameter baseline trained from scratch reaches <strong>99.49%</strong> on this internal split in the same broad performance range as the reported human benchmark of 98.84%.</p>
   </div>
   <div class="card">
     <h3>Architecture matters, but so does validation</h3>
-    <p>Depth reduced errors by <strong>63%</strong> at near-zero cost — the strongest single change. Multi-seed analysis showed LeakyReLU CNN as second-best overall: the single-run result (last place) was a misleading outlier.</p>
+    <p>Depth reduced errors by <strong>63%</strong> at near-zero cost, making it the strongest single change. Multi-seed analysis then showed LeakyReLU CNN as second-best overall, so the single-run last place was a misleading outlier.</p>
   </div>
   <div class="card">
     <h3>Robustness is the open problem</h3>
