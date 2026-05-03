@@ -708,7 +708,7 @@ Across three seeds, Deep CNN maintains the strongest average at 99.69 percent. T
 <div class="subtitle">Selected for detailed analysis because it offers the strongest average accuracy-cost tradeoff.</div>
 
 <!--
-After the model comparison, we now focus on the selected Deep CNN. It has the strongest average accuracy-cost tradeoff, so it is the most relevant model to analyse in detail. The goal here is to understand not just how accurate it is, but where it still makes mistakes, whether those mistakes follow a pattern, and whether the model appears to focus on sign-relevant regions.
+After the model comparison, we now focus on the selected Deep CNN. It has the strongest average accuracy-cost tradeoff, so it is the most relevant model to analyse in detail. The next slides move from model selection to model behaviour.
 -->
 
 ---
@@ -732,7 +732,7 @@ After the model comparison, we now focus on the selected Deep CNN. It has the st
 </div>
 
 <!--
-The Deep CNN makes only 11 errors on the test set, so we can look at the remaining mistakes quite concretely. The weaker classes shown here are visually difficult cases: pedestrians and bicycles share a similar triangular layout, and speed limit 120 can be close to speed limit 100 after resizing. The pattern suggests that the model is not failing broadly, but mainly struggles where small visual details are close to the resolution limit.
+The Deep CNN makes only 11 errors on the test set, so we can inspect the remaining mistakes quite concretely. The weaker classes shown here are visually difficult cases, especially where small numerals or symbols matter at 32 by 32 resolution. The pattern suggests that the model is not failing broadly, but mainly struggles near visually similar class boundaries.
 -->
 
 ---
@@ -746,7 +746,7 @@ The Deep CNN makes only 11 errors on the test set, so we can look at the remaini
 **Representative examples of the 11 errors: mostly speed limits differing by one digit and warning triangles with very similar silhouettes.**
 
 <!--
-Looking at the actual misclassified images makes the error pattern easier to understand. Most examples involve speed limit signs differing by a small numeral, or warning signs with very similar triangular silhouettes. These are exactly the kinds of cases where resizing to 32 by 32 can make the decisive details difficult to resolve. A natural follow-up would be to test whether a higher input resolution reduces these errors.
+The previous slide described the error pattern numerically. Here, the same pattern becomes visible in the actual images. The relevant differences are often small and hard to separate after resizing, which supports the interpretation from the error table.
 -->
 
 ---
@@ -773,7 +773,7 @@ Looking at the actual misclassified images makes the error pattern easier to und
 </div>
 
 <!--
-After looking at individual examples, the confusion matrix gives the class-level view. The strong diagonal shows that errors are rare overall, and the few off-diagonal entries are not spread randomly across the class space. Instead, they mostly align with the visually similar sign groups we already discussed. The Top-5 accuracy of 99.98 percent also shows that even when the top prediction is wrong, the correct class is almost always still among the model's most likely alternatives.
+After looking at individual examples, the confusion matrix gives the class-level view. The strong diagonal shows that errors are rare overall, and the few off-diagonal entries are not randomly spread across classes. They mostly align with the visually similar sign groups discussed before.
 -->
 
 ---
@@ -793,7 +793,7 @@ After looking at individual examples, the confusion matrix gives the class-level
 </div>
 
 <!--
-After looking at where the errors occur, we now ask a different question: is the model systematically worse on rare classes? One concern with any imbalanced dataset is that high overall accuracy could hide weak performance on underrepresented signs. In this run, the gap between the 10 most frequent and 10 rarest classes is only 0.34 percentage points, which suggests no strong class-frequency bias under this setup. However, rare classes have few test images, so this result should be interpreted cautiously.
+After looking at where the errors occur, we now ask whether rare classes are systematically worse. The gap between the 10 most frequent and 10 rarest classes is only 0.34 percentage points in this run. That suggests no strong class-frequency bias under this setup, but rare classes have few test images, so the result should be interpreted cautiously.
 -->
 
 ---
@@ -807,7 +807,7 @@ After looking at where the errors occur, we now ask a different question: is the
 **Activation maps concentrate on the sign shape and internal symbol, consistent with task-relevant feature learning.**
 
 <!--
-After checking error concentration and class-frequency effects, Grad-CAM gives us a qualitative look at what image regions influence the model. The activation maps mostly concentrate on the sign shape and internal symbol, rather than on obvious background areas. This does not prove the full decision process, but it supports the interpretation that the model is using task-relevant visual information. That is useful because background shortcuts would be a concern for generalisation.
+After error and frequency-bias analysis, Grad-CAM gives a qualitative look at which image regions influence the model. The activation maps mostly focus on the sign shape and internal symbol, rather than obvious background areas. This supports the interpretation that the model uses task-relevant visual information, but it is not a formal proof of the decision process.
 -->
 
 ---
@@ -888,10 +888,10 @@ This slide puts the results into perspective. The current model is a strong clas
 
 # Conclusion
 
-<div class="subtitle">Depth was strongest in the single run. LeakyReLU surprised in multi-seed evaluation. Robustness remains open.</div>
+<div class="subtitle">Strong clean-image performance is only the starting point. Stability and robustness decide how reliable the model is.</div>
 
 <!--
-To conclude, there are three main takeaways from this project. First, compact CNNs already perform extremely well on clean, cropped GTSRB images. Second, architectural choices do matter, but the multi-seed analysis showed that a single run can be misleading when the differences are very small. Third, the most important limitation is robustness: the selected model performs very well under clean benchmark conditions, but noise causes a large drop. That is the key gap between a strong benchmark classifier and a more realistic traffic-sign recognition system.
+To conclude, the main message is not simply that the model reaches high accuracy. The stronger point is that clean benchmark performance has to be interpreted together with evaluation stability and robustness. In our results, compact CNNs perform very well on cropped GTSRB images, but small accuracy differences require multi-seed validation, and degraded inputs expose the main limitation.
 -->
 
 ---
@@ -902,25 +902,25 @@ To conclude, there are three main takeaways from this project. First, compact CN
 
 <div class="cards">
   <div class="card">
-    <h3>Compact CNNs are sufficient here</h3>
-    <p>A 629K-parameter baseline trained from scratch reaches <strong>99.49%</strong> on this internal split in the same broad performance range as the reported human benchmark of 98.84%.</p>
+    <h3>Clean classification works very well</h3>
+    <p>A compact 629K-parameter baseline already reaches <strong>99.49%</strong> on the internal test split. This shows that cropped GTSRB classification is highly learnable with a relatively small CNN.</p>
   </div>
   <div class="card">
-    <h3>Architecture matters, but so does validation</h3>
-    <p>Depth reduced errors from <strong>30 to 11</strong> in the single run at near-zero cost. Multi-seed analysis then showed LeakyReLU CNN as second-best overall, so the single-run last place was a misleading outlier.</p>
+    <h3>Single runs can mislead</h3>
+    <p>Deep CNN reduced errors from <strong>30 to 11</strong> in the single run and had the best mean accuracy. But multi-seed validation showed that LeakyReLU was almost as accurate and more stable.</p>
   </div>
   <div class="card">
-    <h3>Robustness is the open problem</h3>
-    <p>A <strong>27.80 pp</strong> drop under Gaussian noise shows that clean benchmark accuracy does not reflect degraded-input performance. Distribution shift is the primary unresolved challenge.</p>
+    <h3>Robustness is the key limitation</h3>
+    <p>Gaussian noise caused a <strong>27.80 pp</strong> accuracy drop. The next step is therefore not only higher clean accuracy, but training and evaluating under degraded input conditions.</p>
   </div>
 </div>
 
 <div class="takeaway" style="margin-top: 20px;">
-<strong>The benchmark result is strong on clean images. Multi-seed evaluation is essential to draw reliable conclusions from small accuracy differences. Extending robustness to degraded inputs is the most important next step.</strong>
+<strong>Final takeaway:</strong> the selected model is a strong benchmark classifier, but a realistic traffic-sign recognition system needs stable validation, robustness training, and eventually object detection for full road scenes.
 </div>
 
 <!--
-First, we saw that a compact CNN already performs very strongly for this cropped benchmark task. Second, the model comparison illustrated why both architectural choices and repeated evaluation are important for drawing reliable conclusions. Third, the biggest open problem remains robustness to degraded inputs, particularly in the presence of Gaussian noise.
+The first finding is that the classification task is highly learnable under clean, cropped benchmark conditions. The second finding is methodological: when all models are above 99 percent, a single run is not enough to draw reliable conclusions. The third finding is practical: robustness is the main gap between a strong benchmark classifier and a more realistic traffic-sign recognition system. That is why the natural next steps are robustness training, stronger validation, and eventually object detection for full road scenes.
 -->
 
 ---
