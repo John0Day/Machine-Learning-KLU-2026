@@ -164,7 +164,7 @@ Stallkamp et al. (2012) report an average human recognition rate of 98.84% on th
 
 ---
 
-## 4. Model Improvements and Extensions
+## 4. Architectural Comparison and Model Selection
 
 ### 4.1 Overview and Expectations
 
@@ -324,9 +324,9 @@ The reconstruction grid shows that the autoencoder captures the general structur
 
 ---
 
-## 5. Results and Discussion
+## 5. Deep CNN Evaluation and Discussion
 
-The Deep CNN was selected as the best model and evaluated in more detail on the held-out test set.
+The model comparison in Section 4 identified the Deep CNN as the best-performing architecture: it achieves the highest mean test accuracy across three seeds (99.69% ± 0.17%), reduces errors by 63% relative to the baseline, and does so at near-baseline training cost. This section does not revisit the model comparison. Instead, it evaluates the selected Deep CNN in detail on the held-out test set, examining prediction quality (Sections 5.1–5.5), class-frequency bias (Section 5.6), robustness to image degradation (Section 5.7), and gradient-based interpretability (Section 5.8). The discussion in Section 5.9 synthesises these findings.
 
 ### 5.1 Test Set Performance
 
@@ -421,7 +421,7 @@ The visualisations suggest that the model mainly focuses on relevant sign region
 
 ### 5.9 Discussion
 
-All five models reach more than 99% test accuracy, which shows that CNNs work very well on GTSRB under clean, pre-cropped benchmark conditions. The results mostly matched our expectations. The Deep CNN was the strongest model, improving test accuracy by 0.32 pp over the baseline while keeping training time almost unchanged. This result is corroborated by the multi-seed analysis in Section 4.6: across three seeds (42, 123, 2026), the Deep CNN achieves the highest mean test accuracy of 99.69% ± 0.17%, although individual seed rankings vary. The likely reason is that the extra convolutional block helps the model learn more abstract features for visually similar signs. MobileNetV2 improved over the baseline in the single-run comparison, but the multi-seed results reveal a different picture: averaged across seeds, MobileNetV2 ranks last (99.43%), below both Baseline CNN (99.51%) and Stride CNN (99.45%), while requiring approximately twice the training time. The LeakyReLU CNN illustrates the risk of single-run evaluation: its seed-42 result (99.46%) placed it last and appeared to confirm that activation function choice is irrelevant when Batch Normalization is present. The multi-seed data revises this conclusion — mean accuracy across three seeds is 99.67% ± 0.03%, placing the LeakyReLU CNN second overall with the smallest variance of any model. The single-run result was an outlier. Strided convolutions produced no meaningful change (mean 99.45%), which is consistent with the expectation that learned downsampling provides limited benefit over fixed MaxPool on a well-structured benchmark dataset.
+The selection of the Deep CNN as the best model is established in Section 4; this discussion synthesises what the detailed analyses in Sections 5.1–5.8 reveal about its behaviour. The error pattern is consistent and interpretable: all 11 remaining misclassifications involve class pairs where the distinguishing feature — a numeral or small symbol — occupies only a few pixels at 32×32 resolution. Pedestrians and Bicycles crossing (classes 27 and 29) are the weakest classes, sharing nearly identical triangular silhouettes. Precision and recall are uniformly high across all 43 classes, confirming that the remaining errors are not systematically concentrated in any structural class category but reflect a resolution constraint that affects specific class pairs regardless of training frequency.
 
 The class-frequency bias analysis shows only a 0.34 pp accuracy gap between frequent and rare classes, despite the roughly 11-fold imbalance. Since this is based on one training run and one random split, it should not be treated as a precise estimate. It only suggests that there is no strong class-frequency bias in this experiment. The Grad-CAM results also support that predictions are mostly based on sign-relevant features. The biggest practical weakness is robustness: accuracy drops by 27.95 pp under moderate Gaussian noise. This matters more than the small differences between clean-test accuracies because it shows where benchmark performance fails in more realistic conditions.
 
@@ -435,7 +435,7 @@ There are several limitations. First, all five models were evaluated across thre
 
 ### 6.1 Conclusion
 
-This project evaluated different CNN architectures on the GTSRB traffic sign classification task and examined which design choices improve performance. Three main findings emerged.
+This project evaluated different CNN architectures on the GTSRB traffic sign classification task and examined which design choices improve performance. Section 4 compared all five models to identify the best architecture; Section 5 evaluated the selected Deep CNN in detail. Three main findings emerged from these two analyses.
 
 First, a compact CNN trained from scratch is already strong enough for this task. The baseline model, with 629K parameters, reaches 99.49% test accuracy on our internal hold-out split. Stallkamp et al. (2012) reported a human recognition rate of 98.84% on the official GTSRB test set. This is not directly comparable to our setup, but it shows that our baseline is in the same broad performance range. This result makes sense because traffic signs use standardized shapes and colors, and the GTSRB images are already cropped to the sign.
 
