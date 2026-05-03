@@ -7,8 +7,8 @@
 1. [Introduction](#1-introduction)
 2. [Data and Preprocessing](#2-data-and-preprocessing)
 3. [Baseline Model](#3-baseline-model)
-4. [Model Improvements and Extensions](#4-model-improvements-and-extensions)
-5. [Results and Discussion](#5-results-and-discussion)
+4. [Architectural Comparison and Model Selection](#4-architectural-comparison-and-model-selection)
+5. [Deep CNN Evaluation and Discussion](#5-deep-cnn-evaluation-and-discussion)
 6. [Conclusion and Future Work](#6-conclusion-and-future-work)
 7. [References](#references)
 8. [Appendix](#appendix)
@@ -17,25 +17,15 @@
 
 ## 1. Introduction 
 
-### 1.1 Problem Context and Motivation
+### 1.1 Problem Context, Approach, and Goal
 
-Traffic sign recognition is an important component of modern driver assistance systems and autonomous driving pipelines. In real-world applications, a classifier must recognize signs under changing illumination, partial occlusion, motion blur, and different viewing distances. Because traffic signs communicate legally and safety-relevant instructions, misclassifying a speed limit, priority sign, or stop sign could lead to incorrect driving decisions, making reliable classification both a technical and a safety-relevant challenge.
+Traffic sign recognition is a core component of driver assistance systems. Because traffic signs communicate safety-relevant instructions, misclassifying a speed limit or stop sign could lead to incorrect driving decisions. This project studies the problem using GTSRB — the German Traffic Sign Recognition Benchmark; the dataset is described in Section 2.
 
-To study this problem in a controlled and reproducible way, this project uses the German Traffic Sign Recognition Benchmark (GTSRB), a widely used dataset for traffic sign classification. A detailed description of the dataset and preprocessing pipeline is provided in Section 2.
+The project compares a compact baseline CNN with four model variants, each targeting one design decision: network depth, activation function, downsampling strategy, and transfer learning. CNNs are trained from scratch first because GTSRB images are pre-cropped to the sign bounding box, the visual domain is narrow, and classes follow standardised shapes and colours — conditions under which a purpose-built CNN may achieve strong performance at lower cost than transfer learning. The evaluation covers accuracy across all 43 classes, class-frequency bias, robustness to noise and blur, and Grad-CAM and latent space analysis for interpretability.
 
-### 1.2 Project Approach
+### 1.2 Assumptions
 
-This project investigates how far compact convolutional neural networks can be pushed on the GTSRB classification task before comparing them with a pretrained model. We trained CNNs from scratch first because the dataset structure supports it: GTSRB images are already cropped to the sign bounding box, the visual domain is narrow, and the classes follow standardised colour and shape patterns. Under these conditions, a purpose-built CNN may achieve strong performance with lower computational cost than transfer learning.
-
-The project compares a baseline CNN with four model variants, each targeting one main design decision: network depth, activation function, downsampling strategy, and transfer learning. This controlled setup makes it easier to relate performance differences to specific architectural choices.
-
-### 1.3 Goal of the Project
-
-The goal of this project is to systematically evaluate how different CNN architectures perform on the GTSRB traffic sign classification task and to identify which design decisions drive performance improvements. This includes assessing generalisation across all 43 sign classes, bias toward frequent versus rare classes, and robustness under simulated image degradations such as noise and blur. Beyond raw accuracy, the evaluation uses Grad-CAM visualisations and latent space analysis to provide interpretable evidence for model behaviour.
-
-### 1.4 Assumptions
-
-This project operates under several scope-defining assumptions. All GTSRB images are pre-cropped to the sign bounding box, so the models perform pure image classification and are never required to locate a sign within a larger scene. Because the official GTSRB test labels were not available in our pipeline, all accuracy figures are computed on an internal 15% hold-out split and are not directly comparable to the official competition leaderboard. The comparison between the baseline and the four model variants remains valid because all models are evaluated under identical conditions on the same internal split. Each image is assumed to contain exactly one sign belonging to one of the 43 mutually exclusive GTSRB classes, and the provided labels are assumed to be correct. Finally, the GTSRB training data is treated as representative of the classification task, though this assumption is limited: the dataset was recorded exclusively on German roads from a single camera system under normal weather conditions, which constrains generalisability to other real-world scenarios.
+All accuracy figures are computed on an internal 15% hold-out split because the official GTSRB test labels were not available in our pipeline; results are not directly comparable to the competition leaderboard. The architectural comparison remains valid because all models are evaluated under identical conditions on the same split. Each image is assumed to contain exactly one sign with a correct label. The dataset was recorded exclusively on German roads under normal weather conditions, which constrains generalisation to other regions and scenarios.
 
 ---
 
@@ -92,7 +82,7 @@ All images are resized to **32×32 pixels** to provide a uniform input size. For
 | ToTensor | All splits | Converts PIL image to float tensor |
 | Normalize | All splits | mean=(0.3337, 0.3064, 0.3171), std=(0.2672, 0.2564, 0.2629) |
 
-Each augmentation simulates a real-world variation: rotation accounts for tilted camera angles, color jitter for changing illumination and color conditions, and affine translation for off-center framing. Because augmentations are sampled independently on each epoch, the model is unlikely to encounter the exact same pixel pattern twice, which acts as a regularisation mechanism and is particularly beneficial for the rarest classes with approximately 147 training images each. Normalization subtracts the per-channel mean and divides by the per-channel standard deviation, centering inputs near zero for stable gradient flow. Both statistics were computed from the official GTSRB training set and applied identically to the internal training, validation, and test splits. Validation and test images receive only the deterministic transforms (resize, ToTensor, normalize), ensuring that evaluation reflects performance on images that have not been randomly distorted.
+Augmentations are applied independently each epoch, acting as a regularisation mechanism that is especially beneficial for the rarest classes (~147 training images each). Normalisation statistics were computed from the GTSRB training set and applied identically to all splits; validation and test images receive only the deterministic transforms.
 
 ---
 
@@ -124,21 +114,17 @@ A single 32×32 RGB image enters as a 3×32×32 tensor and passes through the fo
 | After FC1 | 256 | Compressed, class-discriminative representation |
 | After FC2 | 43 | One confidence score per traffic sign class |
 
-Spatial resolution decreases while channel count increases at every stage. By the time the representation reaches the classifier, the 2,048-dimensional vector encodes a compact summary of the features the network learned to use for class separation.
-
 ### 3.3 Training Configuration
 
 | Hyperparameter | Value | Notes |
 |---------------|-------|-------|
-| Optimizer | Adam | Adapts learning rate per parameter using past gradients and their variance; more stable and less sensitive to initial learning rate than plain SGD |
-| Initial learning rate | 1×10⁻³ | Standard Adam default; close to the best learning rate found in the hyperparameter search |
-| LR scheduler | ReduceLROnPlateau (patience=3, factor=0.5) | Halves the learning rate when validation loss does not improve for 3 consecutive epochs, allowing finer updates near convergence |
-| Loss function | CrossEntropyLoss | Standard multi-class classification loss; handles softmax internally |
-| Batch size | 64 | Balances gradient stability, memory usage, and training speed |
-| Max epochs | 20 | Upper bound for the model comparison; the Stride CNN was the only model to trigger early stopping (epoch 16) |
-| Early stopping patience | 5 | Stops training after 5 epochs without validation accuracy improvement |
-
-Images are processed in mini-batches of 64, with model weights updated after each batch. Stochastic mini-batch updates introduce controlled noise into the optimization that helps avoid poor local minima. Early stopping monitors validation accuracy and halts training if it does not improve for five consecutive epochs, restoring the best-performing checkpoint for final evaluation.
+| Optimizer | Adam | Per-parameter adaptive learning rate; more stable than SGD |
+| Initial learning rate | 1×10⁻³ | Close to the best value found in the hyperparameter search (Section 4.7) |
+| LR scheduler | ReduceLROnPlateau (patience=3, factor=0.5) | Halves lr after 3 epochs without val loss improvement |
+| Loss function | CrossEntropyLoss | Standard multi-class loss; handles softmax internally |
+| Batch size | 64 | — |
+| Max epochs | 20 | Stride CNN was the only model to trigger early stopping (epoch 16) |
+| Early stopping patience | 5 | Restores best checkpoint when val accuracy does not improve for 5 epochs |
 
 ### 3.4 Baseline Results and Interpretation
 
@@ -152,11 +138,11 @@ Images are processed in mini-batches of 64, with model weights updated after eac
 | 123  | 99.15%           | 99.29%       | 0.0451    |
 | 2026 | 98.08%           | 98.16%       | 0.0642    |
 
-All three runs produce high accuracy, although test accuracy ranges from 98.16% to 99.29% across seeds, a spread of 1.13 pp. This shows that short 10-epoch exploratory runs remain sensitive to random seed and incomplete convergence, motivating the more systematic multi-seed comparison in Section 4.6. The training curves indicate that performance was still improving near epoch 10, suggesting that these models had not yet fully converged; the 10-epoch cap was a practical constraint for this exploratory phase.
+All three runs produce high accuracy, but the spread of 1.13 pp across seeds confirms that 10-epoch runs had not yet fully converged. The more systematic multi-seed comparison in Section 4.6 uses 20 epochs.
 
 ![Baseline training curves (seed 42): training and validation loss and accuracy over epochs](results/task04/baseline_loss_curve_seed-42.png)
 
-The seed-42 training curves show training and validation loss decreasing steadily, with both curves tracking closely throughout. There is no clear divergence between training and validation loss, suggesting no strong overfitting during this run.
+The seed-42 curves show training and validation loss decreasing steadily without clear divergence, suggesting no strong overfitting.
 
 **Canonical baseline for model comparison.** The model comparison in Section 4 uses a separate run in which all five evaluated models were trained under identical conditions with a maximum of 20 epochs. In that run the baseline reached **99.49% test accuracy** (30 wrong out of 5,881 test images). This is the canonical figure for all model comparisons. The three exploratory seed runs above serve only to confirm stability.
 
@@ -170,7 +156,7 @@ Stallkamp et al. (2012) report an average human recognition rate of 98.84% on th
 
 After establishing the baseline, we designed four architectural variants, each targeting one main design aspect. This controlled setup makes it easier to relate performance differences to the respective architectural change rather than to multiple changes at once. Beyond the four variants, this section also covers a hyperparameter sensitivity analysis, a latent space visualisation, and a convolutional autoencoder for anomaly detection.
 
-We expected the Deep CNN to show the largest improvement, as additional depth should allow the network to learn more abstract and discriminative features, particularly for classes that differ only in small symbolic details. We expected Leaky ReLU to have little effect, since Batch Normalization already stabilizes activations and reduces the risk of dead neurons. Replacing MaxPool with strided convolutions was expected to have negligible accuracy impact but potentially faster training. MobileNetV2 was expected to perform competitively due to ImageNet pretraining, especially on rare classes, but at a higher computational cost.
+We expected depth to help most and LeakyReLU to have little effect given that Batch Normalisation already mitigates dead neurons. MobileNetV2 was expected to perform competitively due to ImageNet pretraining but at higher cost.
 
 All variants were trained under identical conditions: Adam (lr=1×10⁻³), ReduceLROnPlateau scheduler, identical data augmentation, and the same 70/15/15 split, capped at 20 epochs with early stopping (patience=5).
 
@@ -214,7 +200,7 @@ The Stride CNN achieves 99.52% test accuracy, which is within the noise threshol
 
 ### 4.6 Multi-Seed Stability Analysis
 
-To assess whether the model comparison results from Section 4.1 generalise beyond a single training run, all five models — Baseline CNN, Deep CNN, LeakyReLU CNN, MobileNetV2, and Stride CNN — were each trained three times using seeds 42, 123, and 2026. All other training conditions (data split, augmentation, optimiser, 20-epoch budget) were identical to Section 4.1.
+To assess whether the model comparison results from Section 4.1 generalise beyond a single training run, all five models — Baseline CNN, Deep CNN, LeakyReLU CNN, MobileNetV2, and Stride CNN — were each trained three times using seeds 42, 123, and 2026. All other training conditions (data split, augmentation, optimiser, 20-epoch budget) were held constant. Note that this experiment used a separate training script that seeds all four randomness sources (Python random, NumPy, PyTorch, and CUDA), whereas the Section 4.1 script seeds only PyTorch. The seed-42 entries in the table below therefore reflect a slightly different execution environment and are not intended to reproduce the Section 4.1 numbers exactly.
 
 **Per-run results across all seeds:**
 
@@ -250,27 +236,15 @@ The Deep CNN achieves the highest mean test accuracy (99.69%), although individu
 
 The most notable finding from the multi-seed analysis concerns the LeakyReLU CNN. Its single-run result (99.46%, seed 42) placed it last among the CNN variants and appeared to suggest that replacing ReLU with Leaky ReLU had no benefit. The multi-seed data tells a different story: mean accuracy across three seeds is 99.67% ± 0.03%, placing it second overall and giving it the smallest variance of any model in the comparison. The seed-42 result was an outlier. This is a concrete illustration of why single-run comparisons can be misleading, particularly for differences smaller than 0.5 pp on this dataset.
 
-Standard deviations vary substantially across models (0.03–0.22 pp). The LeakyReLU CNN's unusually low variance may reflect the stabilising effect of the non-zero gradient for negative activations — dead neurons that could destabilise training under ReLU are eliminated, resulting in more consistent convergence regardless of initialisation.
+Standard deviations vary substantially across models (0.03–0.22 pp). The LeakyReLU CNN's unusually low variance may be related to the non-zero gradient for negative activations, which prevents dead neurons and could promote more consistent convergence across different initialisations. This mechanism was not directly tested, however, and the low variance may also reflect other factors.
 
-MobileNetV2 finishes in last place in mean accuracy (99.43%), falling below all purpose-built CNN variants. With approximately twice the training time of the baseline, Deep CNN, and Stride CNN runs, this result corroborates the conclusion from the single-run comparison: ImageNet pretraining does not provide an accuracy advantage for this task and data volume, and the additional computational cost is not justified.
-
-The LeakyReLU CNN shows strong accuracy stability, but its measured training time is substantially higher than the baseline despite identical parameter count. This makes it less attractive from an efficiency perspective and should be interpreted carefully, as runtime can also depend on implementation and hardware-level factors.
-
-The within-model spread across seeds remains non-trivial for some models. The Baseline CNN varies between 99.20% and 99.69% (range: 0.49 pp); the Deep CNN between 99.46% and 99.83% (range: 0.37 pp). This confirms that mean accuracy over multiple seeds gives a substantially more reliable picture of relative model performance than any single run.
+MobileNetV2 finishes last despite nearly twice the training time, corroborating the single-run conclusion that ImageNet pretraining offers no accuracy advantage in this setting. The within-model spread (Baseline CNN: 0.49 pp; Deep CNN: 0.37 pp) confirms that mean accuracy across seeds gives a substantially more reliable picture than any single run. Note that the LeakyReLU CNN's elevated training time despite identical parameter count likely reflects implementation or hardware factors rather than an inherent cost of the activation change.
 
 ### 4.7 Parameter Sensitivity
 
-To assess whether our manually chosen hyperparameters fall in a robust region of the search space, we used Optuna with a Tree-structured Parzen Estimator (TPE) to search over five hyperparameters on the Stride CNN architecture. The search ran 30 trials with a maximum of 10 epochs per trial.
+To assess whether our manually chosen hyperparameters fall in a robust region of the search space, we used Optuna (TPE sampler) to search over learning rate (1×10⁻⁴–1×10⁻², log scale), dropout (0.2–0.6), batch size (32/64/128), optimizer (Adam/SGD), and weight decay (1×10⁻⁵–1×10⁻³, log scale) on the Stride CNN architecture — 30 trials at 10 epochs each.
 
-| Hyperparameter | Search Range |
-|---------------|-------------|
-| Learning rate | 1×10⁻⁴ to 1×10⁻² (log scale) |
-| Dropout rate | 0.2 to 0.6 |
-| Batch size | 32, 64, 128 |
-| Optimizer | Adam, SGD |
-| Weight decay | 1×10⁻⁵ to 1×10⁻³ (log scale) |
-
-The best trial (trial 6) reached **99.91% validation accuracy** with the following configuration (note: each trial used a maximum of 10 epochs, so this figure reflects shorter training than the 20-epoch comparison runs):
+The best trial (trial 6) reached **99.91% validation accuracy** (note: 10-epoch trials reflect shorter training than the 20-epoch comparison runs):
 
 | Hyperparameter | Best Value |
 |---------------|-----------|
@@ -282,7 +256,7 @@ The best trial (trial 6) reached **99.91% validation accuracy** with the followi
 
 ![Optuna optimization history over 30 trials](results/task05/tuning_results.png)
 
-The top 5 trials all used Adam and batch size 32. The main takeaways are qualitative: Adam consistently outperformed SGD across all top-performing trials. The optimal learning rate (1.24×10⁻³) is close to our default of 1×10⁻³, confirming that the default was already in a reasonable range. The best dropout (0.274) is lower than our default of 0.5, suggesting that the Stride CNN architecture requires less regularization than the baseline, possibly because this architecture was less prone to overfitting under the tested settings. Batch size 32 was consistently preferred over 64 or 128, likely because smaller batches provide noisier but more frequent gradient updates, which appears beneficial for this architecture. These results support the conclusion that the manually chosen training defaults are reasonable and that the reported results are unlikely to be the product of an especially lucky configuration.
+Adam appeared in all top-5 trials. The optimal learning rate (1.24×10⁻³) is close to our default (1×10⁻³), and the best dropout (0.274) is lower than our default (0.5), suggesting the Stride CNN requires less regularisation. These results support the view that our default settings are reasonable and the reported results are not the product of an especially lucky configuration.
 
 ### 4.8 Latent Space Visualisation
 
@@ -296,11 +270,7 @@ The projection shows largely well-separated class clusters, indicating that the 
 
 Any classifier always assigns an input to one of its known classes, even when the input lies outside the training distribution. To provide a complementary mechanism for flagging such cases, we trained a convolutional autoencoder as an auxiliary anomaly detector.
 
-The encoder compresses each 3×32×32 image through three convolutional blocks to a flattened 2,048-dimensional representation, then projects it to a 128-dimensional latent vector. The decoder mirrors this path using transposed convolutions to reconstruct the original image. Training minimizes the mean squared reconstruction error:
-
-$$\mathcal{L}(\theta) = \frac{1}{n} \sum_{i=1}^{n} (\hat{x}_i - x_i)^2$$
-
-The anomaly threshold is set at the 95th percentile of validation reconstruction errors, so approximately 5% of in-distribution images are flagged by construction.
+The encoder compresses each 3×32×32 image through three convolutional blocks to a 128-dimensional latent vector; the decoder reconstructs the original image using transposed convolutions. Training minimises mean squared reconstruction error. The anomaly threshold is set at the 95th percentile of validation reconstruction errors, so approximately 5% of in-distribution images are flagged by construction.
 
 ![Autoencoder training and validation loss over 30 epochs](results/task05/autoencoder_loss.png)
 
@@ -314,10 +284,6 @@ The model trained for all 30 epochs without early stopping. Both losses decrease
 | Anomaly threshold (95th percentile) | 1.0910 |
 | Flagged as anomalous (validation set) | 294 / 5,881 (5.0%) |
 
-![Reconstruction error distribution on the validation set](results/task05/autoencoder_error_distribution.png)
-
-The error distribution has a long right tail: most known signs are reconstructed with low error, while a small subset produces substantially higher errors. This tail motivates using high reconstruction error as a candidate anomaly signal.
-
 ![Sample reconstructions: original images (top) vs. autoencoder output (bottom)](results/task05/autoencoder_reconstructions.png)
 
 The reconstruction grid shows that the autoencoder captures the general structure of traffic signs: shapes, colors, and boundaries are reproduced reasonably well. Fine details such as numerals and symbols are blurred, which is expected at 128-dimensional compression. Because no true out-of-distribution test set was available, the anomaly detection capability was not validated beyond the in-distribution false-positive rate. This component should be understood as a proof of concept rather than a validated deployment-ready anomaly filter.
@@ -326,7 +292,7 @@ The reconstruction grid shows that the autoencoder captures the general structur
 
 ## 5. Deep CNN Evaluation and Discussion
 
-The model comparison in Section 4 identified the Deep CNN as the best-performing architecture: it achieves the highest mean test accuracy across three seeds (99.69% ± 0.17%), reduces errors by 63% relative to the baseline, and does so at near-baseline training cost. This section does not revisit the model comparison. Instead, it evaluates the selected Deep CNN in detail on the held-out test set, examining prediction quality (Sections 5.1–5.5), class-frequency bias (Section 5.6), robustness to image degradation (Section 5.7), and gradient-based interpretability (Section 5.8). The discussion in Section 5.9 synthesises these findings.
+The model comparison in Section 4 identified the Deep CNN as the best-performing architecture: it achieves the highest mean test accuracy across three seeds (99.69% ± 0.17%) and, in the single-run evaluation (seed 42), reduced errors from 30 to 11 relative to the baseline — all at near-baseline training cost. This section does not revisit the model comparison. Instead, it evaluates the selected Deep CNN in detail on the held-out test set, examining prediction quality (Sections 5.1–5.5), class-frequency bias (Section 5.6), robustness to image degradation (Section 5.7), and gradient-based interpretability (Section 5.8). The discussion in Section 5.9 synthesises these findings.
 
 ### 5.1 Test Set Performance
 
@@ -342,8 +308,6 @@ The Top-5 accuracy of 99.98% means that the correct class appears among the mode
 ### 5.2 Confusion Matrix
 
 ![Normalized confusion matrix of the Deep CNN on the test set](results/task06/confusion_matrix_normalized.png)
-
-A confusion matrix shows where the model makes mistakes. The rows represent the true classes, and the columns represent the predicted classes. A perfect classifier would only have values on the diagonal, because every image would be assigned to its correct class.
 
 The confusion matrix is strongly diagonal, so the model is correct in almost all cases. The few visible errors mostly happen between visually similar signs, for example different speed limits that share the same circular shape and differ only in the number, or warning signs with similar triangular layouts. This is expected at 32×32 resolution, where small symbols or numbers may only cover a few pixels.
 
@@ -363,17 +327,11 @@ The confusion matrix is strongly diagonal, so the model is correct in almost all
 | 30 | Beware of ice/snow | 98.67% | Snowflake detail difficult to resolve at 32×32 |
 | 8  | Speed limit (120 km/h) | 99.10% | "120" can be confused with "100" (class 7) at small sizes |
 
-The pattern is clear: the weaker classes are visually similar to other classes. Pedestrians and Bicycles crossing (classes 27 and 29) are especially easy to confuse because both are triangular warning signs with a human-like silhouette. At 32×32 pixels, the difference between a pedestrian and a cyclist can be very small. This points more to a resolution limitation than to a general model failure.
+All five worst-performing classes share near-identical shapes with neighbouring classes — a resolution constraint rather than a general model failure.
 
 ### 5.4 Precision and Recall
 
 ![Precision and recall per class for the Deep CNN](results/task05/baseline_models/deep/precision_recall_per_class.png)
-
-**Precision** tells us how reliable a prediction is. If the model predicts class *X*, precision measures how often that prediction is actually correct. Low precision means the model produces many false positives for that class.
-
-**Recall** tells us how many true examples of a class the model finds. If an image really belongs to class *X*, recall measures how often the model correctly identifies it. Low recall means the model misses many examples of that class.
-
-Both metrics matter for traffic sign recognition. A model with high recall but low precision may detect all stop signs but also wrongly label other signs as stop signs. A model with high precision but low recall may avoid false alarms but miss real signs.
 
 The Deep CNN shows high precision and recall across all 43 classes. The few weaker scores match the visually ambiguous classes from Section 5.3. This means the remaining errors are concentrated in genuinely difficult cases rather than spread randomly across the dataset.
 
@@ -385,11 +343,9 @@ The misclassification grid shows the 11 wrongly predicted test images, sorted by
 
 ### 5.6 Class Frequency Bias Analysis
 
-A practical concern is whether the model performs worse on rare classes. In this report, bias analysis means class-frequency bias: rare traffic sign classes might receive lower accuracy because they have fewer training examples. To test this, we compare the 10 most frequent classes with the 10 least frequent classes.
+To test whether the 10.7× class imbalance leads to lower accuracy on rare classes, we compare the 10 most frequent with the 10 rarest classes.
 
 ![Mean test accuracy for frequent vs. rare traffic sign classes](results/task06/bias_analysis_mean_accuracy.png)
-
-*Blue bars (left): the 10 most frequent classes, each with 1,000+ training images. Orange bars (right): the 10 rarest classes, each with fewer than 210 training images. The dashed lines show the mean accuracy for each group. Training counts (n=...) are shown inside each bar label.*
 
 | Group | Training images (avg.) | Mean Test Accuracy |
 |-------|----------------------|-------------------|
@@ -397,7 +353,7 @@ A practical concern is whether the model performs worse on rare classes. In this
 | Rare classes (bottom 10) | ~169 per class | 99.52% |
 | Gap | N/A | **0.34 percentage points** |
 
-The gap between frequent and rare classes is only 0.34 pp, which is small given the roughly 11-fold imbalance in the dataset. Some rare classes, such as Speed limit (20 km/h) and Dangerous curve left, even reach 100% test accuracy. This suggests that augmentation and training worked well for rare classes too. However, this result should be interpreted carefully. It comes from one training run and one random split, and rare classes also have fewer test examples. A single mistake can therefore change their accuracy more strongly. Overall, we do not see a strong class-frequency bias here, but repeated runs would be needed for a more reliable estimate.
+The gap is only 0.34 pp despite the 11-fold imbalance, and several rare classes reach 100% accuracy, suggesting the model generalised well to rare classes. Whether augmentation was the primary compensating factor was not isolated in this analysis. This result should be interpreted cautiously: rare classes have fewer test images, so a single mistake shifts their accuracy significantly, and repeated runs would be needed for a robust estimate.
 
 ### 5.7 Robustness Testing
 
@@ -409,21 +365,17 @@ In real-world use, camera images are rarely as clean as the GTSRB images. We tes
 | Gaussian Blur (kernel=5) | 97.01% | −2.80 pp | Motion blur, out-of-focus optics, reduced sharpness |
 | Gaussian Noise (σ=0.1) | 71.86% | **−27.95 pp** | Low-quality sensors, compression artifacts |
 
-The model handles blur fairly well: accuracy drops by only 2.80 pp. This suggests that the model does not fully depend on perfectly sharp details. Gaussian noise is much more problematic. Accuracy drops by 27.95 pp under moderate noise (σ=0.1 on normalized [0,1] pixel values). This shows that strong clean-test accuracy does not automatically mean the model is robust in less ideal conditions. The main issue is distribution shift: the model was trained on clean images and never learned to handle noisy ones. The most direct next step is to add noise augmentation during training and test whether robustness improves without hurting clean accuracy.
+The model handles blur well (−2.80 pp), suggesting it does not depend on perfectly sharp edges. Gaussian noise is far more damaging: accuracy falls by 27.95 pp under σ=0.1 on normalised pixel values. This is a distribution shift failure — the model was trained exclusively on clean images and never encountered noisy inputs.
 
 ### 5.8 Grad-CAM Interpretability
 
 ![Grad-CAM visualizations: image regions that most influenced the model's predictions](results/task06/gradcam_examples.png)
 
-Gradient-weighted Class Activation Mapping (Grad-CAM) highlights which regions of an input image contributed most to the model's prediction. It does this by computing the gradient of the predicted class score with respect to the activations in the final convolutional layer and using them as spatial importance weights.
-
-The visualisations suggest that the model mainly focuses on relevant sign regions, such as shape, symbol, and colour, instead of background elements like sky, road, or nearby objects. This is useful because a model that relies on background patterns would likely fail when the scene changes. Grad-CAM does not prove exactly how the model reasons, but it supports the idea that the model learned sign-relevant features.
+Gradient-weighted Class Activation Mapping (Grad-CAM) highlights which image regions contributed most to the model's prediction. The visualisations show that the model mainly focuses on the sign shape and internal symbol rather than background elements such as sky or road. Grad-CAM does not prove the full reasoning process, but it supports the interpretation that the model learned sign-relevant features rather than background shortcuts.
 
 ### 5.9 Discussion
 
-The selection of the Deep CNN as the best model is established in Section 4; this discussion synthesises what the detailed analyses in Sections 5.1–5.8 reveal about its behaviour. The error pattern is consistent and interpretable: all 11 remaining misclassifications involve class pairs where the distinguishing feature — a numeral or small symbol — occupies only a few pixels at 32×32 resolution. Pedestrians and Bicycles crossing (classes 27 and 29) are the weakest classes, sharing nearly identical triangular silhouettes. Precision and recall are uniformly high across all 43 classes, confirming that the remaining errors are not systematically concentrated in any structural class category but reflect a resolution constraint that affects specific class pairs regardless of training frequency.
-
-The class-frequency bias analysis shows only a 0.34 pp accuracy gap between frequent and rare classes, despite the roughly 11-fold imbalance. Since this is based on one training run and one random split, it should not be treated as a precise estimate. It only suggests that there is no strong class-frequency bias in this experiment. The Grad-CAM results also support that predictions are mostly based on sign-relevant features. The biggest practical weakness is robustness: accuracy drops by 27.95 pp under moderate Gaussian noise. This matters more than the small differences between clean-test accuracies because it shows where benchmark performance fails in more realistic conditions.
+Most of the remaining errors involve class pairs where the distinguishing feature occupies only a few pixels after resizing — a resolution constraint rather than a systematic model failure. Precision and recall remain high across nearly all classes, and the 0.34 pp frequency-bias gap is small. Grad-CAM supports that predictions rely on sign-relevant regions. The single practical weakness is robustness: the 27.95 pp noise drop reveals that clean benchmark accuracy does not generalise to degraded inputs, which matters more than the small differences between architectures on the clean test set.
 
 ### 5.10 Limitations
 
@@ -435,19 +387,17 @@ There are several limitations. First, all five models were evaluated across thre
 
 ### 6.1 Conclusion
 
-This project evaluated different CNN architectures on the GTSRB traffic sign classification task and examined which design choices improve performance. Section 4 compared all five models to identify the best architecture; Section 5 evaluated the selected Deep CNN in detail. Three main findings emerged from these two analyses.
+This project evaluated five CNN architectures on the GTSRB traffic sign classification task. Three main findings emerged.
 
-First, a compact CNN trained from scratch is already strong enough for this task. The baseline model, with 629K parameters, reaches 99.49% test accuracy on our internal hold-out split. Stallkamp et al. (2012) reported a human recognition rate of 98.84% on the official GTSRB test set. This is not directly comparable to our setup, but it shows that our baseline is in the same broad performance range. This result makes sense because traffic signs use standardized shapes and colors, and the GTSRB images are already cropped to the sign.
+First, a compact CNN trained from scratch is already strong enough for this task. The 629K-parameter baseline reaches 99.49% test accuracy on our internal split — in the same broad range as the human recognition rate of 98.84% reported by Stallkamp et al. (2012) on the official test set.
 
-Second, increasing depth produced the strongest overall accuracy-cost tradeoff among the tested architectural changes, while the multi-seed analysis also showed that LeakyReLU was highly competitive and more stable than the single-run result suggested. Adding a fourth convolutional block raised test accuracy to 99.81% and reduced the number of wrong predictions from 30 to 11 out of 5,881. Strided convolutions did not produce a meaningful improvement, while LeakyReLU changed the interpretation after repeated runs: its single-run result looked unimportant, but across three seeds it achieved the second-highest mean accuracy and the lowest variance. MobileNetV2 improved over the baseline in the single-run comparison, but the multi-seed analysis showed no stable advantage: on average, it ranked below the Baseline CNN and the Stride CNN while requiring substantially more parameters and almost twice the training time. This suggests that ImageNet pretraining offers no clear efficiency advantage in this setup, where the target domain is narrow and well represented in the training data.
+Second, additional depth produced the strongest single-run improvement and the highest mean accuracy across seeds, while LeakyReLU showed the most stable multi-seed performance. Adding a fourth convolutional block raised test accuracy to 99.81% and reduced errors from 30 to 11 at near-baseline training cost. The multi-seed analysis revised two initial rankings: LeakyReLU CNN, which appeared last in the single run, achieved the second-highest mean accuracy (99.67% ± 0.03%) and the lowest variance across seeds. MobileNetV2 showed no stable advantage on average despite requiring nearly twice the training time, confirming that ImageNet pretraining offers no clear benefit when the target domain is narrow and well represented in the training data.
 
-Third, clean benchmark performance does not automatically mean real-world robustness. The class-frequency bias analysis did not show a large gap between frequent and rare classes, and Grad-CAM suggests that the model mainly focuses on relevant sign regions. However, accuracy drops by 27.95 pp under moderate Gaussian noise. The main remaining issue is therefore not clean-image classification, but robustness under distribution shift. A model trained only on clean images has not learned to handle noisy inputs.
-
-From a software perspective, the current implementation can be extended toward a full detection-classification pipeline. The detailed class structure is shown in Appendix C.
+Third, clean benchmark accuracy does not reflect robustness to input degradation. Accuracy drops by 27.95 pp under moderate Gaussian noise — a direct consequence of training exclusively on clean images. This distribution shift problem is the main unresolved challenge; class-frequency bias was small (0.34 pp gap), and Grad-CAM indicates predictions are driven by sign-relevant regions.
 
 ### 6.2 Future Work
 
-The limitations in Section 5.10 suggest several next steps. The most important one is to add Gaussian noise and blur augmentation during training, because noisy inputs were the largest weakness in this project. This should be tested carefully to make sure robustness improves without reducing clean-test accuracy. Another useful step is to increase the input resolution from 32×32 to 64×64 pixels, especially for visually similar classes such as Pedestrians and Bicycles crossing. The Deep CNN and LeakyReLU CNN results have been evaluated across three seeds in this project (Section 4.6), but the differences remain small enough that further validation would be useful. The next step is to repeat the comparison across multiple independent data splits, rather than multiple seeds of a fixed split, to further confirm the relative model ranking. In the longer term, an object detection stage could extend the system from cropped benchmark images to full road images. Finally, testing and fine-tuning on traffic sign data from other countries, cameras, and weather conditions would give a more realistic view of deployment performance.
+The most important next step is adding noise and blur augmentation during training to close the robustness gap. Increasing the input resolution to 64×64 px would address the visual ambiguity problems identified in Section 5.3. Validation across independent data splits (rather than multiple seeds of a fixed split) would further confirm the model ranking. In the longer term, adding an object detection stage is necessary to move from cropped benchmark classification to a full road-scene recognition pipeline; testing on data from other countries and weather conditions would then give a more realistic view of generalisation.
 
 ---
 
