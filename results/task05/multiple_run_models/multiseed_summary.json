@@ -13,6 +13,19 @@
     "num_params": 936235
   },
   {
+    "model": "LeakyReLU CNN",
+    "runs": 3,
+    "test_acc_mean": 0.9966558975230969,
+    "test_acc_std": 0.00028901091161327404,
+    "test_loss_mean": 0.011426079239167627,
+    "test_loss_std": 0.0007612640955050301,
+    "best_val_acc_mean": 0.998242929207051,
+    "best_val_acc_std": 0.0007124528192470894,
+    "training_time_mean_s": 597.3666666666667,
+    "training_time_std_s": 65.3937985506951,
+    "num_params": 629291
+  },
+  {
     "model": "Baseline CNN",
     "runs": 3,
     "test_acc_mean": 0.9951255455421414,

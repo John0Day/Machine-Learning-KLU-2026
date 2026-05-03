@@ -130,5 +130,38 @@
     "training_time_s": 300.2,
     "num_params": 823051,
     "epochs_trained": 20
+  },
+  {
+    "seed": 123,
+    "base_model": "LeakyReLU CNN",
+    "model_name": "LeakyReLU CNN (seed 123)",
+    "best_val_acc": 0.9989797653460296,
+    "test_acc": 0.9969392960380887,
+    "test_loss": 0.011368045288632297,
+    "training_time_s": 642.2,
+    "num_params": 629291,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 2026,
+    "base_model": "LeakyReLU CNN",
+    "model_name": "LeakyReLU CNN (seed 2026)",
+    "best_val_acc": 0.9984696480190444,
+    "test_acc": 0.9967692569290937,
+    "test_loss": 0.012386094914808491,
+    "training_time_s": 645.0,
+    "num_params": 629291,
+    "epochs_trained": 20
+  },
+  {
+    "seed": 42,
+    "base_model": "LeakyReLU CNN",
+    "model_name": "LeakyReLU CNN (seed 42)",
+    "best_val_acc": 0.9972793742560789,
+    "test_acc": 0.9962591396021084,
+    "test_loss": 0.010524097514062095,
+    "training_time_s": 504.9,
+    "num_params": 629291,
+    "epochs_trained": 20
   }
 ]
