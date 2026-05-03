@@ -48,7 +48,7 @@ The GTSRB dataset (Stallkamp et al., 2012) was recorded from a car-mounted camer
 
 ### 2.2 Class Distribution and Visual Challenges
 
-![Class distribution across all 43 GTSRB traffic sign categories](results/task03/class_distribution.png)
+![Class distribution across all 43 GTSRB traffic sign categories](results/task02/class_distribution.png)
 
 *The x-axis shows class IDs 0–42. The full class-ID-to-name mapping is provided in Appendix B.*
 
@@ -76,7 +76,7 @@ The 39,209 labelled images are divided into three non-overlapping subsets:
 
 The training set is used to update model weights; the validation set monitors generalisation during training; the test set is reserved for final model evaluation. The split is performed with `torch.utils.data.random_split` and a fixed seed of 42, making it reproducible but not stratified. Exact class proportions across subsets are not guaranteed, but at this dataset size they are expected to remain close to the original distribution.
 
-![Per-class sample distribution across training, validation, and test splits](results/preprocessing_split_distribution.png)
+![Per-class sample distribution across training, validation, and test splits](results/task03/preprocessing_split_distribution.png)
 
 *The x-axis shows class IDs 0–42. Each bar group shows the image count per class per split.*
 
@@ -234,7 +234,7 @@ The best trial (trial 6) reached **99.91% validation accuracy** with the followi
 | Optimizer | Adam |
 | Weight decay | 6.98×10⁻⁴ |
 
-![Optuna optimization history over 30 trials](results/tuning_results.png)
+![Optuna optimization history over 30 trials](results/task05/tuning_results.png)
 
 The top 5 trials all used Adam and batch size 32. The main takeaways are qualitative: Adam consistently outperformed SGD across all top-performing trials. The optimal learning rate (1.24×10⁻³) is close to our default of 1×10⁻³, confirming that the default was already in a reasonable range. The best dropout (0.274) is lower than our default of 0.5, suggesting that the Stride CNN architecture requires less regularization than the baseline, possibly because this architecture was less prone to overfitting under the tested settings. Batch size 32 was consistently preferred over 64 or 128, likely because smaller batches provide noisier but more frequent gradient updates, which appears beneficial for this architecture. These results support the conclusion that the manually chosen training defaults are reasonable and that the reported results are unlikely to be the product of an especially lucky configuration.
 
@@ -242,7 +242,7 @@ The top 5 trials all used Adam and batch size 32. The main takeaways are qualita
 
 To examine what the Deep CNN has learned internally, 512-dimensional feature vectors were extracted from the penultimate fully connected layer for 2,000 validation samples and projected to two dimensions using t-SNE (perplexity 30).
 
-![t-SNE projection of Deep CNN feature vectors for 2,000 validation samples across all 43 classes](results/tsne_feature_space.png)
+![t-SNE projection of Deep CNN feature vectors for 2,000 validation samples across all 43 classes](results/task05/tsne_feature_space.png)
 
 The projection shows largely well-separated class clusters, indicating that the network has learned class-discriminative internal representations. Most of the 43 classes occupy distinct regions of the feature space. The remaining overlap appears mainly among visually similar sign groups, particularly speed limit signs (which share the same circular shape and differ only in the numeral) and warning signs with similar triangular layouts. This pattern is consistent with the confusion cases identified in the per-class accuracy analysis in Section 5.3.
 
@@ -256,7 +256,7 @@ $$\mathcal{L}(\theta) = \frac{1}{n} \sum_{i=1}^{n} (\hat{x}_i - x_i)^2$$
 
 The anomaly threshold is set at the 95th percentile of validation reconstruction errors, so approximately 5% of in-distribution images are flagged by construction.
 
-![Autoencoder training and validation loss over 30 epochs](results/autoencoder_loss.png)
+![Autoencoder training and validation loss over 30 epochs](results/task05/autoencoder_loss.png)
 
 The model trained for all 30 epochs without early stopping. Both losses decreased steadily, with the final validation loss converging to **0.5118**.
 
@@ -268,11 +268,11 @@ The model trained for all 30 epochs without early stopping. Both losses decrease
 | Anomaly threshold (95th percentile) | 1.0910 |
 | Flagged as anomalous (validation set) | 294 / 5,881 (5.0%) |
 
-![Reconstruction error distribution on the validation set](results/autoencoder_error_distribution.png)
+![Reconstruction error distribution on the validation set](results/task05/autoencoder_error_distribution.png)
 
 The error distribution has a long right tail: most known signs are reconstructed with low error, while a small subset produces substantially higher errors. This tail motivates using high reconstruction error as a candidate anomaly signal.
 
-![Sample reconstructions: original images (top) vs. autoencoder output (bottom)](results/autoencoder_reconstructions.png)
+![Sample reconstructions: original images (top) vs. autoencoder output (bottom)](results/task05/autoencoder_reconstructions.png)
 
 The reconstruction grid shows that the autoencoder captures the general structure of traffic signs: shapes, colors, and boundaries are reproduced reasonably well. Fine details such as numerals and symbols are blurred, which is expected at 128-dimensional compression. Because no true out-of-distribution test set was available, the anomaly detection capability was not validated beyond the in-distribution false-positive rate. This component should be understood as a proof of concept rather than a validated deployment-ready anomaly filter.
 
@@ -295,7 +295,7 @@ The Top-5 accuracy of 99.98% means that the correct class appears among the mode
 
 ### 5.2 Confusion Matrix
 
-![Normalized confusion matrix of the Deep CNN on the test set](results/task06/deep/confusion_matrix_normalized.png)
+![Normalized confusion matrix of the Deep CNN on the test set](results/task06/confusion_matrix_normalized.png)
 
 A confusion matrix shows where the model makes mistakes. The rows represent the true classes, and the columns represent the predicted classes. A perfect classifier would only have values on the diagonal, because every image would be assigned to its correct class.
 
@@ -303,7 +303,7 @@ The confusion matrix is strongly diagonal, so the model is correct in almost all
 
 ### 5.3 Per-Class Accuracy
 
-![Per-class test accuracy across all 43 GTSRB classes](results/task06/deep/per_class_accuracy.png)
+![Per-class test accuracy across all 43 GTSRB classes](results/task05/baseline_models/deep/per_class_accuracy.png)
 
 **Five best-performing classes (100% accuracy):** Stop, Dangerous curve left, Dangerous curve right, End of no passing, End of no passing by vehicles over 3.5t.
 
@@ -321,7 +321,7 @@ The pattern is clear: the weaker classes are visually similar to other classes. 
 
 ### 5.4 Precision and Recall
 
-![Precision and recall per class for the Deep CNN](results/task06/deep/precision_recall_per_class.png)
+![Precision and recall per class for the Deep CNN](results/task05/baseline_models/deep/precision_recall_per_class.png)
 
 **Precision** tells us how reliable a prediction is. If the model predicts class *X*, precision measures how often that prediction is actually correct. Low precision means the model produces many false positives for that class.
 
@@ -333,7 +333,7 @@ The Deep CNN shows high precision and recall across all 43 classes. The few weak
 
 ### 5.5 Misclassified Examples
 
-![High-confidence misclassifications: cases where the model was wrong but confident](results/task06/deep/misclassifications_top_confidence.png)
+![High-confidence misclassifications: cases where the model was wrong but confident](results/task06/misclassifications_top_confidence.png)
 
 The misclassification grid shows the 11 wrongly predicted test images, sorted by the model's confidence in the wrong class. Most errors are understandable: the images are degraded, partially occluded, or very similar to another class. The errors do not suggest that the model completely fails on any one category.
 
@@ -341,7 +341,7 @@ The misclassification grid shows the 11 wrongly predicted test images, sorted by
 
 A practical concern is whether the model performs worse on rare classes. In this report, bias analysis means class-frequency bias: rare traffic sign classes might receive lower accuracy because they have fewer training examples. To test this, we compare the 10 most frequent classes with the 10 least frequent classes.
 
-![Mean test accuracy for frequent vs. rare traffic sign classes](results/task06/deep/bias_analysis_mean_accuracy.png)
+![Mean test accuracy for frequent vs. rare traffic sign classes](results/task06/bias_analysis_mean_accuracy.png)
 
 *Blue bars (left): the 10 most frequent classes, each with 1,000+ training images. Orange bars (right): the 10 rarest classes, each with fewer than 210 training images. The dashed lines show the mean accuracy for each group. Training counts (n=...) are shown inside each bar label.*
 
@@ -367,7 +367,7 @@ The model handles blur fairly well: accuracy drops by only 2.80 pp. This suggest
 
 ### 5.8 Grad-CAM Interpretability
 
-![Grad-CAM visualizations: image regions that most influenced the model's predictions](results/task06/deep/gradcam_examples.png)
+![Grad-CAM visualizations: image regions that most influenced the model's predictions](results/task06/gradcam_examples.png)
 
 Gradient-weighted Class Activation Mapping (Grad-CAM) highlights which regions of an input image contributed most to the model's prediction. It does this by computing the gradient of the predicted class score with respect to the activations in the final convolutional layer and using them as spatial importance weights.
 
@@ -417,11 +417,11 @@ Stallkamp, J., Schlipsing, M., Salmen, J., & Igel, C. (2012). Man vs. computer: 
 
 | Task | Key Output Files |
 |------|-----------------|
-| Task 02 | `results/task03/class_mapping.csv`, `results/task03/class_distribution.png` |
-| Task 03 | `results/preprocessing_stats.json`, `results/preprocessing_sample_grid.png` |
+| Task 02 | `results/task02/class_mapping.csv`, `results/task02/class_distribution.png` |
+| Task 03 | `results/task03/preprocessing_stats.json`, `results/task03/preprocessing_sample_grid.png` |
 | Task 04 | `models/baseline.pth`, `results/task04/baseline_history_seed-42.json`, `results/task04/baseline_loss_curve_seed-42.png` |
 | Task 05 | `models/deep_cnn.pth`, `results/task05/model_comparison.json`, `results/task05/model_comparison_summary.png` |
-| Task 06 | `results/task06/deep/evaluation_summary.json`, `results/task06/deep/gradcam_examples.png`, `results/task06/deep/confusion_matrix_normalized.png`, `results/task06/deep/bias_analysis_mean_accuracy.png` |
+| Task 06 | `results/task06/evaluation_summary.json`, `results/task06/gradcam_examples.png`, `results/task06/confusion_matrix_normalized.png`, `results/task06/bias_analysis_mean_accuracy.png` |
 
 ---
 
