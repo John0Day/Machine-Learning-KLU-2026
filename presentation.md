@@ -936,10 +936,10 @@ A: More seeds, independent splits, confidence intervals, or a stratified evaluat
 
 ![](results/task06/deep/gradcam_examples.png)
 
-**Activation maps concentrate on the sign shape and internal symbol, consistent with task-relevant feature learning.**
+**Activation maps mostly highlight sign-relevant regions, supporting the interpretation that the model uses task-relevant visual information.**
 
 <!--
-After error and frequency-bias analysis, Grad-CAM gives a qualitative look at which image regions influence the model. The activation maps mostly focus on the sign shape and internal symbol, rather than obvious background areas. This supports the interpretation that the model uses task-relevant visual information, but it is not a formal proof of the decision process.
+After error and frequency-bias analysis, Grad-CAM gives a qualitative look at which image regions influence the model. The activation maps mostly highlight sign-relevant regions, although some examples also show attention outside the sign area. This supports the interpretation that the model often uses task-relevant visual information, but it is not a formal proof of the decision process.
 
 Professor question catalogue:
 Q: Does Grad-CAM prove how the model makes decisions?
@@ -947,7 +947,7 @@ A: No. Grad-CAM is qualitative supporting evidence, not a formal causal proof of
 Q: Why include Grad-CAM anyway?
 A: It helps check whether the model appears to focus on sign-relevant regions rather than obvious background shortcuts.
 Q: What should we conclude from these maps?
-A: The maps support the interpretation that predictions are linked to the sign shape and internal symbols, which is consistent with task-relevant feature learning.
+A: The maps support the interpretation that predictions are often linked to sign-relevant regions. However, some attention outside the sign area remains visible, so the conclusion should stay cautious.
 Q: What are the limitations of Grad-CAM?
 A: It is coarse, depends on the selected layer, and can highlight regions correlated with the prediction without proving causality.
 -->
