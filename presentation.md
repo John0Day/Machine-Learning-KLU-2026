@@ -415,6 +415,14 @@ This plot makes the class imbalance visible. Some classes, such as Speed limit 5
 
 <!--
 Now that the dataset challenges are clear, we can move to the modelling approach. I will first show how the raw images are turned into fixed model inputs, because preprocessing defines what every model actually sees. After that, I introduce the compact CNN baseline as the reference model for the rest of the experiment.
+
+Professor question catalogue:
+Q: Why start the approach section with preprocessing?
+A: Because preprocessing defines the exact input distribution for every model. It determines image size, augmentation, normalisation, and the deterministic validation and test setup.
+Q: Why not start directly with the model architecture?
+A: The architecture can only be interpreted properly once it is clear what the model receives as input. The 32 by 32 input size also affects the later discussion of fine visual details.
+Q: What is the transition from this section?
+A: We move from dataset challenges to controlled model inputs, then to the baseline model that serves as the reference point.
 -->
 
 ---
@@ -461,7 +469,17 @@ Now that the dataset challenges are clear, we can move to the modelling approach
 </div>
 
 <!--
-Before any model sees the data, every image goes through the same preprocessing pipeline. The resize to 32 by 32 is our choice, not a dataset property — originals range from 25 to 243 pixels. Augmentation is applied only to training images to simulate real-world conditions: slight rotation for camera angle, color jitter for lighting and weather, and a small translation for off-centre signs. Validation and test images receive only resize and normalise, with no randomness, so evaluation results are reproducible across runs.
+Before any model sees the data, every image goes through the same preprocessing pipeline. First, we resize the image to 32 by 32 pixels. This resizing step is our preprocessing choice, because the original GTSRB images have different sizes and need to be converted into one fixed input format for the CNN. During training, we then apply augmentation to simulate realistic variation, such as tilted camera angles, lighting changes, and slightly off-centre signs. For validation and testing, we only resize and normalise the images. There are no random transforms, so every model is evaluated on the same inputs.
+
+Professor question catalogue:
+Q: Why did you resize to 32 by 32 pixels?
+A: We needed a fixed input size for all CNN models. 32 by 32 keeps training efficient and makes the model comparison easier. The trade-off is that small numerals and symbols can become harder to distinguish.
+Q: Is 32 by 32 a dataset constraint?
+A: No. It is our preprocessing choice. The original GTSRB images have different sizes, so they must be resized before they can be passed into a fixed CNN architecture.
+Q: Why use augmentation only for training?
+A: Augmentation helps the model learn from slightly varied examples. Validation and test images stay deterministic, so the evaluation remains reproducible and fair across models.
+Q: Could 64 by 64 improve results?
+A: Possibly. A higher resolution could preserve fine details better, especially speed-limit numerals. But it would also increase compute, so it would need to be tested empirically.
 -->
 
 ---
@@ -483,6 +501,16 @@ Before any model sees the data, every image goes through the same preprocessing 
 
 <!--
 This grid shows 16 real training images after all augmentation steps have been applied. The effect is visible: images appear at slightly different angles, with varying brightness and contrast. This is what the model actually learns from — not the clean originals.
+
+Professor question catalogue:
+Q: Why include this visual example?
+A: It makes the preprocessing concrete. Instead of only listing augmentation operations, the slide shows what the model actually sees during training.
+Q: Are these images used for validation or testing?
+A: No. These are augmented training examples. Validation and test images are not randomly augmented.
+Q: Does augmentation make the task artificially harder?
+A: It makes training more varied, but the goal is to improve generalisation. The evaluation remains on deterministic validation and test images.
+Q: Why not use stronger augmentation?
+A: Stronger augmentation could help robustness, especially for noise and blur, but overly strong transformations may distort the sign identity. This would need tuning.
 -->
 
 ---
@@ -513,7 +541,17 @@ This grid shows 16 real training images after all augmentation steps have been a
 </div>
 
 <!--
-The baseline model processes images in three hierarchical stages. The first stage learns basic visual patterns such as edges and colour boundaries, the second combines these into shapes and contours, and the third builds more sign-specific representations such as numerals inside circles. After these stages, the model compresses the image into a 2,048-value feature representation and uses it to predict one of the 43 classes. With 629,000 parameters and training from scratch on GTSRB, this is our reference point for everything that follows.
+The baseline model processes images in three successive stages. The first stage learns basic visual patterns such as edges and colour boundaries, the second combines these into shapes and contours, and the third builds more sign-specific representations such as numerals inside circles. After these stages, the model compresses the image into a 2,048-value feature representation and uses it to predict one of the 43 classes. With 629,000 parameters and training from scratch on GTSRB, this is our reference point for everything that follows.
+
+Professor question catalogue:
+Q: Why is a compact CNN a reasonable baseline?
+A: The task uses small, cropped traffic sign images, so a compact CNN can learn useful hierarchical visual features without requiring a very large model.
+Q: Why train from scratch instead of using a pretrained model immediately?
+A: GTSRB is narrow and structured, and there are enough labelled images for a compact CNN to learn task-specific features. Pretraining is tested later as a separate variant.
+Q: What does the 2,048-value representation mean?
+A: It is the flattened output after the three convolutional blocks: 128 feature maps at 4×4 spatial resolution, giving 128×4×4 = 2,048 values. This vector is then compressed to 256 units by the first fully connected layer before the final 43-class output layer. So the full classifier path is 2,048 → 256 → 43.
+Q: Why explain the baseline before showing results?
+A: The baseline is the reference point for all later model changes. The audience needs to understand what is being improved or compared.
 -->
 
 ---
@@ -540,6 +578,16 @@ The baseline model processes images in three hierarchical stages. The first stag
 
 <!--
 The baseline reaches 99.49 percent on the internal test split, with only 30 wrong predictions out of 5,881 images. It does this with 629K parameters, so it is already a strong and relatively compact reference model. That raises the central question for the next part: if the baseline is already this good, can specific architectural changes still improve it in a meaningful way? This is what motivates the variants on the next slide.
+
+Professor question catalogue:
+Q: Why continue if the baseline already reaches 99.49 percent?
+A: The remaining 30 errors are still informative. They show where the model struggles and motivate testing whether architecture choices can reduce those mistakes.
+Q: Is 99.49 percent directly comparable to the official GTSRB benchmark?
+A: No. This is on our internal split, so it is internally comparable across our models but not directly comparable to the official leaderboard.
+Q: Why mention parameters here?
+A: Parameter count shows that the baseline is not only accurate but also compact. This matters when comparing later variants that may be larger or slower.
+Q: What should the audience take from this slide?
+A: The baseline is already strong, so later improvements must be interpreted carefully rather than assumed to be large or obvious.
 -->
 
 ---
@@ -575,6 +623,16 @@ The baseline reaches 99.49 percent on the internal test split, with only 30 wron
 
 <!--
 At this point, the baseline gives us a strong reference point, but it also raises the question of what could still be improved. We therefore define four architectural hypotheses rather than selecting variants randomly. More depth might help with fine visual details, transfer learning might provide useful visual features, the activation function might affect training stability, and learned downsampling might preserve spatial information better than fixed pooling. The next slide maps these four questions to the concrete model variants we tested.
+
+Professor question catalogue:
+Q: Were the four variants chosen randomly?
+A: No. Each variant corresponds to a specific architectural question raised by the baseline result and dataset properties.
+Q: Why test more depth?
+A: Additional depth may help learn more abstract sign-level features and better separate fine details such as numerals.
+Q: Why test transfer learning?
+A: It tests whether general visual features learned from ImageNet transfer to a narrow traffic sign domain.
+Q: Why test activation and downsampling?
+A: Activation choice may affect training stability, and learned downsampling tests whether fixed pooling discards useful spatial detail.
 -->
 
 ---
@@ -596,6 +654,22 @@ At this point, the baseline gives us a strong reference point, but it also raise
 
 <!--
 The previous slide introduced the four architectural questions. Here, each question is mapped to the model variant that tests it. Deep CNN tests additional depth, MobileNetV2 tests transfer learning, LeakyReLU tests activation choice, and Stride CNN tests learned downsampling. These are not random alternatives, but targeted variants around one main design aspect. The next step is to make sure all of them are trained and evaluated under the same conditions.
+
+Professor question catalogue:
+Q: Does each variant change exactly one thing?
+A: Each variant targets one main design aspect, but other properties such as parameter count, training time, and optimisation dynamics can also change.
+Q: Why is MobileNetV2 included if the project focuses on compact CNNs?
+A: It was included deliberately as an upper-bound candidate for transfer learning. MobileNetV2 brings ImageNet-pretrained features and 2.56M parameters — roughly four times the baseline. The result that it shows no stable accuracy advantage despite that cost is itself a finding: it tells us that ImageNet pretraining does not transfer meaningfully to this narrow, structured domain, and that a purpose-built compact CNN is more efficient here.
+Q: Why is LeakyReLU included?
+A: It tests whether keeping a small gradient for negative activations improves training stability across seeds.
+Q: How should this table be interpreted?
+A: It is a design map. The performance interpretation comes later and must include accuracy, stability, parameter count, and training time.
+
+Additional detail per variant (if the professor asks for specifics):
+- Deep CNN: this is the baseline made slightly deeper. We add one extra convolutional block with 256 filters and increase the hidden fully connected layer from 256 to 512 units. Because there is one more pooling step, the feature map becomes smaller before the classifier. The parameter count increases from 629K to 936K.
+- MobileNetV2: this model uses a MobileNetV2 network that was already pretrained on ImageNet. We replace the original ImageNet output layer with a new classifier for the 43 GTSRB traffic sign classes and then fine-tune the model on GTSRB. It is much larger than the baseline, with 2.56M parameters.
+- LeakyReLU CNN: this keeps the same architecture as the baseline and has the same parameter count of 629K. The only main change is the activation function: ReLU is replaced by LeakyReLU with a small negative slope of 0.01. This means negative activations are not completely set to zero, which can help gradients keep flowing.
+- Stride CNN: this keeps the same basic structure as the baseline, but replaces fixed MaxPool downsampling with strided convolution. In simple terms, the model learns how to reduce the image size instead of using a fixed pooling rule. Because these strided convolutions have learnable weights, the parameter count increases to 823K.
 -->
 
 ---
@@ -631,6 +705,16 @@ The previous slide introduced the four architectural questions. Here, each quest
 
 <!--
 The comparison is only meaningful because the training and evaluation setup is fixed across all five models. Augmentation is applied only to the training set, while validation and test images are resized and normalised without random transforms. Early stopping monitors validation loss and halts training once it stops improving — this prevents overfitting and means models that converge faster simply finish earlier rather than continuing to train on noise. This means performance differences can be interpreted mainly through model design, while still considering parameter count, training time, and seed variation. The goal is a controlled architectural comparison rather than a tournament between unrelated models.
+
+Professor question catalogue:
+Q: Can all performance differences be attributed only to architecture?
+A: Not exclusively. The fixed setup makes model design the main factor, but parameter count, random seed, training dynamics, and early stopping still matter.
+Q: Why use early stopping?
+A: It stops training when validation loss stops improving, which helps reduce overfitting and avoids training longer just to fit noise.
+Q: Why is validation/test preprocessing deterministic?
+A: It ensures that each model is evaluated on the same inputs every time, so differences are not caused by random transformations.
+Q: Why call this a controlled comparison rather than a tournament?
+A: The goal is to test architectural hypotheses under fixed conditions, not simply to find a leaderboard winner.
 -->
 
 ---
@@ -709,6 +793,14 @@ Across three seeds, Deep CNN maintains the strongest average at 99.69 percent. T
 
 <!--
 After the model comparison, we now focus on the selected Deep CNN. It has the strongest average accuracy-cost tradeoff, so it is the most relevant model to analyse in detail. The next slides move from model selection to model behaviour.
+
+Professor question catalogue:
+Q: Why focus the detailed evaluation only on Deep CNN?
+A: Deep CNN was selected after the model comparison because it had the strongest average accuracy-cost tradeoff. This section is not meant to repeat the comparison, but to understand the selected model's behaviour.
+Q: Why not analyse LeakyReLU in the same detail?
+A: LeakyReLU is a strong alternative, especially because of its stability, but Deep CNN had the highest mean accuracy and strongest single-run improvement. A full follow-up could analyse both models side by side.
+Q: What changes in this section compared with model comparison?
+A: The focus shifts from which model performs best to where the selected model still makes mistakes, whether the errors have a pattern, and how interpretable the predictions look.
 -->
 
 ---
@@ -732,7 +824,17 @@ After the model comparison, we now focus on the selected Deep CNN. It has the st
 </div>
 
 <!--
-The Deep CNN makes only 11 errors on the test set, so we can inspect the remaining mistakes quite concretely. The weaker classes shown here are visually difficult cases, especially where small numerals or symbols matter at 32 by 32 resolution. The pattern suggests that the model is not failing broadly, but mainly struggles near visually similar class boundaries.
+The Deep CNN makes only 11 errors on the test set, so we can inspect the remaining mistakes quite concretely. The weaker classes shown here are visually difficult cases, especially where small numerals or symbols matter at 32 by 32 resolution. The pattern suggests that the model is not failing broadly, but mainly struggles with visually similar class boundaries.
+
+Professor question catalogue:
+Q: Does this mean the model is unreliable?
+A: No. The error count is very small: 11 wrong predictions out of 5,881 test images. The important point is that the remaining errors are not random, but concentrated around visually similar classes.
+Q: Why show only these classes?
+A: These classes illustrate the weakest or most interpretable error cases. They show where the remaining mistakes occur and why those mistakes are visually plausible.
+Q: What does this say about the 32 by 32 input size?
+A: It suggests that small internal details can become difficult to resolve at this resolution. This is especially relevant for speed-limit numerals and similar warning signs.
+Q: Is this evidence of a general model failure?
+A: No. It points to a specific limitation near visually similar class boundaries, not broad failure across the task.
 -->
 
 ---
@@ -747,6 +849,16 @@ The Deep CNN makes only 11 errors on the test set, so we can inspect the remaini
 
 <!--
 The previous slide described the error pattern numerically. Here, the same pattern becomes visible in the actual images. The relevant differences are often small and hard to separate after resizing, which supports the interpretation from the error table.
+
+Professor question catalogue:
+Q: Why include actual misclassified examples?
+A: They make the error pattern tangible. Instead of only reporting class-level metrics, we can see what the model confused and why the confusion is visually understandable.
+Q: What do these examples show?
+A: Most examples involve signs that differ by small numerals or have very similar silhouettes. This supports the idea that the model struggles mainly with fine visual distinctions.
+Q: What would likely reduce these mistakes?
+A: A higher input resolution, such as 64 by 64, could give the model more pixels for the decisive numerals and symbols. This would need to be tested empirically.
+Q: Does this prove that 32 by 32 is the only problem?
+A: No. It is a plausible contributing factor, but other factors such as class similarity, lighting, blur, and data imbalance can also play a role.
 -->
 
 ---
@@ -774,6 +886,16 @@ The previous slide described the error pattern numerically. Here, the same patte
 
 <!--
 After looking at individual examples, the confusion matrix gives the class-level view. The strong diagonal shows that errors are rare overall, and the few off-diagonal entries are not randomly spread across classes. They mostly align with the visually similar sign groups discussed before.
+
+Professor question catalogue:
+Q: Why include a confusion matrix if there are only 11 errors?
+A: Because it shows whether the errors are scattered randomly or concentrated in specific class pairs. Here, the pattern supports the earlier error analysis.
+Q: What does the strong diagonal mean?
+A: It means most classes are predicted correctly most of the time. The model is not broadly confused across the 43 classes.
+Q: What does Top-5 accuracy add here?
+A: It shows that even when the top prediction is wrong, the correct class is almost always still among the model's most likely alternatives.
+Q: Should we overinterpret the confusion matrix?
+A: No. With only 11 errors, the matrix is mainly supporting evidence, not a full statistical error study.
 -->
 
 ---
@@ -794,6 +916,16 @@ After looking at individual examples, the confusion matrix gives the class-level
 
 <!--
 After looking at where the errors occur, we now ask whether rare classes are systematically worse. The gap between the 10 most frequent and 10 rarest classes is only 0.34 percentage points in this run. That suggests no strong class-frequency bias under this setup, but rare classes have few test images, so the result should be interpreted cautiously.
+
+Professor question catalogue:
+Q: Does this prove there is no class-frequency bias?
+A: No. It suggests no strong frequency bias under this setup, but the rare classes have few test images, so the estimate is uncertain.
+Q: Why compare the 10 most frequent and 10 rarest classes?
+A: It gives a simple diagnostic for whether high overall accuracy hides weaker performance on underrepresented classes.
+Q: Could augmentation explain the small gap?
+A: It may help, but we did not isolate its effect with an ablation study. Therefore, we should not claim that augmentation caused the small gap.
+Q: What would make this analysis stronger?
+A: More seeds, independent splits, confidence intervals, or a stratified evaluation across multiple test samples would make the conclusion more robust.
 -->
 
 ---
@@ -808,6 +940,16 @@ After looking at where the errors occur, we now ask whether rare classes are sys
 
 <!--
 After error and frequency-bias analysis, Grad-CAM gives a qualitative look at which image regions influence the model. The activation maps mostly focus on the sign shape and internal symbol, rather than obvious background areas. This supports the interpretation that the model uses task-relevant visual information, but it is not a formal proof of the decision process.
+
+Professor question catalogue:
+Q: Does Grad-CAM prove how the model makes decisions?
+A: No. Grad-CAM is qualitative supporting evidence, not a formal causal proof of the decision process.
+Q: Why include Grad-CAM anyway?
+A: It helps check whether the model appears to focus on sign-relevant regions rather than obvious background shortcuts.
+Q: What should we conclude from these maps?
+A: The maps support the interpretation that predictions are linked to the sign shape and internal symbols, which is consistent with task-relevant feature learning.
+Q: What are the limitations of Grad-CAM?
+A: It is coarse, depends on the selected layer, and can highlight regions correlated with the prediction without proving causality.
 -->
 
 ---
