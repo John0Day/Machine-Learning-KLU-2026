@@ -1,0 +1,20 @@
+{
+  "clean": {
+    "loss": 0.01601208007856133,
+    "acc": 0.9945587485121578,
+    "num_samples": 5881
+  },
+  "gaussian_noise": {
+    "loss": 2.0202471394053205,
+    "acc": 0.607379697330386,
+    "num_samples": 5881
+  },
+  "gaussian_blur": {
+    "loss": 0.10680058429008478,
+    "acc": 0.9671824519639517,
+    "num_samples": 5881
+  },
+  "noise_std": 0.1,
+  "blur_kernel_size": 5,
+  "top5_acc": 0.999829960891005
+}
