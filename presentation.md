@@ -203,7 +203,7 @@ style: |
 <p style="margin-top: 18px; font-size: 0.9em;">German Traffic Sign Recognition Benchmark · 43 classes · 39,209 images</p>
 
 <!--
-This project compares five CNN architectures for traffic sign classification on GTSRB. We will cover the problem structure, our experimental setup, what the results show, and where the key limitations are.
+This project compares five CNN architectures for traffic sign classification on GTSRB. We will cover the problem structure, our experimental setup, the single-run and multi-seed results, and where the key limitations are.
 -->
 
 ---
@@ -283,20 +283,6 @@ Three challenges compound here. Rare classes have very little training data. Vis
 
 <!--
 The imbalance is immediately visible. Speed limit 50 dominates on the left; the rare classes on the right have a fraction of the data. Whether this gap translates into a per-class accuracy gap is something we test explicitly later.
--->
-
----
-
-<!-- _class: image-focus -->
-
-## At 32×32 pixels, numerals and similar warning symbols are the main source of visual ambiguity
-
-![](results/task03/sample_images_by_class.png)
-
-**This is the actual input the model receives. Speed limit signs and warning triangles with similar silhouettes are the hardest classes to distinguish.**
-
-<!--
-This shows what the model works with. The circular speed limit signs are nearly indistinguishable at this resolution — a direct constraint on achievable accuracy for those class pairs.
 -->
 
 ---
@@ -384,15 +370,15 @@ Three convolutional stages build progressively abstract representations — from
 |---|---|---|
 | **Deep CNN** | 3 stages may not resolve fine numerals at 32×32 | Added a 4th stage with 256 filters (+307K params) |
 | **MobileNetV2** | Scratch training on 39K images may underfit rare classes | Replaced network with one pretrained on 1.2M images |
-| **LeakyReLU CNN** | ReLU may cause dead neurons and limit gradient flow | Replaced ReLU activation with LeakyReLU |
+| **LeakyReLU CNN** | ReLU may cause dead neurons and limit gradient flow | Replaced ReLU activation with LeakyReLU (slope = 0.01) |
 | **Stride CNN** | MaxPooling may discard spatially relevant detail | Replaced pooling with learnable stride-2 convolution |
 
 <div class="takeaway">
-<strong>Each variant is a testable hypothesis.</strong> A null result — no improvement — is also informative: it indicates the baseline already handles that aspect adequately.
+<strong>Each variant is a testable hypothesis.</strong> A null result — no improvement — is also informative: it indicates the baseline already handles that aspect adequately. Single-run results tell only part of the story; we validated all five models across three seeds.
 </div>
 
 <!--
-The variants are not arbitrary — each targets a known limitation or open question. The table makes the hypothesis and the change explicit. I will now show which ones held up.
+The variants are not arbitrary — each targets a known limitation or open question. The table makes the hypothesis and the change explicit. Single-run results will be shown first, then multi-seed validation reveals which conclusions hold.
 -->
 
 ---
@@ -433,41 +419,41 @@ Identical training conditions are what make the architectural comparison valid. 
 
 # Results
 
-<div class="subtitle">All models reached high accuracy on the internal split. One stood out on the cost–accuracy tradeoff.</div>
+<div class="subtitle">All models exceed 99% on the internal split. Multi-seed analysis revised two of the initial rankings.</div>
 
 <!--
-Here are the results. I will highlight the main pattern, then show the two most instructive comparisons in detail.
+Here are the results. I will first show the canonical single-run comparison, then what multi-seed validation added to the picture.
 -->
 
 ---
 
 ## All five models achieve above 99% accuracy on the internal test split
 
-<div class="kicker">Full results</div>
+<div class="kicker">Single-run results — canonical comparison (seed 42)</div>
 
 | Model | Test Accuracy | Wrong / 5,881 | Parameters | Training Time |
 |---|---:|---:|---:|---:|
 | Baseline CNN | 99.49% | 30 | 629K | 275.6 s |
-| Deep CNN | 99.81% | 11 | 936K | 284.0 s |
+| **Deep CNN** | **99.81%** | **11** | **936K** | **284.0 s** |
 | MobileNetV2 | 99.66% | 20 | 2.56M | 518.7 s |
 | LeakyReLU CNN | 99.46% | 32 | 629K | 271.5 s |
 | Stride CNN | 99.52% | 28 | 823K | 236.9 s |
 
 <br>
 
-All five models achieve above **99%** accuracy on this internal split. For context, the published human benchmark on GTSRB is **98.84%** — though direct comparison is limited by our internal evaluation setup.
+All five models achieve above **99%** on this internal split. For context, the published human benchmark on GTSRB is **98.84%** — though direct comparison is limited by our internal evaluation setup.
 
-<p class="muted" style="font-size: 0.85em; margin-top: 8px;">All results from single training runs (seed 42). Differences below ~0.1 pp (≈ 6 images on this test set) should be treated as potentially unstable without multi-seed validation.</p>
+<p class="muted" style="font-size: 0.85em; margin-top: 8px;">Canonical results from a single run (seed 42). Differences at or below ~0.1 pp (≈ 6 images) should not be interpreted without multi-seed context — see next slide.</p>
 
 <!--
-Every model exceeds 99% — the task is tractable for compact CNNs on this benchmark. Differences are small in absolute terms, so I will focus on the result that stands out in both error count and cost efficiency.
+Every model exceeds 99% — the task is tractable for compact CNNs on this benchmark. Differences are small in absolute terms. The single-run ranking is a starting point; multi-seed validation shows which of these differences are reproducible.
 -->
 
 ---
 
 ## One additional extraction stage reduced errors by 63% at minimal added cost
 
-<div class="kicker">Main finding</div>
+<div class="kicker">Main finding — Deep CNN</div>
 
 <div class="kpi-row">
   <div class="kpi"><div class="number">99.81%</div><div class="label">Deep CNN — test accuracy</div></div>
@@ -481,63 +467,40 @@ Every model exceeds 99% — the task is tractable for compact CNNs on this bench
     <p style="margin-top: 10px;">Parameter count increased from 629K to <strong>936K</strong>. Training time increased by just 8 seconds.</p>
   </div>
   <div>
-    <p>All other variants either matched or fell below baseline accuracy while adding computational cost.</p>
-    <p style="margin-top: 10px;">Depth was the only design change that produced a consistent accuracy improvement on this dataset and split.</p>
-    <p class="muted" style="font-size: 0.85em; margin-top: 8px;">Single run — multi-seed validation would be needed to confirm the magnitude of this advantage.</p>
+    <p>Among all variants, depth produced the strongest accuracy–cost tradeoff. The Deep CNN advantage holds in multi-seed analysis: mean <strong>99.69% ± 0.17%</strong> across 3 seeds.</p>
+    <p style="margin-top: 10px;" class="muted">The 0.18 pp mean gap over Baseline represents an average advantage — individual seed rankings vary. Seed 2026 is one example where Baseline outperformed Deep CNN.</p>
   </div>
 </div>
 
 <!--
-The 63% error reduction from one additional stage is the strongest signal in the results. The cost is negligible. All other variants showed no consistent improvement over the baseline — depth was the only effective variable.
+The 63% error reduction from one additional stage is the strongest signal in the results. The cost is negligible. Multi-seed analysis confirms Deep CNN as the best model on average — but the advantage is not consistent in every single seed.
 -->
 
 ---
 
-## MobileNetV2 showed no accuracy advantage over the Deep CNN at significantly higher cost
+## Multi-seed validation revised the ranking of two models from the single-run comparison
 
-<div class="kicker">Transfer learning comparison</div>
+<div class="kicker">Stability analysis — 3 seeds × 5 models = 15 training runs</div>
 
-<div class="two-col">
+| Rank | Model | Test Acc (mean ± std) | Parameters | Train Time (mean) |
+|---:|---|---:|---:|---:|
+| 1 | **Deep CNN** | **99.69% ± 0.17%** | 936K | 266 s |
+| 2 | **LeakyReLU CNN** | **99.67% ± 0.03%** | 629K | 597 s |
+| 3 | Baseline CNN | 99.51% ± 0.22% | 629K | 261 s |
+| 4 | Stride CNN | 99.45% ± 0.12% | 823K | 268 s |
+| 5 | MobileNetV2 | 99.43% ± 0.19% | 2.56M | 529 s |
+
+<div class="two-col" style="margin-top: 12px;">
   <div>
-    <p><strong>MobileNetV2</strong></p>
-    <ul>
-      <li>Pretrained on ImageNet — 1.2M images</li>
-      <li><strong>2.56M parameters</strong> — about 4× the baseline, 2.7× the Deep CNN</li>
-      <li><strong>518.7 s training</strong> — 1.8× the Deep CNN</li>
-      <li>Test accuracy: <strong>99.66%</strong></li>
-    </ul>
+    <p><strong>LeakyReLU CNN</strong> — seed 42 single-run: <strong>99.46%</strong> (last among CNNs). Multi-seed mean: <strong>99.67% ± 0.03%</strong> (2nd, smallest variance). The seed-42 result was an outlier. A cautionary example for single-run evaluation.</p>
   </div>
   <div>
-    <p><strong>Deep CNN</strong></p>
-    <ul>
-      <li>Trained from scratch on GTSRB only</li>
-      <li><strong>936K parameters</strong></li>
-      <li><strong>284.0 s training</strong></li>
-      <li>Test accuracy: <strong>99.81%</strong></li>
-    </ul>
+    <p><strong>MobileNetV2</strong> — single-run: 99.66% (3rd). Multi-seed mean: <strong>99.43%</strong> (last). No stable accuracy advantage over purpose-built CNNs, despite ~4× more parameters and nearly twice the training time of the baseline.</p>
   </div>
 </div>
 
-<div class="takeaway">
-<strong>Interpretation:</strong> for this task and data volume, a purpose-built compact model outperformed the pretrained general model at lower cost. This result is specific to this setting — transfer learning may be more effective in lower-data regimes or with domain-adapted pretraining.
-</div>
-
 <!--
-MobileNetV2 had a structural advantage: 1.2M pretraining images, 4× more parameters than the baseline. Yet the Deep CNN trained from scratch outperformed it here. The finding is bounded by this specific task and dataset — it does not generalise to transfer learning in general.
--->
-
----
-
-<!-- _class: image-focus -->
-
-## The Deep CNN achieves the best accuracy at near-baseline training cost
-
-![](results/task05/model_comparison_summary.png)
-
-**Higher parameter count and longer training time did not produce better accuracy in this experiment.**
-
-<!--
-This chart makes the cost–accuracy tradeoff visible across all five models. MobileNetV2 sits furthest right in cost, yet below the Deep CNN in accuracy. The Deep CNN is the Pareto-optimal choice in this comparison.
+Multi-seed validation is the methodological backbone of this project. Two models changed their story: LeakyReLU improved substantially; MobileNetV2 declined. Deep CNN's advantage held on average. The LeakyReLU reversal — from last to second — is the strongest argument for why single-run comparisons need to be interpreted with caution.
 -->
 
 ---
@@ -605,10 +568,10 @@ The strong diagonal confirms accurate classification across almost all classes. 
 
 Several rare classes reach **100%** accuracy on the test split. The augmentation strategy appears to have partially compensated for the data shortage in rare classes.
 
-<p class="muted" style="font-size: 0.88em; margin-top: 14px;">Caveat: one training run, one fixed split. Rare classes have very few test images — a single missed prediction shifts per-class accuracy significantly. This result is indicative, not conclusive without multi-seed validation.</p>
+<p class="muted" style="font-size: 0.88em; margin-top: 14px;">Caveat: one training run, one fixed split. Rare classes have very few test images — a single missed prediction shifts per-class accuracy significantly. This result is indicative, not conclusive without cross-validation.</p>
 
 <!--
-An 11-fold data imbalance produced only a 0.34 pp accuracy gap. This is a positive signal, but the caveat matters: rare classes have too few test images for a stable estimate. Multi-seed validation would be needed to confirm whether this gap is representative.
+An 11-fold data imbalance produced only a 0.34 pp accuracy gap. This is a positive signal, but the caveat matters: rare classes have too few test images for a stable estimate. The result suggests no strong frequency bias — but further validation with independent splits would be needed to confirm it.
 -->
 
 ---
@@ -674,7 +637,7 @@ Blur tolerance is actually encouraging — the model has learned features that a
     <ul>
       <li>Internal split — not comparable to the official GTSRB leaderboard</li>
       <li>Pre-cropped images — classification only, no sign detection</li>
-      <li>Single run per model — small differences may not be stable across seeds</li>
+      <li>Three-seed validation — not cross-validation or independent data splits</li>
       <li>32×32 input resolution — fine detail is lost</li>
       <li>GTSRB: German roads, controlled weather conditions only</li>
     </ul>
@@ -683,14 +646,14 @@ Blur tolerance is actually encouraging — the model has learned features that a
     <p><strong>Three highest-priority next steps</strong></p>
     <ul>
       <li><strong>Add noise and blur augmentation during training</strong> — most direct fix for the robustness gap</li>
-      <li><strong>Repeat with multiple seeds and splits</strong> — validate stability of the Deep CNN advantage</li>
-      <li><strong>Test at 64×64 resolution</strong> — expected to reduce confusion in similar-class pairs</li>
+      <li><strong>Validate across independent data splits</strong> — multi-seed is done; the next step is multiple splits to confirm ranking stability</li>
+      <li><strong>Test at 64×64 resolution</strong> — expected to reduce confusion in visually similar class pairs</li>
     </ul>
   </div>
 </div>
 
 <!--
-The most actionable limitation is the noise result — augmentation training directly addresses it without requiring a new architecture. Multi-seed validation and higher resolution are the two other priorities before drawing stronger conclusions from this comparison.
+The most actionable limitation is the noise result — augmentation training directly addresses it without requiring a new architecture. Multi-seed validation has been completed; the remaining methodological gap is independent data splits. Higher resolution is the most plausible fix for the remaining per-class confusion errors.
 -->
 
 ---
@@ -700,7 +663,7 @@ The most actionable limitation is the noise result — augmentation training dir
 
 # Conclusion
 
-<div class="subtitle">Depth improved accuracy. Robustness under noise remains unresolved.</div>
+<div class="subtitle">Depth was strongest. LeakyReLU surprised in multi-seed evaluation. Robustness remains open.</div>
 
 <!--
 Three findings to close with.
@@ -718,8 +681,8 @@ Three findings to close with.
     <p>A 629K-parameter baseline trained from scratch reaches <strong>99.49%</strong> on this internal split — in the same broad performance range as the reported human benchmark of 98.84%.</p>
   </div>
   <div class="card">
-    <h3>Depth was the effective variable</h3>
-    <p>One additional extraction stage reduced errors by <strong>63%</strong> at near-zero added cost. Transfer learning, activation choice, and downsampling strategy showed no consistent improvement.</p>
+    <h3>Architecture matters, but so does validation</h3>
+    <p>Depth reduced errors by <strong>63%</strong> at near-zero cost — the strongest single change. Multi-seed analysis showed LeakyReLU CNN as second-best overall: the single-run result (last place) was a misleading outlier.</p>
   </div>
   <div class="card">
     <h3>Robustness is the open problem</h3>
@@ -728,11 +691,11 @@ Three findings to close with.
 </div>
 
 <div class="takeaway" style="margin-top: 20px;">
-<strong>The benchmark result is strong on clean images. Extending it to degraded or out-of-distribution conditions requires explicit robustness work — the most important next step for this architecture.</strong>
+<strong>The benchmark result is strong on clean images. Multi-seed evaluation is essential to draw reliable conclusions from small accuracy differences. Extending robustness to degraded inputs is the most important next step.</strong>
 </div>
 
 <!--
-Compact CNNs work well on GTSRB under controlled conditions. Depth was the only design change that consistently improved results. The noise result carries the most practical weight — it defines what this architecture still cannot do, and points directly to where future work should focus.
+Compact CNNs work well on GTSRB under controlled conditions. Depth was the most effective architectural change. The LeakyReLU reversal demonstrates that multi-seed evaluation is not optional when differences are small. The noise result defines what this architecture still cannot do, and points directly to where future work should focus.
 -->
 
 ---
@@ -745,7 +708,7 @@ Compact CNNs work well on GTSRB under controlled conditions. Depth was the only 
 ## Questions?
 
 <!--
-Thank you. Backup slides are available on the autoencoder extension, hyperparameter sensitivity analysis, full limitations table, and t-SNE feature space visualisation.
+Thank you. Backup slides are available on the autoencoder extension, hyperparameter sensitivity analysis, full per-run multi-seed table, and t-SNE feature space visualisation.
 -->
 
 ---
@@ -816,7 +779,35 @@ The autoencoder adds an "I don't know" capability alongside the classifier. The 
 </div>
 
 <!--
-Optuna uses earlier trial results to guide subsequent ones. The key finding: our manual defaults were not fragile. The optimal learning rate is very close to our choice. The one notable gap is dropout — lower regularisation appears preferable.
+Optuna uses earlier trial results to guide subsequent ones. The key finding: our manual defaults were not fragile. The optimal learning rate is very close to our choice. The one notable gap is dropout — lower regularisation appears preferable for the Stride CNN architecture.
+-->
+
+---
+
+## Backup: Multi-Seed Per-Run Results
+
+<div class="kicker">All 15 training runs — seeds 42, 123, 2026</div>
+
+| Seed | Model | Test Acc | Test Loss | Train Time | Epochs |
+|---:|---|---:|---:|---:|---:|
+| 42 | Baseline CNN | 99.20% | 0.0323 | 225 s | 16 |
+| 42 | Deep CNN | 99.78% | 0.0077 | 293 s | 20 |
+| 42 | LeakyReLU CNN | 99.63% | 0.0105 | 505 s | 20 |
+| 42 | MobileNetV2 | 99.44% | 0.0197 | 530 s | 20 |
+| 42 | Stride CNN | 99.46% | 0.0178 | 295 s | 20 |
+| 123 | Baseline CNN | 99.64% | 0.0104 | 276 s | 20 |
+| 123 | Deep CNN | 99.83% | 0.0075 | 289 s | 20 |
+| 123 | LeakyReLU CNN | 99.69% | 0.0114 | 642 s | 20 |
+| 123 | MobileNetV2 | 99.66% | 0.0105 | 529 s | 20 |
+| 123 | Stride CNN | 99.30% | 0.0253 | 208 s | 14 |
+| 2026 | Baseline CNN | 99.69% | 0.0118 | 281 s | 20 |
+| 2026 | Deep CNN | 99.46% | 0.0190 | 216 s | 15 |
+| 2026 | LeakyReLU CNN | 99.68% | 0.0124 | 645 s | 20 |
+| 2026 | MobileNetV2 | 99.20% | 0.0299 | 529 s | 20 |
+| 2026 | Stride CNN | 99.59% | 0.0120 | 300 s | 20 |
+
+<!--
+Use this slide if the professor asks for the raw per-run data behind the aggregated multi-seed table in the main deck. Seed 2026 for Deep CNN shows one example where Baseline outperformed Deep CNN — this is why the 0.18 pp mean advantage should be read as an average, not a guarantee.
 -->
 
 ---
@@ -827,14 +818,14 @@ Optuna uses earlier trial results to guide subsequent ones. The key finding: our
 |---|---|
 | Internal hold-out split only | Not directly comparable to official GTSRB leaderboard |
 | Pre-cropped images | Cannot locate signs — classification only, not detection |
-| Single training run per model | Small accuracy differences may not be stable across seeds |
+| Three-seed validation, no independent splits | Relative ranking confirmed on average; cross-validation not performed |
 | 32×32 input resolution | Fine details (numerals, symbols) may be partially lost |
 | No noise or blur augmentation during training | Model not robust to degraded inputs |
 | GTSRB: German roads, single camera, controlled weather | Limited generalisation to other regions, conditions, or sign standards |
 | Rare classes have few test images | A single missed prediction shifts per-class accuracy significantly |
 
 <!--
-Use this slide for detailed questions about methodology. The most actionable limitations for follow-up work are noise augmentation, multi-seed validation, and higher resolution.
+Use this slide for detailed questions about methodology. The most actionable limitations for follow-up work are noise augmentation, independent split validation, and higher resolution.
 -->
 
 ---
@@ -864,26 +855,24 @@ Distinct clusters indicate that the model has learned to separate classes in its
 | 3 | Dataset overview | 0:50 |
 | 4 | Two structural challenges | 0:45 |
 | 5 | Class distribution (visual) | 0:20 |
-| 6 | Sample images (visual) | 0:20 |
-| 7 | Divider — Our Approach | 0:10 |
-| 8 | Experimental design | 0:45 |
-| 9 | Baseline architecture | 0:50 |
-| 10 | Four variants | 1:00 |
-| 11 | Training conditions | 0:40 |
-| 12 | Divider — Results | 0:10 |
-| 13 | Full results | 0:40 |
-| 14 | Main finding: Deep CNN | 0:50 |
-| 15 | Transfer learning comparison | 0:50 |
-| 16 | Cost vs. accuracy (visual) | 0:25 |
-| 17 | Divider — Error Analysis | 0:10 |
-| 18 | Error pattern | 0:45 |
-| 19 | Confusion matrix (visual) | 0:25 |
-| 20 | Bias analysis | 0:45 |
-| 21 | Grad-CAM (visual) | 0:25 |
-| 22 | Divider — Robustness | 0:10 |
-| 23 | Robustness results | 0:50 |
-| 24 | Limitations and next steps | 0:50 |
-| 25 | Divider — Conclusion | 0:10 |
-| 26 | Summary | 0:55 |
-| 27 | Thank You | — |
-| **Total** | | **~14:45** |
+| 6 | Divider — Our Approach | 0:10 |
+| 7 | Experimental design | 0:45 |
+| 8 | Baseline architecture | 0:50 |
+| 9 | Four variants | 1:00 |
+| 10 | Training conditions | 0:40 |
+| 11 | Divider — Results | 0:10 |
+| 12 | Single-run results table | 0:40 |
+| 13 | Main finding: Deep CNN | 0:50 |
+| 14 | Multi-seed stability | 1:05 |
+| 15 | Divider — Error Analysis | 0:10 |
+| 16 | Error pattern | 0:45 |
+| 17 | Confusion matrix (visual) | 0:25 |
+| 18 | Bias analysis | 0:45 |
+| 19 | Grad-CAM (visual) | 0:25 |
+| 20 | Divider — Robustness | 0:10 |
+| 21 | Robustness results | 0:50 |
+| 22 | Limitations and next steps | 0:50 |
+| 23 | Divider — Conclusion | 0:10 |
+| 24 | Summary | 0:55 |
+| 25 | Thank You | — |
+| **Total** | | **~14:40** |
