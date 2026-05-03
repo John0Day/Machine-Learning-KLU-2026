@@ -220,10 +220,11 @@ style: |
 
 # Compact CNN Architectures for Traffic Sign Classification
 
-## An experimental comparison on GTSRB
+## Architecture, stability, and robustness on GTSRB
 
-<p style="margin-top: 18px; font-size: 0.9em;">German Traffic Sign Recognition Benchmark · 43 classes · 39,209 images</p>
-
+<p style="margin-top: 18px; font-size: 0.9em;">
+German Traffic Sign Recognition Benchmark · 43 classes · 39,209 images
+</p>
 <!--
 This project compares five CNN architectures for traffic sign classification on GTSRB. We will cover the problem structure, our experimental setup, the single-run and multi-seed results, and where the key limitations are.
 -->
@@ -233,9 +234,9 @@ This project compares five CNN architectures for traffic sign classification on 
 <!-- _class: divider -->
 <!-- _paginate: false -->
 
-# The Problem
+# Context
 
-<div class="subtitle">A large real-world dataset with two structural challenges built in.</div>
+<div class="subtitle">What is the task, what is the dataset, and what makes it challenging?</div>
 
 <!--
 GTSRB — the German Traffic Sign Recognition Benchmark — was published by Stallkamp et al. in 2012 and collected from a forward-facing car-mounted camera on real German roads. Images are already cropped to the sign bounding box, which means the model only needs to classify — not locate — a sign. That makes the dataset well-suited for controlled architectural comparisons.
@@ -243,6 +244,31 @@ GTSRB — the German Traffic Sign Recognition Benchmark — was published by Sta
 For context: the dataset was used in the IJCNN 2011 competition, where the best submitted system — a CNN committee — reached 99.46% on the official test set. Stallkamp et al. also tested 30 human participants on the same set and reported 98.84% recognition rate. That figure is the one we cite as a broad reference. We cannot compare to it directly because we use a different internal split.
 
 Before the approach, the next slides set up two structural properties of the data that directly motivated our design choices: class imbalance and visual similarity between classes.
+-->
+
+---
+
+## Traffic sign classification — a core task in driver assistance systems
+
+<div class="kicker">Background</div>
+
+<div class="two-col" style="margin-top: 24px;">
+  <div>
+    <p><strong>What is the task?</strong></p>
+    <p>Given a cropped image of a traffic sign, assign it to one of a fixed set of categories — speed limits, prohibitory signs, warnings, mandatory directions.</p>
+  </div>
+  <div>
+    <p><strong>Why does it matter?</strong></p>
+    <p>Reliable sign recognition is a building block for driver assistance and autonomous systems. A model that misreads a speed limit or stop sign in real traffic has direct safety implications.</p>
+  </div>
+</div>
+
+<div class="takeaway" style="margin-top: 28px;">
+<strong>This project:</strong> we compare five CNN architectures on GTSRB — a standard benchmark for this task — to understand which design choices actually matter and how stable the results are.
+</div>
+
+<!--
+Brief motivation: why traffic sign classification, why CNNs, why a benchmark comparison. Keep this short — the audience needs context, not a literature review.
 -->
 
 ---
