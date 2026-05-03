@@ -1091,27 +1091,32 @@ Thank you for your attention. I am happy to answer any questions about the model
 
 <div class="kicker">Extension · proof of concept</div>
 
-<div class="lead">A standard classifier always assigns one of its 43 known classes, even for inputs it has never seen.</div>
+<div class="lead" style="font-size: 1.12em; margin-bottom: 12px;">
+A standard classifier always predicts one of the 43 known classes, even for unfamiliar inputs.
+</div>
 
-<div class="two-col">
+<div class="two-col" style="grid-template-columns: 54% 46%; gap: 22px; align-items: start; margin-top: 10px;">
   <div>
-    <p><strong>Approach</strong></p>
-    <p>A compression autoencoder learns to reconstruct known traffic signs via a 128-dimensional bottleneck. Inputs that do not match the learned reconstruction pattern may produce elevated reconstruction error, which can be used as a candidate anomaly signal.</p>
-    <br>
-    <p><strong>Threshold</strong></p>
-    <p>Set at the 95th percentile of validation reconstruction errors (1.091). By construction, this flags 5% of in-distribution validation images.</p>
+    <div class="card" style="margin-bottom: 12px;">
+      <h3>Idea</h3>
+      <p style="font-size: 0.9em;">A compression autoencoder learns to reconstruct known traffic signs through a <strong>128-dimensional bottleneck</strong>. Inputs that do not match the learned reconstruction pattern may produce higher reconstruction error.</p>
+    </div>
+    <div class="takeaway" style="margin-top: 0; font-size: 0.88em;">
+      <strong>Important limitation:</strong> no true out-of-distribution test set was available. This is a candidate anomaly signal, not a validated anomaly detector.
+    </div>
   </div>
   <div>
-    <p><strong>Results on the validation set</strong></p>
-    <table>
+    <table style="font-size: 0.76em;">
       <tr><th>Metric</th><th>Value</th></tr>
       <tr><td>Latent size</td><td>128 dimensions</td></tr>
       <tr><td>Final reconstruction loss</td><td>0.5118</td></tr>
-      <tr><td>Anomaly threshold (95th pct.)</td><td>1.091</td></tr>
+      <tr><td>Threshold rule</td><td>95th percentile</td></tr>
+      <tr><td>Anomaly threshold</td><td>1.091</td></tr>
       <tr><td>Images flagged</td><td>294 / 5,881 (5%)</td></tr>
     </table>
-    <br>
-    <p class="muted" style="font-size: 0.88em;">No true out-of-distribution test set was available. The method is implementable; its real-world detection performance is not yet validated.</p>
+    <div class="takeaway" style="margin-top: 12px; font-size: 0.86em;">
+      <strong>Threshold:</strong> by construction, the 95th percentile threshold flags 5% of in-distribution validation images.
+    </div>
   </div>
 </div>
 
@@ -1125,23 +1130,34 @@ This backup slide shows the autoencoder as a proof of concept rather than a vali
 
 <div class="kicker">Extension · 30-trial Bayesian search</div>
 
-**Goal:** verify that manually chosen training settings are not fragile.
+<div class="lead" style="font-size: 1.08em; margin-bottom: 12px;">
+Goal: check whether the manual training settings are in a reasonable range.
+</div>
 
-| Hyperparameter | Search range | Best value found |
-|---|---|:---:|
-| Learning rate | 0.0001 – 0.01 | **0.00124** |
-| Dropout rate | 0.2 – 0.6 | **0.274** |
-| Batch size | 32, 64, 128 | **32** |
-| Optimiser | Adam / SGD | **Adam** |
-| Weight decay | 1×10⁻⁵ – 1×10⁻² | **0.000698** |
+<div class="two-col" style="grid-template-columns: 58% 42%; gap: 22px; align-items: start; margin-top: 8px;">
+  <div>
+    <table style="font-size: 0.74em;">
+      <tr><th>Hyperparameter</th><th>Search range</th><th>Best value</th></tr>
+      <tr><td>Learning rate</td><td>0.0001 to 0.01</td><td><strong>0.00124</strong></td></tr>
+      <tr><td>Dropout rate</td><td>0.2 to 0.6</td><td><strong>0.274</strong></td></tr>
+      <tr><td>Batch size</td><td>32, 64, 128</td><td><strong>32</strong></td></tr>
+      <tr><td>Optimiser</td><td>Adam / SGD</td><td><strong>Adam</strong></td></tr>
+      <tr><td>Weight decay</td><td>1×10⁻⁵ to 1×10⁻²</td><td><strong>0.000698</strong></td></tr>
+    </table>
+  </div>
+  <div>
+    <div class="kpi" style="padding: 14px 12px; margin-bottom: 12px;">
+      <div class="number" style="font-size: 1.65em;">99.91%</div>
+      <div class="label">best validation accuracy<br>trial 6</div>
+    </div>
+    <div class="card" style="font-size: 0.86em; padding: 12px 14px;">
+      <h3>What it suggests</h3>
+      <p>Adam appeared in all top-5 trials. The best learning rate is close to our default of 0.001, while the best dropout is lower than our default of 0.5.</p>
+    </div>
+  </div>
+</div>
 
-**Best trial (trial 6):** 99.91% validation accuracy
-
-- Adam appeared in all top-5 trials in this search
-- Best learning rate (0.00124) is close to our default (0.001)
-- Best dropout (0.274) is lower than our default (0.5)
-
-<div class="takeaway">
+<div class="takeaway" style="font-size: 0.9em; margin-top: 14px;">
 <strong>Sensitivity check:</strong> the manual defaults appear to be in a reasonable region of the search space, but this was not a full hyperparameter study.
 </div>
 
@@ -1197,56 +1213,23 @@ This slide collects the main methodological limitations. The most important poin
 
 ---
 
-<!-- _class: image-focus -->
-
 ## Backup: t-SNE Feature Space (Deep CNN)
 
-![](results/task05/tsne_feature_space.png)
-
-**2,000 validation samples projected to 2D from the Deep CNN's 512-dimensional internal feature space (perplexity = 30).**
-
-Most classes form distinct clusters. Overlap concentrates among speed limit signs and visually similar warning triangles, consistent with the per-class error pattern.
-
-<!--
-This slide visualises the Deep CNN feature space by projecting 2,000 validation samples from 512 dimensions down to two dimensions with t-SNE. Most classes form visually separated clusters, which supports the interpretation that the model learned class-relevant representations. The overlap is mainly visible among speed limit signs and similar warning signs, which is consistent with the error analysis. Since t-SNE is only a projection, this should be treated as supporting visual evidence rather than a formal proof.
--->
-
----
-
-## Backup: Timing Plan
-
-| Slide | Topic | Time |
-|---|---|:---:|
-| 1 | Title | 0:20 |
-| 2 | Divider: Dataset | 0:10 |
-| 3 | Task motivation | 0:40 |
-| 4 | Dataset overview | 0:45 |
-| 5 | Three dataset properties | 0:45 |
-| 6 | Visual ambiguity zoom-in | 0:35 |
-| 7 | Class imbalance visual | 0:30 |
-| 8 | Divider: Our Approach | 0:10 |
-| 9 | Baseline architecture | 0:50 |
-| 10 | Baseline result | 0:35 |
-| 11 | Architectural questions | 0:45 |
-| 12 | Variant mapping | 0:45 |
-| 13 | Controlled training setup | 0:40 |
-| 14 | Divider: Model Comparison | 0:10 |
-| 15 | Single-run results table | 0:45 |
-| 16 | Multi-seed validation | 1:00 |
-| 17 | Divider: Deep CNN Evaluation | 0:10 |
-| 18 | Error profile | 0:40 |
-| 19 | Misclassified examples | 0:30 |
-| 20 | Confusion matrix | 0:25 |
-| 21 | Frequency bias analysis | 0:40 |
-| 22 | Grad-CAM | 0:25 |
-| 23 | Divider: Robustness | 0:10 |
-| 24 | Robustness results | 0:50 |
-| 25 | Limitations and next steps | 0:50 |
-| 26 | Divider: Conclusion | 0:10 |
-| 27 | Summary | 0:50 |
-| 28 | Thank You | n/a |
-| **Total** | | **~14:45** |
+<div class="two-col" style="grid-template-columns: 64% 36%; gap: 24px; align-items: center; margin-top: 8px;">
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <img src="results/task05/tsne_feature_space.png" style="max-width: 100%; max-height: 56vh; object-fit: contain;" />
+  </div>
+  <div>
+    <div class="lead" style="font-size: 1.02em; line-height: 1.28; margin-bottom: 14px;">
+      2,000 validation samples projected from the Deep CNN's 512-dimensional feature representation into 2D.
+    </div>
+    <div class="takeaway" style="font-size: 0.9em; margin-top: 0;">
+      <strong>Interpretation:</strong> most classes appear as separate groups. The visible overlap is mainly among speed limit signs and similar warning signs, which matches the error patterns seen earlier.
+    </div>
+  </div>
+</div>
 
 <!--
-Use this as a rough guide to stay within 15 minutes. The two highest-risk sections for running over time are Model Comparison and Deep CNN Evaluation, because these are the most technical parts of the presentation. If time is tight, the confusion matrix and Grad-CAM slides can be covered briefly. Backup slides are purely for questions; do not cover them unless someone specifically asks.
+This backup slide gives a visual check of the feature space learned by the Deep CNN. Each point is one validation image, and t-SNE projects the 512-dimensional internal representation into two dimensions so we can inspect it visually. The main takeaway is simple: many classes appear separated, while the overlap is mostly where we would expect it, especially among speed limit signs and similar warning signs. This supports the error analysis, but it should not be treated as proof, because t-SNE is only a two-dimensional projection.
 -->
+
