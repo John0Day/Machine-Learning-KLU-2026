@@ -362,10 +362,10 @@ In real-world use, camera images are rarely as clean as the GTSRB images. We tes
 | Condition | Test Accuracy | Δ vs. Clean | What this simulates |
 |-----------|-------------|:-----------:|---------------------|
 | Clean | 99.81% | baseline | Ideal conditions |
-| Gaussian Blur (kernel=5) | 97.01% | −2.80 pp | Motion blur, out-of-focus optics, reduced sharpness |
-| Gaussian Noise (σ=0.1) | 71.86% | **−27.95 pp** | Low-quality sensors, compression artifacts |
+| Gaussian Blur (kernel=5) | 97.01% | −2.81 pp | Motion blur, out-of-focus optics, reduced sharpness |
+| Gaussian Noise (σ=0.1) | 72.01% | **−27.80 pp** | Low-quality sensors, compression artifacts |
 
-The model handles blur well (−2.80 pp), suggesting it does not depend on perfectly sharp edges. Gaussian noise is far more damaging: accuracy falls by 27.95 pp under σ=0.1 on normalised pixel values. This is a distribution shift failure — the model was trained exclusively on clean images and never encountered noisy inputs.
+The model handles blur well (−2.81 pp), suggesting it does not depend on perfectly sharp edges. Gaussian noise is far more damaging: accuracy falls by 27.80 pp under σ=0.1 on normalised pixel values. This is a distribution shift failure — the model was trained exclusively on clean images and never encountered noisy inputs.
 
 ### 5.8 Grad-CAM Interpretability
 
@@ -375,7 +375,7 @@ Gradient-weighted Class Activation Mapping (Grad-CAM) highlights which image reg
 
 ### 5.9 Discussion
 
-Most of the remaining errors involve class pairs where the distinguishing feature occupies only a few pixels after resizing — a resolution constraint rather than a systematic model failure. Precision and recall remain high across nearly all classes, and the 0.34 pp frequency-bias gap is small. Grad-CAM supports that predictions rely on sign-relevant regions. The single practical weakness is robustness: the 27.95 pp noise drop reveals that clean benchmark accuracy does not generalise to degraded inputs, which matters more than the small differences between architectures on the clean test set.
+Most of the remaining errors involve class pairs where the distinguishing feature occupies only a few pixels after resizing — a resolution constraint rather than a systematic model failure. Precision and recall remain high across nearly all classes, and the 0.34 pp frequency-bias gap is small. Grad-CAM supports that predictions rely on sign-relevant regions. The single practical weakness is robustness: the 27.80 pp noise drop reveals that clean benchmark accuracy does not generalise to degraded inputs, which matters more than the small differences between architectures on the clean test set.
 
 ### 5.10 Limitations
 
@@ -393,7 +393,7 @@ First, a compact CNN trained from scratch is already strong enough for this task
 
 Second, additional depth produced the strongest single-run improvement and the highest mean accuracy across seeds, while LeakyReLU showed the most stable multi-seed performance. Adding a fourth convolutional block raised test accuracy to 99.81% and reduced errors from 30 to 11 at near-baseline training cost. The multi-seed analysis revised two initial rankings: LeakyReLU CNN, which appeared last in the single run, achieved the second-highest mean accuracy (99.67% ± 0.03%) and the lowest variance across seeds. MobileNetV2 showed no stable advantage on average despite requiring nearly twice the training time, confirming that ImageNet pretraining offers no clear benefit when the target domain is narrow and well represented in the training data.
 
-Third, clean benchmark accuracy does not reflect robustness to input degradation. Accuracy drops by 27.95 pp under moderate Gaussian noise — a direct consequence of training exclusively on clean images. This distribution shift problem is the main unresolved challenge; class-frequency bias was small (0.34 pp gap), and Grad-CAM indicates predictions are driven by sign-relevant regions.
+Third, clean benchmark accuracy does not reflect robustness to input degradation. Accuracy drops by 27.80 pp under moderate Gaussian noise — a direct consequence of training exclusively on clean images. This distribution shift problem is the main unresolved challenge; class-frequency bias was small (0.34 pp gap), and Grad-CAM indicates predictions are driven by sign-relevant regions.
 
 ### 6.2 Future Work
 

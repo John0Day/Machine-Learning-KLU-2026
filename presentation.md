@@ -117,6 +117,12 @@ style: |
     gap: 18px;
     margin-top: 16px;
   }
+  .cards-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+  }
   .card {
     background: var(--color-light);
     border-left: 5px solid var(--color-accent);
@@ -278,7 +284,7 @@ Good morning everyone. This project is about applying deep learning to traffic s
 </div>
 
 <!--
-The dataset we used is GTSRB (the German Traffic Sign Recognition Benchmark), collected by Ruhr University Bochum. One important thing to note upfront: all images are already cropped to the sign boundary, so we are solving a pure classification problem, not a detection problem. That lets us focus entirely on comparing architectures.
+The dataset we used is GTSRB (the German Traffic Sign Recognition Benchmark), collected by Ruhr University Bochum. One important thing to note upfront: all images are already cropped to the sign boundary, so we are solving a pure classification problem, not a detection problem.
 -->
 
 ---
@@ -360,26 +366,26 @@ Before looking at individual examples, we should separate the three dataset prop
 
 ---
 
-## Zoom-in: fine details become critical after resizing
+## Zoom-in: many signs differ only in small internal details
 
 ![bg right:48% contain](results/task03/sample_images_by_class.png)
 
 <div style="width: 47%; margin-top: 26px;">
 
-<div class="kicker">Visual ambiguity at 32×32 px</div>
+<div class="kicker">Visual ambiguity · original dataset images</div>
 
 <div class="lead" style="font-size: 1.22em; line-height: 1.28; margin-top: 10px;">
 Many signs share the same outer shape, so the decisive information is often a small numeral or symbol.
 </div>
 
 <div class="takeaway" style="margin-top: 26px; font-size: 0.95em;">
-<strong>Key challenge:</strong> after resizing to <strong>32×32 px</strong>, signs such as <strong>30</strong> and <strong>80</strong> differ by only a handful of pixels. The model must classify based on fine detail near the resolution limit.
+<strong>Key challenge:</strong> signs such as speed limit 30 and 80 share the same red circular frame — the only difference is the numeral inside. The model must learn to distinguish classes based on fine internal detail.
 </div>
 
 </div>
 
 <!--
-After the general dataset challenges, we zoom in on the visual ambiguity problem. Speed limit signs are a good example: they share the same red circular frame, and the decisive difference is often only the numeral inside. Because we resize the input to 32 by 32 pixels, that numeral may occupy only a handful of pixels. This is why visually similar classes become important again later in the error analysis.
+After the general dataset challenges, we zoom in on the visual ambiguity problem. Speed limit signs are a good example: they share the same red circular frame, and the only difference is the numeral inside. The model has to separate classes based on that fine internal detail alone — there is no shape or colour difference to rely on. This is why visually similar classes show up again later in the error analysis.
 -->
 
 ---
@@ -405,10 +411,78 @@ This plot makes the class imbalance visible. Some classes, such as Speed limit 5
 
 # Our Approach
 
-<div class="subtitle">One compact baseline. Four targeted architectural variants. Identical training conditions across all models.</div>
+<div class="subtitle">From preprocessing to a compact CNN baseline under controlled conditions.</div>
 
 <!--
-Now that the dataset challenges are clear, we can move to the modelling approach. The first step is to introduce the baseline model and understand how well it already performs on this task. From that reference point, we can then decide what is actually worth testing further.
+Now that the dataset challenges are clear, we can move to the modelling approach. I will first show how the raw images are turned into fixed model inputs, because preprocessing defines what every model actually sees. After that, I introduce the compact CNN baseline as the reference model for the rest of the experiment.
+-->
+
+---
+
+## Preprocessing pipeline: from raw image to model input
+
+<div class="kicker">Training only · augmentation simulates real-world variation</div>
+
+<div class="cards-5">
+  <div class="card" style="text-align:center;">
+    <span class="step-label">1</span>
+    <h3>Resize</h3>
+    <p style="font-size:0.85em;">32×32 px<br><span class="muted">originals: 25–243 px</span></p>
+  </div>
+  <div class="card" style="text-align:center;">
+    <span class="step-label">2</span>
+    <h3>Rotation</h3>
+    <p style="font-size:0.85em;">±15°<br><span class="muted">tilted camera angles</span></p>
+  </div>
+  <div class="card" style="text-align:center;">
+    <span class="step-label">3</span>
+    <h3>ColorJitter</h3>
+    <p style="font-size:0.85em;">brightness, contrast, saturation<br><span class="muted">lighting &amp; weather</span></p>
+  </div>
+  <div class="card" style="text-align:center;">
+    <span class="step-label">4</span>
+    <h3>Translate</h3>
+    <p style="font-size:0.85em;">±10% shift<br><span class="muted">off-centre sign</span></p>
+  </div>
+  <div class="card" style="text-align:center;">
+    <span class="step-label">5</span>
+    <h3>Normalize</h3>
+    <p style="font-size:0.85em;">GTSRB mean &amp; std<br><span class="muted">zero mean, unit variance</span></p>
+  </div>
+</div>
+
+<div class="cards-2" style="margin-top: 14px;">
+  <div class="takeaway" style="margin-top:0;">
+    <strong>Val / Test:</strong> Resize + Normalize only — no random transforms, identical input every run.
+  </div>
+  <div class="takeaway" style="margin-top:0;">
+    <strong>Split (seed 42):</strong> 70 / 15 / 15 → 27,447 train · 5,881 val · 5,881 test images.
+  </div>
+</div>
+
+<!--
+Before any model sees the data, every image goes through the same preprocessing pipeline. The resize to 32 by 32 is our choice, not a dataset property — originals range from 25 to 243 pixels. Augmentation is applied only to training images to simulate real-world conditions: slight rotation for camera angle, color jitter for lighting and weather, and a small translation for off-centre signs. Validation and test images receive only resize and normalise, with no randomness, so evaluation results are reproducible across runs.
+-->
+
+---
+
+<!-- _class: image-focus -->
+
+## What augmented training images look like
+
+<div class="kicker">16 training samples after augmentation · 32×32 px</div>
+
+<div class="two-col" style="grid-template-columns: 62% 38%; gap: 26px; align-items: center; margin-top: 12px;">
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <img src="results/task03/preprocessing_sample_grid.png" style="max-width: 100%; max-height: 56vh; object-fit: contain;" />
+  </div>
+  <div class="takeaway" style="margin-top: 0; font-size: 0.95em;">
+    <strong>Training input:</strong> each image has already been resized, rotated, colour-jittered, and translated. This is the exact augmented input the model learns from.
+  </div>
+</div>
+
+<!--
+This grid shows 16 real training images after all augmentation steps have been applied. The effect is visible: images appear at slightly different angles, with varying brightness and contrast. This is what the model actually learns from — not the clean originals.
 -->
 
 ---
@@ -556,7 +630,7 @@ The previous slide introduced the four architectural questions. Here, each quest
 </div>
 
 <!--
-The comparison is only meaningful because the training and evaluation setup is fixed across all five models. Augmentation is applied only to the training set, while validation and test images are resized and normalised without random transforms. This means performance differences can be interpreted mainly through model design, while still considering parameter count, training time, and seed variation. The goal is a controlled architectural comparison rather than a tournament between unrelated models.
+The comparison is only meaningful because the training and evaluation setup is fixed across all five models. Augmentation is applied only to the training set, while validation and test images are resized and normalised without random transforms. Early stopping monitors validation loss and halts training once it stops improving — this prevents overfitting and means models that converge faster simply finish earlier rather than continuing to train on noise. This means performance differences can be interpreted mainly through model design, while still considering parameter count, training time, and seed variation. The goal is a controlled architectural comparison rather than a tournament between unrelated models.
 -->
 
 ---
@@ -566,10 +640,10 @@ The comparison is only meaningful because the training and evaluation setup is f
 
 # Model Comparison
 
-<div class="subtitle">All models exceed 99% on the internal split. Multi-seed analysis revised two of the initial rankings.</div>
+<div class="subtitle">All models exceed 99% on the internal split. Multi-seed validation gives the more reliable ranking.</div>
 
 <!--
-With the setup clear, let us look at results. I will start with the canonical single-run comparison under seed 42, then follow up with a multi-seed analysis across three seeds. The single run gives the first signal; the multi-seed result is what I would actually rely on for drawing conclusions.
+With the setup clear, we can move to the model results. I first show the canonical single-run comparison under seed 42, because it gives an initial signal about which architecture looks strongest. Then I move to the multi-seed analysis across three seeds, which is the more reliable basis for drawing conclusions when all models are already above 99 percent.
 -->
 
 ---
@@ -677,13 +751,26 @@ Looking at the actual misclassified images makes the error pattern easier to und
 
 ---
 
-<!-- _class: image-focus -->
-
 ## Errors are rare and concentrated, not randomly distributed
 
-![](results/task06/deep/confusion_matrix_normalized.png)
+<div class="kicker">Confusion matrix · Deep CNN</div>
 
-**Top-5 accuracy: 99.98%. The correct class appeared in the model's top 5 predictions in all but one of 5,881 test cases.**
+<div class="two-col" style="grid-template-columns: 58% 42%; gap: 24px; align-items: center; margin-top: 10px;">
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <img src="results/task06/deep/confusion_matrix_normalized.png" style="max-width: 100%; max-height: 62vh; object-fit: contain;" />
+  </div>
+  <div>
+    <div class="lead" style="font-size: 1.08em; line-height: 1.3; margin-bottom: 14px;">
+      The strong diagonal shows that most classes are predicted correctly.
+    </div>
+    <div class="takeaway" style="font-size: 0.92em; margin-top: 0;">
+      <strong>Interpretation:</strong> the few off-diagonal entries are sparse and align with visually similar signs, rather than being randomly spread across all 43 classes.
+    </div>
+    <p class="muted" style="font-size: 0.84em; margin-top: 16px;">
+      Top-5 accuracy: <strong>99.98%</strong>. The correct class appeared in the model's top 5 predictions in all but one of 5,881 test cases.
+    </p>
+  </div>
+</div>
 
 <!--
 After looking at individual examples, the confusion matrix gives the class-level view. The strong diagonal shows that errors are rare overall, and the few off-diagonal entries are not spread randomly across the class space. Instead, they mostly align with the visually similar sign groups we already discussed. The Top-5 accuracy of 99.98 percent also shows that even when the top prediction is wrong, the correct class is almost always still among the model's most likely alternatives.
@@ -738,26 +825,26 @@ So far, the Deep CNN looked very strong on clean, pre-cropped benchmark images. 
 
 ---
 
-## Gaussian noise causes a 27.95 pp accuracy drop, the main robustness limitation
+## Gaussian noise causes a 27.80 pp accuracy drop, the main robustness limitation
 
 <div class="kicker">Robustness test · no retraining</div>
 
 <div class="kpi-row">
   <div class="kpi"><div class="number">99.81%</div><div class="label">clean test images</div></div>
   <div class="kpi"><div class="number">97.01%</div><div class="label">Gaussian blur −2.80 pp</div></div>
-  <div class="kpi"><div class="number" style="color: #c0392b;">71.86%</div><div class="label">Gaussian noise −27.95 pp</div></div>
+  <div class="kpi"><div class="number" style="color: #c0392b;">72.01%</div><div class="label">Gaussian noise −27.80 pp</div></div>
 </div>
 
 <br>
 
-The model handles moderate blur reasonably well. Under Gaussian noise, accuracy drops from **99.81%** to **71.86%**, corresponding to roughly **1,600 additional errors** on the same 5,881 test images.
+The model handles moderate blur reasonably well. Under Gaussian noise, accuracy drops from **99.81%** to **72.01%**, corresponding to roughly **1,650 additional errors** on the same 5,881 test images.
 
 <div class="takeaway">
 <strong>Cause:</strong> this is a distribution shift failure. The model was trained on clean images and was not exposed to noisy inputs during training. The clean benchmark result therefore does not fully describe performance under degraded real-world conditions.
 </div>
 
 <!--
-The clean result is the reference point: 99.81 percent accuracy on the original test images. With Gaussian blur, accuracy remains relatively high at 97.01 percent, so moderate blur does not destroy performance. Gaussian noise is very different: accuracy falls to 71.86 percent, which means roughly 1,600 additional errors on the same test set. The most likely explanation is distribution shift, because the model was trained on clean images and never learned to handle this kind of noisy input.
+The clean result is the reference point: 99.81 percent accuracy on the original test images. With Gaussian blur, accuracy remains relatively high at 97.01 percent, so moderate blur does not destroy performance. Gaussian noise is very different: accuracy falls to 72.01 percent, which means roughly 1,650 additional errors on the same test set. The most likely explanation is distribution shift, because the model was trained on clean images and never learned to handle this kind of noisy input.
 -->
 
 ---
@@ -824,7 +911,7 @@ To conclude, there are three main takeaways from this project. First, compact CN
   </div>
   <div class="card">
     <h3>Robustness is the open problem</h3>
-    <p>A <strong>27.95 pp</strong> drop under Gaussian noise shows that clean benchmark accuracy does not reflect degraded-input performance. Distribution shift is the primary unresolved challenge.</p>
+    <p>A <strong>27.80 pp</strong> drop under Gaussian noise shows that clean benchmark accuracy does not reflect degraded-input performance. Distribution shift is the primary unresolved challenge.</p>
   </div>
 </div>
 
